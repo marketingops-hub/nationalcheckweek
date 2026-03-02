@@ -44,7 +44,7 @@ export default function Hero() {
               height: "1.2em",
               overflow: "hidden",
               verticalAlign: "bottom",
-              minWidth: "320px",
+              width: "clamp(180px, 50vw, 380px)",
             }}
           >
             &nbsp;

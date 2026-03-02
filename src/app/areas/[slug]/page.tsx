@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAreaBySlug, getAreasByState, AREAS } from "@/lib/areas";
+import InnerNav from "@/components/InnerNav";
 
 interface Props {
   params: { slug: string };
@@ -35,6 +36,8 @@ export default function AreaPage({ params }: Props) {
 
   return (
     <>
+      <InnerNav backHref={`/states/${area.stateSlug}`} backLabel={area.state} />
+
       {/* Hero */}
       <div className="area-hero">
         <div className="area-breadcrumb">

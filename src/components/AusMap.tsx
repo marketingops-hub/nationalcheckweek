@@ -74,6 +74,7 @@ export default function AusMap({ onSelectState, selectedState }: Props) {
   const [cities, setCities] = useState<{ name: string; x: number; y: number; state: string }[]>([]);
   const [hovered, setHovered] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -108,7 +109,9 @@ export default function AusMap({ onSelectState, selectedState }: Props) {
 
         setShapes(built);
         setCities(projectedCities);
+        setLoading(false);
       } catch {
+        setLoading(false);
         setError(true);
       }
     }
@@ -120,13 +123,32 @@ export default function AusMap({ onSelectState, selectedState }: Props) {
     <div className="map-wrapper" style={{ position: "relative" }}>
       <div className="map-hint">Click any state or territory to explore its regional data</div>
 
+      {loading && !error && (
+        <div style={{
+          width: "100%",
+          aspectRatio: "800/560",
+          background: "linear-gradient(90deg, #BFDBFE 25%, #DBEAFE 50%, #BFDBFE 75%)",
+          backgroundSize: "200% 100%",
+          animation: "mapSkeleton 1.4s ease-in-out infinite",
+          borderRadius: "8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: "12px",
+        }}>
+          <div style={{ width: 32, height: 32, border: "3px solid #93C5FD", borderTopColor: "#1E40AF", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <span style={{ fontSize: "0.82rem", color: "#1E40AF", fontWeight: 600 }}>Loading map…</span>
+        </div>
+      )}
+
       {error && (
         <div style={{ textAlign: "center", padding: "40px", color: "#64748B" }}>
           Map unavailable. Please refresh the page.
         </div>
       )}
 
-      {!error && (
+      {!loading && !error && (
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}

@@ -24,6 +24,10 @@ export default function NewsTicker() {
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
     let x = 0;
     let raf: number;
     const speed = 0.5;

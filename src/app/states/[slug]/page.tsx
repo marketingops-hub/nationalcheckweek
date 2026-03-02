@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { REGIONAL } from "@/lib/regional";
 import { getAreasByState } from "@/lib/areas";
+import InnerNav from "@/components/InnerNav";
 
 const SLUG_TO_STATE: Record<string, string> = {
   "new-south-wales":              "New South Wales",
@@ -54,15 +55,7 @@ export default async function StatePage({ params }: Props) {
 
   return (
     <>
-      {/* NAV */}
-      <nav style={{ background: "var(--navy)", padding: "0 40px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <Link href="/" style={{ fontWeight: 700, fontSize: "1rem", color: "#FFFFFF", textDecoration: "none" }}>
-          <span style={{ color: "var(--teal-light)" }}>Schools</span>Wellbeing.com.au
-        </Link>
-        <Link href="/#map" style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>
-          ← All States
-        </Link>
-      </nav>
+      <InnerNav backHref="/#map" backLabel="All States" />
 
       {/* HEADER */}
       <div style={{ background: "var(--navy)", padding: "56px 40px 48px", borderBottom: "4px solid var(--accent)" }}>

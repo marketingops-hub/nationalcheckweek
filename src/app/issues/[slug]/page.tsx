@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ISSUES } from "@/lib/issues";
+import InnerNav from "@/components/InnerNav";
 
 export async function generateStaticParams() {
   return ISSUES.map((i) => ({ slug: i.slug }));
@@ -36,15 +37,7 @@ export default async function IssuePage({ params }: Props) {
 
   return (
     <>
-      {/* NAV BAR */}
-      <nav style={{ background: "var(--navy)", padding: "0 40px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <Link href="/" style={{ fontWeight: 700, fontSize: "1rem", color: "#FFFFFF", textDecoration: "none" }}>
-          <span style={{ color: "var(--teal-light)" }}>Schools</span>Wellbeing.com.au
-        </Link>
-        <Link href="/#issues" style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.65)", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
-          ← All Issues
-        </Link>
-      </nav>
+      <InnerNav backHref="/#issues" backLabel="All Issues" />
 
       {/* HERO HEADER */}
       <div style={{ background: "var(--navy)", padding: "56px 40px 48px", borderBottom: `4px solid ${SEVERITY_COLOR[issue.severity]}` }}>
