@@ -88,6 +88,7 @@ const THEMES = [
 export default function ResearchSection() {
   return (
     <section className="section" id="research" style={{ background: "var(--white)" }}>
+      <div className="section-inner">
       <div className="section-tag">National Research Overview</div>
       <h2>What the Evidence Shows</h2>
       <p className="section-lead">
@@ -118,6 +119,7 @@ export default function ResearchSection() {
 
       <div className="research-note">
         <strong>Note on data currency:</strong> Australian national prevalence data for child mental health is primarily drawn from the 2013–14 Young Minds Matter survey — the most recent nationally representative study. The AIHW has flagged a new national survey as a priority. Regional, self-harm, and attendance data reflects the most recent available collections (2022–24).
+      </div>
       </div>
     </section>
   );

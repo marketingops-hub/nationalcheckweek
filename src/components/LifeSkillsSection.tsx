@@ -34,17 +34,25 @@ export default function LifeSkillsSection() {
             </div>
           </div>
 
-          <a
-            href="https://www.lifeskillsgroup.com.au"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="lsg-cta"
-          >
-            Explore Life Skills GO
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 17L17 7M17 7H7M17 7v10"/>
-            </svg>
-          </a>
+          <div className="lsg-cta-row">
+            <a
+              href="https://www.lifeskillsgroup.com.au"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lsg-cta"
+            >
+              See Life Skills GO in Action
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+              </svg>
+            </a>
+            <a
+              href="#research"
+              className="lsg-cta-ghost"
+            >
+              View the Evidence
+            </a>
+          </div>
           <p className="lsg-disclaimer">
             Life Skills GO is an evidence-based wellbeing measurement and resource platform designed in collaboration with Australian educators. It is used in schools across Australia to collect emotion and wellbeing data, measure student readiness to learn, and deliver curriculum-aligned resources — supporting both whole-school and individual student wellbeing strategies.
           </p>

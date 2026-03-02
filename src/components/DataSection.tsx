@@ -1,6 +1,7 @@
 export default function DataSection() {
   return (
     <section className="section section-dark" id="data">
+      <div className="section-inner">
       <div className="section-tag">Methodology &amp; Data Sources</div>
       <h2>How This Site Uses Data</h2>
       <p className="section-lead">
@@ -32,6 +33,7 @@ export default function DataSection() {
             <strong style={{ color: "rgba(246,239,228,0.85)" }}>Survey years:</strong> Some sources date from 2013–14. The most recent available data is used throughout.
           </p>
         </div>
+      </div>
       </div>
     </section>
   );
