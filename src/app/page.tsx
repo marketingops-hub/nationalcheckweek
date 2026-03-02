@@ -4,6 +4,7 @@ import StatTicker from "@/components/StatTicker";
 import MapSection from "@/components/MapSection";
 import IssuesSection from "@/components/IssuesSection";
 import LifeSkillsSection from "@/components/LifeSkillsSection";
+import ResearchSection from "@/components/ResearchSection";
 import DataSection from "@/components/DataSection";
 import Footer from "@/components/Footer";
 
@@ -16,6 +17,7 @@ export default function Home() {
       <MapSection />
       <IssuesSection />
       <LifeSkillsSection />
+      <ResearchSection />
       <DataSection />
       <Footer />
     </>
