@@ -1,19 +1,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAreaBySlug, getAreasByState, AREAS } from "@/lib/areas";
 import InnerNav from "@/components/InnerNav";
+import { createClient } from "@/lib/supabase/server";
+
+interface AreaIssue { title: string; severity: string; stat: string; desc: string; }
+interface KeyStat { num: string; label: string; }
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return AREAS.map(a => ({ slug: a.slug }));
+  const sb = await createClient();
+  const { data } = await sb.from("areas").select("slug");
+  return (data ?? []).map((a) => ({ slug: a.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const area = getAreaBySlug(slug);
+  const sb = await createClient();
+  const { data: area } = await sb.from("areas").select("name, overview").eq("slug", slug).single();
   if (!area) return { title: "Area Not Found" };
   return {
     title: `${area.name} Student Wellbeing Report | Schools Monitor`,
@@ -23,12 +29,18 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function AreaPage({ params }: Props) {
   const { slug } = await params;
-  const area = getAreaBySlug(slug);
+  const sb = await createClient();
+
+  const { data: area } = await sb.from("areas").select("*").eq("slug", slug).single();
   if (!area) notFound();
 
-  const relatedAreas = getAreasByState(area!.stateSlug)
-    .filter(a => a.slug !== area.slug)
-    .slice(0, 4);
+  const { data: relatedData } = await sb
+    .from("areas")
+    .select("slug, name, type, issues")
+    .eq("state_slug", area.state_slug)
+    .neq("slug", slug)
+    .limit(4);
+  const relatedAreas = relatedData ?? [];
 
   const severityLabel: Record<string, string> = {
     critical: "Critical",
@@ -38,14 +50,14 @@ export default async function AreaPage({ params }: Props) {
 
   return (
     <>
-      <InnerNav backHref={`/states/${area.stateSlug}`} backLabel={area.state} />
+      <InnerNav backHref={`/states/${area.state_slug}`} backLabel={area.state} />
 
       {/* Hero */}
       <div className="area-hero">
         <div className="area-breadcrumb">
           <Link href="/">Home</Link>
           <span>›</span>
-          <Link href={`/states/${area.stateSlug}`}>{area.state}</Link>
+          <Link href={`/states/${area.state_slug}`}>{area.state}</Link>
           <span>›</span>
           <span style={{ color: "#FFFFFF" }}>{area.name}</span>
         </div>
@@ -66,7 +78,7 @@ export default async function AreaPage({ params }: Props) {
             <div className="area-stat-num">{area.schools}</div>
             <div className="area-stat-label">Approximate schools</div>
           </div>
-          {area.keyStats.map((s, i) => (
+          {(area.key_stats as KeyStat[]).map((s, i) => (
             <div key={i} className="area-stat-box">
               <div className="area-stat-num">{s.num}</div>
               <div className="area-stat-label">{s.label}</div>
@@ -82,7 +94,7 @@ export default async function AreaPage({ params }: Props) {
         <div className="area-section">
           <h2>Priority Wellbeing Issues</h2>
           <div className="area-issues-list">
-            {area.issues.map((issue, i) => (
+            {(area.issues as AreaIssue[]).map((issue, i) => (
               <div key={i} className={`area-issue-card ${issue.severity}`}>
                 <div className="area-issue-title">{issue.title}</div>
                 <div className="area-issue-stat">
@@ -149,7 +161,7 @@ export default async function AreaPage({ params }: Props) {
           <div className="area-section">
             <h2>Other Areas in {area.state}</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
-              {relatedAreas.map(a => (
+              {(relatedAreas as { slug: string; name: string; type: string; issues: unknown[] }[]).map(a => (
                 <Link
                   key={a.slug}
                   href={`/areas/${a.slug}`}
@@ -175,7 +187,7 @@ export default async function AreaPage({ params }: Props) {
 
         {/* Back navigation */}
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "8px" }}>
-          <Link href={`/states/${area.stateSlug}`} className="area-back-btn">
+          <Link href={`/states/${area.state_slug}`} className="area-back-btn">
             ← Back to {area.state}
           </Link>
           <Link href="/" className="area-back-btn" style={{ background: "#334155" }}>

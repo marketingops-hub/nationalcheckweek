@@ -1,30 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { REGIONAL } from "@/lib/regional";
-import { getAreasByState } from "@/lib/areas";
 import InnerNav from "@/components/InnerNav";
-
-const SLUG_TO_STATE: Record<string, string> = {
-  "new-south-wales":              "New South Wales",
-  "victoria":                     "Victoria",
-  "queensland":                   "Queensland",
-  "south-australia":              "South Australia",
-  "western-australia":            "Western Australia",
-  "tasmania":                     "Tasmania",
-  "northern-territory":           "Northern Territory",
-  "australian-capital-territory": "Australian Capital Territory",
-};
-
-const STATE_ICON: Record<string, string> = {
-  "New South Wales":              "🔵",
-  "Victoria":                     "🟣",
-  "Queensland":                   "🔴",
-  "South Australia":              "🟠",
-  "Western Australia":            "🔴",
-  "Tasmania":                     "🟡",
-  "Northern Territory":           "🔴",
-  "Australian Capital Territory": "🟢",
-};
+import { createClient } from "@/lib/supabase/server";
 
 const BADGE_COLOR: Record<string, { bg: string; text: string }> = {
   "badge-critical": { bg: "#FEF2F2", text: "#B91C1C" },
@@ -33,7 +10,9 @@ const BADGE_COLOR: Record<string, { bg: string; text: string }> = {
 };
 
 export async function generateStaticParams() {
-  return Object.keys(SLUG_TO_STATE).map((slug) => ({ slug }));
+  const sb = await createClient();
+  const { data } = await sb.from("states").select("slug");
+  return (data ?? []).map((s) => ({ slug: s.slug }));
 }
 
 interface Props {
@@ -42,16 +21,29 @@ interface Props {
 
 export default async function StatePage({ params }: Props) {
   const { slug } = await params;
-  const stateName = SLUG_TO_STATE[slug];
-  if (!stateName) notFound();
+  const sb = await createClient();
 
-  const data = REGIONAL[stateName];
-  if (!data) notFound();
+  const { data: state } = await sb
+    .from("states")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+  if (!state) notFound();
 
-  const allStates = Object.keys(SLUG_TO_STATE);
-  const currentIdx = allStates.indexOf(slug);
-  const prevSlug = currentIdx > 0 ? allStates[currentIdx - 1] : null;
-  const nextSlug = currentIdx < allStates.length - 1 ? allStates[currentIdx + 1] : null;
+  const { data: allStates } = await sb
+    .from("states")
+    .select("slug, name")
+    .order("name");
+  const stateList = allStates ?? [];
+  const currentIdx = stateList.findIndex((s) => s.slug === slug);
+  const prevSlug = currentIdx > 0 ? stateList[currentIdx - 1].slug : null;
+  const nextSlug = currentIdx < stateList.length - 1 ? stateList[currentIdx + 1].slug : null;
+
+  const { data: areas } = await sb
+    .from("areas")
+    .select("slug, name, type, population, issues")
+    .eq("state_slug", slug);
+  const stateAreas = areas ?? [];
 
   return (
     <>
@@ -63,12 +55,12 @@ export default async function StatePage({ params }: Props) {
           <div style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "16px" }}>
             Regional Wellbeing Data
           </div>
-          <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>{STATE_ICON[stateName]}</div>
+          <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>{state.icon}</div>
           <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", color: "#FFFFFF", lineHeight: 1.15, marginBottom: "16px", fontFamily: "'Playfair Display', Georgia, serif" }}>
-            {stateName}
+            {state.name}
           </h1>
           <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>
-            {data.subtitle}
+            {state.subtitle}
           </p>
         </div>
       </div>
@@ -90,11 +82,11 @@ export default async function StatePage({ params }: Props) {
           Priority Wellbeing Issues
         </h2>
         <p style={{ fontSize: "0.95rem", color: "var(--text-light)", marginBottom: "32px", lineHeight: 1.7 }}>
-          The following issues are documented as the most significant wellbeing challenges for students in {stateName}, based on national and state-level Australian data.
+          The following issues are documented as the most significant wellbeing challenges for students in {state.name}, based on national and state-level Australian data.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginBottom: "56px" }}>
-          {data.issues.map((issue, i) => {
+          {(state.issues as { name: string; badge: string; stat: string; desc: string }[]).map((issue, i) => {
             const badge = BADGE_COLOR[issue.badge] ?? BADGE_COLOR["badge-notable"];
             return (
               <div key={issue.name} style={{ background: "#FFFFFF", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -114,19 +106,16 @@ export default async function StatePage({ params }: Props) {
         </div>
 
         {/* AREAS / CITIES */}
-        {(() => {
-          const areas = getAreasByState(slug);
-          if (areas.length === 0) return null;
-          return (
-            <section style={{ marginBottom: "52px" }}>
+        {stateAreas.length > 0 && (
+          <section style={{ marginBottom: "52px" }}>
               <h2 style={{ fontSize: "1.3rem", color: "var(--navy)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em", paddingBottom: "12px", borderBottom: "2px solid var(--border)" }}>
-                Cities &amp; Regions in {stateName}
+                Cities &amp; Regions in {state.name}
               </h2>
               <p style={{ fontSize: "0.95rem", color: "var(--text-light)", marginBottom: "24px", lineHeight: 1.7 }}>
                 Select a city or region to explore a detailed wellbeing report for that specific area, including local data, priority issues, and prevention insights.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "14px" }}>
-                {areas.map(area => (
+                {stateAreas.map((area: { slug: string; name: string; type: string; population: string; issues: unknown[] }) => (
                   <Link
                     key={area.slug}
                     href={`/areas/${area.slug}`}
@@ -155,8 +144,7 @@ export default async function StatePage({ params }: Props) {
                 ))}
               </div>
             </section>
-          );
-        })()}
+        )}
 
         {/* DATA → PREVENTION BRIDGE */}
         <section style={{ background: "linear-gradient(135deg, #0B1D35 0%, #132848 100%)", borderRadius: "16px", padding: "36px 40px", marginBottom: "52px" }}>
@@ -164,10 +152,10 @@ export default async function StatePage({ params }: Props) {
             From Data to Prevention
           </div>
           <h3 style={{ fontSize: "1.4rem", color: "#FFFFFF", marginBottom: "16px", fontFamily: "'Playfair Display', Georgia, serif" }}>
-            The challenge schools in {stateName} face
+            The challenge schools in {state.name} face
           </h3>
           <p style={{ fontSize: "0.975rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.8, marginBottom: "16px" }}>
-            Schools across {stateName} are doing their best with the resources and information they have. But wellbeing challenges like anxiety, disengagement, and self-harm are often invisible until they become urgent. Teachers and principals are not mental health specialists — and without systematic data, they are working without a map.
+            Schools across {state.name} are doing their best with the resources and information they have. But wellbeing challenges like anxiety, disengagement, and self-harm are often invisible until they become urgent. Teachers and principals are not mental health specialists — and without systematic data, they are working without a map.
           </p>
           <p style={{ fontSize: "0.975rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.8, marginBottom: "28px" }}>
             When schools measure student emotional readiness to learn regularly and systematically, the warning signs become visible weeks before a crisis. That window is where prevention lives.
@@ -184,15 +172,15 @@ export default async function StatePage({ params }: Props) {
             Explore Other States & Territories
           </h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            {Object.entries(SLUG_TO_STATE).map(([s, name]) => (
-              <Link key={s} href={`/states/${s}`} style={{
+            {stateList.map((s) => (
+              <Link key={s.slug} href={`/states/${s.slug}`} style={{
                 fontSize: "0.9rem", padding: "7px 16px", borderRadius: "100px", textDecoration: "none",
-                background: s === slug ? "var(--navy)" : "var(--gray-50)",
-                color: s === slug ? "#FFFFFF" : "var(--navy)",
-                border: `1px solid ${s === slug ? "var(--navy)" : "var(--border)"}`,
+                background: s.slug === slug ? "var(--navy)" : "var(--gray-50)",
+                color: s.slug === slug ? "#FFFFFF" : "var(--navy)",
+                border: `1px solid ${s.slug === slug ? "var(--navy)" : "var(--border)"}`,
                 fontWeight: 600,
               }}>
-                {name}
+                {s.name}
               </Link>
             ))}
           </div>
@@ -204,7 +192,7 @@ export default async function StatePage({ params }: Props) {
             {prevSlug && (
               <Link href={`/states/${prevSlug}`} style={{ display: "block", padding: "18px 20px", border: "1px solid var(--border)", borderRadius: "10px", textDecoration: "none", background: "var(--white)" }}>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-light)", marginBottom: "6px" }}>← Previous</div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--navy)" }}>{SLUG_TO_STATE[prevSlug]}</div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--navy)" }}>{stateList.find(s => s.slug === prevSlug)?.name}</div>
               </Link>
             )}
           </div>
@@ -212,7 +200,7 @@ export default async function StatePage({ params }: Props) {
             {nextSlug && (
               <Link href={`/states/${nextSlug}`} style={{ display: "block", padding: "18px 20px", border: "1px solid var(--border)", borderRadius: "10px", textDecoration: "none", background: "var(--white)", textAlign: "right" }}>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-light)", marginBottom: "6px" }}>Next →</div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--navy)" }}>{SLUG_TO_STATE[nextSlug]}</div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--navy)" }}>{stateList.find(s => s.slug === nextSlug)?.name}</div>
               </Link>
             )}
           </div>

@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ISSUES } from "@/lib/issues";
 import InnerNav from "@/components/InnerNav";
+import { createClient } from "@/lib/supabase/server";
 
 export async function generateStaticParams() {
-  return ISSUES.map((i) => ({ slug: i.slug }));
+  const sb = await createClient();
+  const { data } = await sb.from("issues").select("slug").order("rank");
+  return (data ?? []).map((i) => ({ slug: i.slug }));
 }
 
 interface Props {
@@ -13,11 +15,31 @@ interface Props {
 
 export default async function IssuePage({ params }: Props) {
   const { slug } = await params;
-  const issue = ISSUES.find((i) => i.slug === slug);
+  const sb = await createClient();
+
+  const { data: issue } = await sb
+    .from("issues")
+    .select("*")
+    .eq("slug", slug)
+    .single();
   if (!issue) notFound();
 
-  const prev = ISSUES.find((i) => i.rank === issue.rank - 1);
-  const next = ISSUES.find((i) => i.rank === issue.rank + 1);
+  const { data: prevData } = await sb
+    .from("issues")
+    .select("slug, icon, title")
+    .eq("rank", issue.rank - 1)
+    .single();
+  const { data: nextData } = await sb
+    .from("issues")
+    .select("slug, icon, title")
+    .eq("rank", issue.rank + 1)
+    .single();
+
+  const { data: allIssues } = await sb.from("issues").select("rank").order("rank");
+  const totalIssues = allIssues?.length ?? 15;
+
+  const prev = prevData ?? null;
+  const next = nextData ?? null;
 
   const SEVERITY_COLOR: Record<string, string> = {
     critical: "#B91C1C",
@@ -44,7 +66,7 @@ export default async function IssuePage({ params }: Props) {
         <div style={{ maxWidth: "860px", margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
             <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)" }}>
-              Issue #{issue.rank} of {ISSUES.length}
+              Issue #{issue.rank} of {totalIssues}
             </span>
             <span style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.15)" }} />
             <span style={{
@@ -59,11 +81,11 @@ export default async function IssuePage({ params }: Props) {
             {issue.title}
           </h1>
           <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.8, maxWidth: "680px" }}>
-            {issue.shortDesc}
+            {issue.short_desc}
           </p>
           <div style={{ marginTop: "28px", padding: "16px 20px", background: "rgba(255,255,255,0.06)", borderLeft: `4px solid ${SEVERITY_COLOR[issue.severity]}`, borderRadius: "0 8px 8px 0" }}>
             <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.85)", margin: 0, fontWeight: 500 }}>
-              📊 {issue.anchorStat}
+              📊 {issue.anchor_stat}
             </p>
           </div>
         </div>
@@ -97,7 +119,7 @@ export default async function IssuePage({ params }: Props) {
           <h2 style={{ fontSize: "1.3rem", color: "var(--navy)", marginBottom: "16px", paddingBottom: "12px", borderBottom: "2px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             What the Australian Data Shows
           </h2>
-          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}>{issue.australianData}</p>
+          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}>{issue.australian_data}</p>
         </section>
 
         {/* HOW IT AFFECTS LEARNING */}
@@ -114,7 +136,7 @@ export default async function IssuePage({ params }: Props) {
             Key Impact Areas
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-            {issue.impacts.map((imp) => (
+            {(issue.impacts as { title: string; text: string }[]).map((imp) => (
               <div key={imp.title} style={{ background: "var(--gray-50)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px 22px" }}>
                 <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: SEVERITY_COLOR[issue.severity], marginBottom: "8px" }}>
                   {imp.title}
@@ -131,7 +153,7 @@ export default async function IssuePage({ params }: Props) {
             Groups Most at Risk
           </h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            {issue.groups.map((g) => (
+            {(issue.groups as string[]).map((g) => (
               <span key={g} style={{ fontSize: "0.9rem", padding: "6px 16px", background: "rgba(11,29,53,0.06)", borderRadius: "100px", color: "var(--navy)", fontWeight: 500, border: "1px solid rgba(11,29,53,0.1)" }}>
                 {g}
               </span>
@@ -165,7 +187,7 @@ export default async function IssuePage({ params }: Props) {
             Sources
           </h2>
           <div>
-            {issue.sources.map((s) => (
+            {(issue.sources as string[]).map((s) => (
               <div key={s} style={{ fontSize: "0.9rem", color: "var(--text-light)", padding: "10px 0", borderBottom: "1px solid var(--border)", lineHeight: 1.6 }}>
                 📄 {s}
               </div>
