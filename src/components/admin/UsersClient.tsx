@@ -166,7 +166,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: User[] }) 
           </div>
           <button onClick={() => handleResetPassword(editUser)} disabled={busy}
             className="admin-btn w-full text-xs"
-            style={{ background: "rgba(79,70,229,0.07)", color: "#4f46e5", border: "1px solid rgba(79,70,229,0.2)" }}>
+            style={{ background: "var(--admin-accent-bg)", color: "var(--admin-accent)", border: "1px solid rgba(89,37,244,0.2)" }}>
             {busy ? "Sending…" : "✉ Send Password Reset Email"}
           </button>
         </Modal>

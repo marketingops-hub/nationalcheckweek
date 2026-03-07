@@ -160,7 +160,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
                 </tr>
               )}
               {filtered.map(r => (
-                <tr key={r.id} style={editId === r.id ? { background: "rgba(79,70,229,0.04)" } : undefined}>
+                <tr key={r.id} style={editId === r.id ? { background: "rgba(89,37,244,0.04)" } : undefined}>
                   <td style={{ maxWidth: "200px" }}>
                     <div className="font-mono text-xs font-semibold truncate" style={{ color: "var(--admin-accent)" }}>{r.from_path}</div>
                     {r.note && <div className="text-xs mt-0.5 truncate" style={{ color: "var(--admin-text-faint)" }}>{r.note}</div>}
@@ -170,7 +170,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
                   </td>
                   <td>
                     <span className="admin-badge font-mono" style={r.status_code === 301
-                      ? { background: "#ede9fe", color: "#4338ca" }
+                      ? { background: "rgba(89,37,244,0.1)", color: "#5925f4" }
                       : { background: "#fef9c3", color: "#854d0e" }}>
                       {r.status_code}
                     </span>

@@ -85,7 +85,7 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
 
   const PROVIDER_COLORS: Record<string, { bg: string; color: string }> = {
     openai:    { bg: "#dcfce7", color: "#15803d" },
-    anthropic: { bg: "#ede9fe", color: "#4338ca" },
+    anthropic: { bg: "rgba(89,37,244,0.1)", color: "#5925f4" },
     google:    { bg: "#fef9c3", color: "#854d0e" },
     other:     { bg: "#f1f5f9", color: "#475569" },
   };
@@ -218,7 +218,7 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
       )}
 
       {/* Info box */}
-      <div className="mt-6 rounded-xl p-4" style={{ background: "rgba(79,70,229,0.04)", border: "1px solid rgba(79,70,229,0.12)" }}>
+      <div className="mt-6 rounded-xl p-4" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(89,37,244,0.12)" }}>
         <p className="text-xs" style={{ color: "var(--admin-text-muted)" }}>
           <strong style={{ color: "var(--admin-accent)" }}>Security note:</strong> API keys are stored encrypted at rest in Supabase and are only accessible to authenticated admin users. Keys marked <span style={{ color: "#15803d", fontWeight: 600 }}>Active</span> will be used by the AI content generation tools.
         </p>
