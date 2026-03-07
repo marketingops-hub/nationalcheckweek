@@ -8,11 +8,20 @@ const SEVERITY_STYLE: Record<string, { bg: string; color: string; label: string 
 };
 
 export default async function AdminIssuesPage() {
-  const sb = await createClient();
-  const { data: issues } = await sb
-    .from("issues")
-    .select("id, rank, slug, icon, title, severity, anchor_stat, updated_at")
-    .order("rank");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let issues: any[] | null = null;
+  let fetchError = "";
+  try {
+    const sb = await createClient();
+    const res = await sb
+      .from("issues")
+      .select("id, rank, slug, icon, title, severity, anchor_stat, updated_at")
+      .order("rank");
+    issues = res.data;
+    if (res.error) fetchError = res.error.message;
+  } catch (e) {
+    fetchError = e instanceof Error ? e.message : "Failed to load issues.";
+  }
 
   return (
     <div>
@@ -32,6 +41,23 @@ export default async function AdminIssuesPage() {
         </Link>
       </div>
 
+      {fetchError && (
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>
+          {fetchError}
+        </div>
+      )}
+
+      {(!issues || issues.length === 0) && !fetchError ? (
+        <div className="rounded-xl p-10 text-center" style={{ background: "#161B22", border: "1px solid #21262D" }}>
+          <div className="text-3xl mb-3">⚠️</div>
+          <p className="text-sm font-medium mb-1" style={{ color: "#C9D1D9" }}>No issues yet</p>
+          <p className="text-xs mb-4" style={{ color: "#484F58" }}>Create your first wellbeing issue.</p>
+          <Link href="/admin/issues/new" className="text-sm font-semibold px-4 py-2 rounded-lg inline-block"
+            style={{ background: "#238636", color: "#FFFFFF" }}>
+            Create an issue
+          </Link>
+        </div>
+      ) : issues && issues.length > 0 ? (
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #21262D" }}>
         <table className="w-full text-sm">
           <thead>
@@ -74,13 +100,23 @@ export default async function AdminIssuesPage() {
                     <div className="truncate">{issue.anchor_stat}</div>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/admin/issues/${issue.id}`}
-                      className="text-xs font-semibold px-3 py-1.5 rounded"
-                      style={{ background: "#21262D", color: "#C9D1D9" }}
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/issues/${issue.slug}`}
+                        target="_blank"
+                        className="text-xs font-semibold px-3 py-1.5 rounded"
+                        style={{ background: "#161B22", color: "#6E7681", border: "1px solid #21262D" }}
+                      >
+                        View ↗
+                      </Link>
+                      <Link
+                        href={`/admin/issues/${issue.id}`}
+                        className="text-xs font-semibold px-3 py-1.5 rounded"
+                        style={{ background: "#21262D", color: "#C9D1D9" }}
+                      >
+                        Edit
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               );
@@ -88,6 +124,7 @@ export default async function AdminIssuesPage() {
           </tbody>
         </table>
       </div>
+      ) : null}
     </div>
   );
 }
