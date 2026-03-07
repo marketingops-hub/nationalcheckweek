@@ -35,7 +35,6 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0D1117' }}>
       <div className="w-full max-w-md">
-        {/* Logo / Brand */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5" style={{ background: '#1C7ED6' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +47,6 @@ export default function AdminLoginPage() {
           <p className="text-sm" style={{ color: '#6E7681' }}>Sign in to access the dashboard</p>
         </div>
 
-        {/* Card */}
         <div className="rounded-xl p-8" style={{ background: '#161B22', border: '1px solid #30363D' }}>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -62,14 +60,10 @@ export default function AdminLoginPage() {
                 required
                 autoComplete="email"
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                style={{
-                  background: '#0D1117',
-                  border: '1px solid #30363D',
-                  color: '#E6EDF3',
-                }}
+                style={{ background: '#0D1117', border: '1px solid #30363D', color: '#E6EDF3' }}
                 onFocus={(e) => (e.target.style.borderColor = '#1C7ED6')}
                 onBlur={(e) => (e.target.style.borderColor = '#30363D')}
-                placeholder="admin@admin.com"
+                placeholder="admin@example.com"
               />
             </div>
 
@@ -84,11 +78,7 @@ export default function AdminLoginPage() {
                 required
                 autoComplete="current-password"
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                style={{
-                  background: '#0D1117',
-                  border: '1px solid #30363D',
-                  color: '#E6EDF3',
-                }}
+                style={{ background: '#0D1117', border: '1px solid #30363D', color: '#E6EDF3' }}
                 onFocus={(e) => (e.target.style.borderColor = '#1C7ED6')}
                 onBlur={(e) => (e.target.style.borderColor = '#30363D')}
                 placeholder="••••••••"
