@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-const SEVERITY_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  critical: { bg: "#450A0A30", color: "#FCA5A5", label: "Critical" },
-  high:     { bg: "#451A0330", color: "#FCD34D", label: "High" },
-  notable:  { bg: "#052E1630", color: "#86EFAC", label: "Notable" },
+const SEVERITY: Record<string, { css: string; label: string }> = {
+  critical: { css: "admin-badge-red",    label: "Critical" },
+  high:     { css: "admin-badge-yellow", label: "High" },
+  notable:  { css: "admin-badge-green",  label: "Notable" },
 };
 
 export default async function AdminIssuesPage() {
@@ -23,107 +23,90 @@ export default async function AdminIssuesPage() {
     fetchError = e instanceof Error ? e.message : "Failed to load issues.";
   }
 
+  const count = issues?.length ?? 0;
+
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "#FAFAFA", letterSpacing: "-0.025em" }}>Issues</h1>
-          <p className="text-[15px]" style={{ color: "#71717A" }}>
-            {issues?.length ?? 0} wellbeing issues tracked across Australian schools.
-          </p>
+      {/* Page header */}
+      <div className="admin-page-header">
+        <div className="flex items-center gap-4">
+          <h1>Issues</h1>
+          <span className="admin-badge admin-badge-indigo">{count} records</span>
         </div>
-        <Link
-          href="/admin/issues/new"
-          className="text-sm font-semibold px-4 py-2.5 rounded-xl"
-          style={{ background: "linear-gradient(135deg, #6366F1, #818CF8)", color: "#FFFFFF" }}
-        >
-          + New Issue
+        <Link href="/admin/issues/new" className="admin-btn admin-btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Issue
         </Link>
       </div>
 
       {fetchError && (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ background: "#450A0A30", color: "#FCA5A5", border: "1px solid #7F1D1D50" }}>
-          {fetchError}
-        </div>
+        <div className="admin-alert admin-alert-error">{fetchError}</div>
       )}
 
       {(!issues || issues.length === 0) && !fetchError ? (
-        <div className="rounded-2xl p-10 text-center" style={{ background: "#18181B", border: "1px solid #27272A" }}>
-          <div className="text-3xl mb-3">⚠️</div>
-          <p className="text-sm font-medium mb-1" style={{ color: "#D4D4D8" }}>No issues yet</p>
-          <p className="text-xs mb-4" style={{ color: "#52525B" }}>Create your first wellbeing issue.</p>
-          <Link href="/admin/issues/new" className="text-sm font-semibold px-4 py-2.5 rounded-xl inline-block"
-            style={{ background: "linear-gradient(135deg, #6366F1, #818CF8)", color: "#FFFFFF" }}>
-            Create an issue
-          </Link>
+        <div className="admin-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3>No wellbeing issues yet</h3>
+          <p>Create your first issue to start building the wellbeing database.</p>
+          <Link href="/admin/issues/new" className="admin-btn admin-btn-primary">Create an issue</Link>
         </div>
       ) : issues && issues.length > 0 ? (
-      <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #27272A" }}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ background: "#18181B", borderBottom: "1px solid #27272A" }}>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A", width: "48px" }}>#</th>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Issue</th>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Severity</th>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider hidden md:table-cell" style={{ color: "#71717A" }}>Anchor Stat</th>
-              <th className="text-right px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(issues ?? []).map((issue, idx) => {
-              const sev = SEVERITY_STYLE[issue.severity] ?? SEVERITY_STYLE.notable;
-              return (
-                <tr
-                  key={issue.id}
-                  style={{
-                    background: idx % 2 === 0 ? "#09090B" : "#18181B",
-                    borderBottom: "1px solid #27272A",
-                  }}
-                >
-                  <td className="px-5 py-3.5 font-mono text-xs" style={{ color: "#52525B" }}>{issue.rank}</td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <span>{issue.icon}</span>
-                      <span className="font-medium" style={{ color: "#FAFAFA" }}>{issue.title}</span>
-                    </div>
-                    <div className="text-xs mt-0.5" style={{ color: "#52525B" }}>/issues/{issue.slug}</div>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                      style={{ background: sev.bg, color: sev.color }}
-                    >
-                      {sev.label}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 hidden md:table-cell text-xs" style={{ color: "#A1A1AA", maxWidth: "260px" }}>
-                    <div className="truncate">{issue.anchor_stat}</div>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/issues/${issue.slug}`}
-                        target="_blank"
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{ background: "#18181B", color: "#71717A", border: "1px solid #27272A" }}
-                      >
-                        View ↗
-                      </Link>
-                      <Link
-                        href={`/admin/issues/${issue.id}`}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{ background: "#27272A", color: "#D4D4D8" }}
-                      >
-                        Edit
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--admin-border)" }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th style={{ width: "48px" }}>#</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th className="hidden md:table-cell">Anchor Stat</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {issues.map((issue) => {
+                const sev = SEVERITY[issue.severity] ?? SEVERITY.notable;
+                return (
+                  <tr key={issue.id}>
+                    <td>
+                      <span className="font-mono text-xs" style={{ color: "var(--admin-text-faint)" }}>{issue.rank}</span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{issue.icon}</span>
+                        <div>
+                          <div className="text-[15px] font-semibold" style={{ color: "var(--admin-text-primary)" }}>{issue.title}</div>
+                          <div className="text-xs mt-1" style={{ color: "var(--admin-text-faint)" }}>/issues/{issue.slug}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`admin-badge ${sev.css}`}>{sev.label}</span>
+                    </td>
+                    <td className="hidden md:table-cell">
+                      <div className="text-sm max-w-[260px] truncate" style={{ color: "var(--admin-text-muted)" }}>{issue.anchor_stat}</div>
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/issues/${issue.slug}`} target="_blank" className="admin-icon-btn" title="View on site">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                          </svg>
+                        </Link>
+                        <Link href={`/admin/issues/${issue.id}`} className="admin-icon-btn" title="Edit">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </div>
   );

@@ -75,20 +75,20 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
       {/* Nav sections */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {SECTIONS.map((section, sIdx) => (
-          <div key={sIdx} className={sIdx > 0 ? 'mt-6' : ''}>
+          <div key={sIdx} className={sIdx > 0 ? 'mt-7' : ''}>
             {section.title && (
-              <div className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#52525B' }}>
+              <div className="px-3 mb-3 text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#52525B' }}>
                 {section.title}
               </div>
             )}
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {section.items.map((item) => {
                 const isActive = item.href === '/admin'
                   ? pathname === '/admin'
                   : pathname.startsWith(item.href);
                 return (
                   <Link key={item.href} href={item.href}
-                    className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium"
+                    className="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium"
                     style={{
                       background: isActive ? '#6366F115' : 'transparent',
                       color: isActive ? '#A5B4FC' : '#A1A1AA',

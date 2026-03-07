@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
+const TYPE_BADGE: Record<string, { css: string; label: string }> = {
+  city:   { css: "admin-badge-yellow", label: "City" },
+  lga:    { css: "admin-badge-indigo", label: "LGA" },
+  region: { css: "admin-badge-green",  label: "Region" },
+};
+
 export default async function AdminContentPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let areas: any[] | null = null;
@@ -18,114 +24,86 @@ export default async function AdminContentPage() {
     fetchError = e instanceof Error ? e.message : "Failed to load areas.";
   }
 
+  const count = areas?.length ?? 0;
+
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "#FAFAFA", letterSpacing: "-0.025em" }}>Areas</h1>
-          <p className="text-[15px]" style={{ color: "#71717A" }}>
-            {areas?.length ?? 0} cities, regions and LGAs with wellbeing reports.
-          </p>
+      {/* Page header */}
+      <div className="admin-page-header">
+        <div className="flex items-center gap-4">
+          <h1>Areas</h1>
+          <span className="admin-badge admin-badge-indigo">{count} records</span>
         </div>
-        <Link
-          href="/admin/content/new"
-          className="text-sm font-semibold px-4 py-2.5 rounded-xl"
-          style={{ background: "linear-gradient(135deg, #6366F1, #818CF8)", color: "#FFFFFF" }}
-        >
-          + New Area
+        <Link href="/admin/content/new" className="admin-btn admin-btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Area
         </Link>
       </div>
 
       {fetchError && (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ background: "#450A0A30", color: "#FCA5A5", border: "1px solid #7F1D1D50" }}>
-          {fetchError}
-        </div>
+        <div className="admin-alert admin-alert-error">{fetchError}</div>
       )}
 
       {(!areas || areas.length === 0) && !fetchError ? (
-        <div className="rounded-2xl p-10 text-center" style={{ background: "#18181B", border: "1px solid #27272A" }}>
-          <div className="text-3xl mb-3">🗺️</div>
-          <p className="text-sm font-medium mb-1" style={{ color: "#D4D4D8" }}>No areas yet</p>
-          <p className="text-xs mb-4" style={{ color: "#52525B" }}>Create your first area, city or LGA.</p>
-          <Link href="/admin/content/new" className="text-sm font-semibold px-4 py-2.5 rounded-xl inline-block"
-            style={{ background: "linear-gradient(135deg, #6366F1, #818CF8)", color: "#FFFFFF" }}>
-            Create an area
-          </Link>
+        <div className="admin-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <h3>No areas yet</h3>
+          <p>Add your first city, region, or LGA to start building area reports.</p>
+          <Link href="/admin/content/new" className="admin-btn admin-btn-primary">Create an area</Link>
         </div>
       ) : areas && areas.length > 0 ? (
-      <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #27272A" }}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ background: "#18181B", borderBottom: "1px solid #27272A" }}>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Area</th>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider hidden md:table-cell" style={{ color: "#71717A" }}>State</th>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Type</th>
-              <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Issues</th>
-              <th className="text-right px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: "#71717A" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(areas ?? []).map((area, idx) => {
-              const issueCount = Array.isArray(area.issues) ? area.issues.length : 0;
-              const typeLabel = area.type === "city" ? "City" : area.type === "lga" ? "LGA" : "Region";
-              const typeColor = area.type === "city" ? "#FCD34D" : area.type === "lga" ? "#C4B5FD" : "#93C5FD";
-              const typeBg = area.type === "city" ? "#451A0320" : area.type === "lga" ? "#2E1065" : "#1E3A5F20";
-              return (
-                <tr
-                  key={area.id}
-                  style={{
-                    background: idx % 2 === 0 ? "#09090B" : "#18181B",
-                    borderBottom: "1px solid #27272A",
-                  }}
-                >
-                  <td className="px-5 py-3.5">
-                    <span className="font-medium" style={{ color: "#FAFAFA" }}>{area.name}</span>
-                    <div className="text-xs mt-0.5" style={{ color: "#52525B" }}>/areas/{area.slug}</div>
-                  </td>
-                  <td className="px-5 py-3.5 hidden md:table-cell text-xs" style={{ color: "#A1A1AA" }}>
-                    {area.state}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                      style={{ background: typeBg, color: typeColor }}
-                    >
-                      {typeLabel}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                      style={{ background: "#6366F115", color: "#A5B4FC" }}
-                    >
-                      {issueCount}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/areas/${area.slug}`}
-                        target="_blank"
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{ background: "#18181B", color: "#71717A", border: "1px solid #27272A" }}
-                      >
-                        View ↗
-                      </Link>
-                      <Link
-                        href={`/admin/content/${area.id}`}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{ background: "#27272A", color: "#D4D4D8" }}
-                      >
-                        Edit
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--admin-border)" }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th className="hidden md:table-cell">State</th>
+                <th>Type</th>
+                <th>Issues</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {areas.map((area) => {
+                const issueCount = Array.isArray(area.issues) ? area.issues.length : 0;
+                const typeBadge = TYPE_BADGE[area.type] ?? TYPE_BADGE.region;
+                return (
+                  <tr key={area.id}>
+                    <td>
+                      <div className="text-[15px] font-semibold" style={{ color: "var(--admin-text-primary)" }}>{area.name}</div>
+                      <div className="text-xs mt-1" style={{ color: "var(--admin-text-faint)" }}>/areas/{area.slug}</div>
+                    </td>
+                    <td className="hidden md:table-cell">
+                      <span className="text-sm" style={{ color: "var(--admin-text-muted)" }}>{area.state}</span>
+                    </td>
+                    <td>
+                      <span className={`admin-badge ${typeBadge.css}`}>{typeBadge.label}</span>
+                    </td>
+                    <td>
+                      <span className="admin-badge admin-badge-indigo">{issueCount}</span>
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/areas/${area.slug}`} target="_blank" className="admin-icon-btn" title="View on site">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                          </svg>
+                        </Link>
+                        <Link href={`/admin/content/${area.id}`} className="admin-icon-btn" title="Edit">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </div>
   );

@@ -459,20 +459,61 @@ footer { background: var(--navy); padding: 64px 80px 40px; border-top: 3px solid
    ADMIN SHELL — Modern 2026 Design System
    Zinc palette · Indigo accents · 15px base
 ═══════════════════════════════════════ */
+
+/* ── Design Tokens ── */
 .admin-shell {
+  --admin-bg-deep: #09090B;
+  --admin-bg-surface: #18181B;
+  --admin-bg-elevated: #27272A;
+  --admin-border: #27272A;
+  --admin-border-strong: #3F3F46;
+  --admin-text-primary: #FAFAFA;
+  --admin-text-secondary: #D4D4D8;
+  --admin-text-muted: #A1A1AA;
+  --admin-text-subtle: #71717A;
+  --admin-text-faint: #52525B;
+  --admin-accent: #6366F1;
+  --admin-accent-light: #818CF8;
+  --admin-accent-wash: #A5B4FC;
+  --admin-accent-bg: rgba(99, 102, 241, 0.08);
+  --admin-accent-gradient: linear-gradient(135deg, #6366F1, #818CF8);
+  --admin-success: #22C55E;
+  --admin-success-light: #86EFAC;
+  --admin-success-bg: rgba(34, 197, 94, 0.1);
+  --admin-danger: #EF4444;
+  --admin-danger-light: #FCA5A5;
+  --admin-danger-bg: rgba(239, 68, 68, 0.1);
+  --admin-warning-light: #FCD34D;
+  --admin-warning-bg: rgba(252, 211, 77, 0.1);
+  --admin-radius-sm: 8px;
+  --admin-radius-md: 12px;
+  --admin-radius-lg: 16px;
+  --admin-transition: 150ms ease-out;
+
   font-family: var(--font-inter, 'Inter'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #D4D4D8;
-  background: #09090B;
+  color: var(--admin-text-secondary);
+  background: var(--admin-bg-deep);
   line-height: 1.6;
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-.admin-shell * { transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease; }
-.admin-shell h1 { font-family: inherit; font-size: 1.5rem; line-height: 1.3; font-weight: 700; color: #FAFAFA; margin: 0; letter-spacing: -0.025em; }
-.admin-shell h2 { font-family: inherit; font-size: 1rem; line-height: 1.4; font-weight: 600; color: #FAFAFA; margin: 0; }
-.admin-shell h3 { font-family: inherit; font-size: 0.9375rem; line-height: 1.4; font-weight: 600; color: #D4D4D8; margin: 0; }
-.admin-shell h4 { font-family: inherit; font-size: 0.875rem; line-height: 1.4; font-weight: 600; color: #D4D4D8; margin: 0; }
+
+/* ── Global Transitions ── */
+.admin-shell * {
+  transition: background-color var(--admin-transition),
+              border-color var(--admin-transition),
+              color var(--admin-transition),
+              box-shadow var(--admin-transition),
+              transform var(--admin-transition),
+              opacity var(--admin-transition);
+}
+
+/* ── Typography ── */
+.admin-shell h1 { font-family: inherit; font-size: 1.5rem; line-height: 1.3; font-weight: 700; color: var(--admin-text-primary); margin: 0; letter-spacing: -0.025em; }
+.admin-shell h2 { font-family: inherit; font-size: 1rem; line-height: 1.4; font-weight: 600; color: var(--admin-text-primary); margin: 0; }
+.admin-shell h3 { font-family: inherit; font-size: 0.9375rem; line-height: 1.4; font-weight: 600; color: var(--admin-text-secondary); margin: 0; }
+.admin-shell h4 { font-family: inherit; font-size: 0.875rem; line-height: 1.4; font-weight: 600; color: var(--admin-text-secondary); margin: 0; }
 .admin-shell p  { font-size: inherit; line-height: inherit; margin: 0; }
 .admin-shell a  { color: inherit; text-decoration: none; }
 .admin-shell button { font-family: inherit; cursor: pointer; }
@@ -483,11 +524,185 @@ footer { background: var(--navy); padding: 64px 80px 40px; border-top: 3px solid
   font-size: 0.9375rem;
 }
 .admin-shell input::placeholder,
-.admin-shell textarea::placeholder { color: #52525B; }
+.admin-shell textarea::placeholder { color: var(--admin-text-faint); }
+
+/* ── Focus Accessibility ── */
+.admin-shell a:focus-visible,
+.admin-shell button:focus-visible,
+.admin-shell input:focus-visible,
+.admin-shell textarea:focus-visible,
+.admin-shell select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--admin-bg-deep), 0 0 0 4px var(--admin-accent);
+}
+
+/* ── Button Micro-interactions ── */
+.admin-shell button:active:not(:disabled),
+.admin-shell .admin-btn:active {
+  transform: scale(0.97);
+}
+.admin-shell .admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  border-radius: var(--admin-radius-md);
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+.admin-shell .admin-btn-primary {
+  background: var(--admin-accent-gradient);
+  color: #fff;
+}
+.admin-shell .admin-btn-primary:hover { box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
+.admin-shell .admin-btn-secondary {
+  background: var(--admin-bg-elevated);
+  color: var(--admin-text-secondary);
+  border: 1px solid var(--admin-border);
+}
+.admin-shell .admin-btn-secondary:hover { background: var(--admin-border-strong); color: var(--admin-text-primary); }
+.admin-shell .admin-btn-ghost {
+  background: transparent;
+  color: var(--admin-text-subtle);
+}
+.admin-shell .admin-btn-ghost:hover { background: var(--admin-bg-elevated); color: var(--admin-text-secondary); }
+.admin-shell .admin-btn-danger {
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger-light);
+  border: 1px solid rgba(127, 29, 29, 0.3);
+}
+.admin-shell .admin-btn-danger:hover { background: rgba(239, 68, 68, 0.15); }
+
+/* ── Icon Buttons (square, for table actions) ── */
+.admin-shell .admin-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--admin-radius-sm);
+  background: transparent;
+  color: var(--admin-text-faint);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+.admin-shell .admin-icon-btn:hover {
+  background: var(--admin-bg-elevated);
+  color: var(--admin-text-secondary);
+  border-color: var(--admin-border);
+  transform: translateY(-1px);
+}
+.admin-shell .admin-icon-btn:active { transform: scale(0.93); }
+
+/* ── Table ── */
+.admin-shell .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.admin-shell .admin-table thead th {
+  text-align: left;
+  padding: 12px 24px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--admin-text-subtle);
+  background: var(--admin-bg-surface);
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-shell .admin-table thead th:last-child { text-align: right; }
+.admin-shell .admin-table tbody tr {
+  background: var(--admin-bg-deep);
+  border-left: 3px solid transparent;
+}
+.admin-shell .admin-table tbody tr:hover {
+  background: var(--admin-bg-surface);
+  border-left-color: var(--admin-accent);
+  transform: translateY(-1px);
+}
+.admin-shell .admin-table tbody tr:active { transform: translateY(0); }
+.admin-shell .admin-table tbody td {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--admin-border);
+  vertical-align: middle;
+}
+.admin-shell .admin-table tbody td:last-child { text-align: right; }
+.admin-shell .admin-table tbody tr:last-child td { border-bottom: none; }
+/* reveal action buttons more on row hover */
+.admin-shell .admin-table tbody tr:hover .admin-icon-btn {
+  color: var(--admin-text-muted);
+  border-color: var(--admin-border);
+}
+
+/* ── Badges / Pills ── */
+.admin-shell .admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+.admin-shell .admin-badge-indigo { background: var(--admin-accent-bg); color: var(--admin-accent-wash); }
+.admin-shell .admin-badge-green  { background: var(--admin-success-bg); color: var(--admin-success-light); }
+.admin-shell .admin-badge-red    { background: var(--admin-danger-bg); color: var(--admin-danger-light); }
+.admin-shell .admin-badge-yellow { background: var(--admin-warning-bg); color: var(--admin-warning-light); }
+
+/* ── Page Header ── */
+.admin-shell .admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-shell .admin-page-header h1 { display: flex; align-items: center; gap: 12px; }
+
+/* ── Empty State ── */
+.admin-shell .admin-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  background: var(--admin-bg-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  text-align: center;
+}
+.admin-shell .admin-empty svg { color: var(--admin-text-faint); margin-bottom: 16px; }
+.admin-shell .admin-empty h3 { color: var(--admin-text-secondary); margin-bottom: 4px; }
+.admin-shell .admin-empty p { color: var(--admin-text-faint); font-size: 0.8125rem; margin-bottom: 20px; }
+
+/* ── Alert Banners ── */
+.admin-shell .admin-alert {
+  padding: 12px 16px;
+  border-radius: var(--admin-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.admin-shell .admin-alert-error { background: var(--admin-danger-bg); color: var(--admin-danger-light); border: 1px solid rgba(127, 29, 29, 0.3); }
+.admin-shell .admin-alert-success { background: var(--admin-success-bg); color: var(--admin-success-light); border: 1px solid rgba(22, 101, 52, 0.3); }
+
+/* ── Cards ── */
+.admin-shell .admin-card {
+  background: var(--admin-bg-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  padding: 28px;
+}
+
+/* ── Scrollbar ── */
 .admin-shell ::-webkit-scrollbar { width: 6px; height: 6px; }
 .admin-shell ::-webkit-scrollbar-track { background: transparent; }
-.admin-shell ::-webkit-scrollbar-thumb { background: #3F3F46; border-radius: 3px; }
-.admin-shell ::-webkit-scrollbar-thumb:hover { background: #52525B; }
+.admin-shell ::-webkit-scrollbar-thumb { background: var(--admin-border-strong); border-radius: 3px; }
+.admin-shell ::-webkit-scrollbar-thumb:hover { background: var(--admin-text-faint); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1200px) {
