@@ -99,8 +99,8 @@ export default function UsersClient({ initialUsers }: { initialUsers: User[] }) 
   const Modal = ({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(15,23,42,0.5)", backdropFilter: "blur(2px)" }}>
       <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
-        <h2 className="text-base font-bold mb-1" style={{ color: "#0f172a" }}>{title}</h2>
-        {sub && <p className="text-xs mb-5" style={{ color: "#94a3b8" }}>{sub}</p>}
+        <h2 className="text-base font-bold mb-1" style={{ color: "var(--admin-text-primary)" }}>{title}</h2>
+        {sub && <p className="text-xs mb-5" style={{ color: "var(--admin-text-subtle)" }}>{sub}</p>}
         {children}
       </div>
     </div>

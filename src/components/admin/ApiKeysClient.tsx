@@ -111,8 +111,8 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(15,23,42,0.5)", backdropFilter: "blur(2px)" }}>
           <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
-            <h2 className="text-base font-bold mb-1" style={{ color: "#0f172a" }}>Add API Key</h2>
-            <p className="text-xs mb-5" style={{ color: "#94a3b8" }}>Keys are stored encrypted and only accessible to admin users.</p>
+            <h2 className="text-base font-bold mb-1" style={{ color: "var(--admin-text-primary)" }}>Add API Key</h2>
+            <p className="text-xs mb-5" style={{ color: "var(--admin-text-subtle)" }}>Keys are stored encrypted and only accessible to admin users.</p>
             <div className="mb-4">
               <label className={LABEL} style={LABEL_STYLE}>Label</label>
               <input className={INPUT} style={INPUT_STYLE} value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. OpenAI Production Key" />
@@ -220,7 +220,7 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
       {/* Info box */}
       <div className="mt-6 rounded-xl p-4" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(89,37,244,0.12)" }}>
         <p className="text-xs" style={{ color: "var(--admin-text-muted)" }}>
-          <strong style={{ color: "var(--admin-accent)" }}>Security note:</strong> API keys are stored encrypted at rest in Supabase and are only accessible to authenticated admin users. Keys marked <span style={{ color: "#15803d", fontWeight: 600 }}>Active</span> will be used by the AI content generation tools.
+          <strong style={{ color: "var(--admin-accent)" }}>Security note:</strong> API keys are stored encrypted at rest in Supabase and are only accessible to authenticated admin users. Keys marked <span style={{ color: "var(--admin-success-light)", fontWeight: 600 }}>Active</span> will be used by the AI content generation tools.
         </p>
       </div>
     </div>

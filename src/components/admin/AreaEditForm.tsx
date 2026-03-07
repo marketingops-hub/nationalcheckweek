@@ -26,9 +26,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const SEVERITY_LEFT: Record<string, string> = {
-  critical: "#dc2626",
-  high:     "#d97706",
-  notable:  "#16a34a",
+  critical: "var(--admin-danger)",
+  high:     "var(--admin-warning-light)",
+  notable:  "var(--admin-success)",
 };
 
 function KeyStatCard({ stat, idx, onChange, onRemove }: {
