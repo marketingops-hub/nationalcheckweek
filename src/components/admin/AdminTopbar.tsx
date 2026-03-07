@@ -60,11 +60,14 @@ export default function AdminTopbar({ email }: { email: string }) {
           </nav>
         ) : (
           <div className="relative group">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#5925f4] transition-colors text-[20px]">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-[#5925f4] transition-colors text-[20px]" style={{ color: 'var(--admin-text-faint)' }} aria-hidden="true">search</span>
+            <label htmlFor="admin-topbar-search" className="sr-only">Search</label>
             <input
+              id="admin-topbar-search"
               className="w-full pl-10 pr-4 py-2 rounded-lg border-none text-sm outline-none focus:ring-2 focus:ring-[#5925f4]/20" style={{ background: 'var(--admin-bg-elevated)', color: 'var(--admin-text-primary)' }}
               placeholder="Search resources, users or reports..."
-              type="text"
+              type="search"
+              aria-label="Search admin"
             />
           </div>
         )}

@@ -93,7 +93,7 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
             {section.title && open && (
               <div style={{
                 padding: '0 10px 6px',
-                fontSize: '0.625rem',
+                fontSize: '0.6875rem',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',

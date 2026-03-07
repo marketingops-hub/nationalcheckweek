@@ -89,35 +89,49 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
     google:    { bg: "#fef9c3", color: "#854d0e" },
     other:     { bg: "#f1f5f9", color: "#475569" },
   };
-  const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
+  const LABEL_CLS = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
   const LABEL_STYLE = { color: "var(--admin-text-subtle)" };
+  const INPUT_ERR = { background: "#fff", border: "1px solid var(--admin-danger)", color: "var(--admin-text-primary)", boxShadow: "0 0 0 3px rgba(220,38,38,0.12)" };
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  function validateCreate() {
+    const errs: Record<string, string> = {};
+    if (!label.trim()) errs.label = "Label is required.";
+    if (!keyValue.trim()) errs.keyValue = "API key value is required.";
+    else if (keyValue.trim().length < 8) errs.keyValue = "Key seems too short — check it's correct.";
+    return errs;
+  }
 
   return (
     <div className="space-y-8">
       {/* Feedback */}
-      {!showCreate && error   && <div className="admin-alert admin-alert-error">{error}</div>}
-      {!showCreate && success && <div className="admin-alert admin-alert-success">{success}</div>}
+      {!showCreate && error   && <div className="admin-alert admin-alert-error" role="alert">{error}</div>}
+      {!showCreate && success && <div className="admin-alert admin-alert-success" role="status">{success}</div>}
 
       {/* Create inline panel */}
       {showCreate && (
-        <div className="admin-form-panel">
+        <div className="admin-form-panel" role="region" aria-label="Add API key">
           <div className="flex items-center justify-between mb-6 pb-4" style={{ borderBottom: '1px solid var(--admin-border)' }}>
             <div>
-              <h2 className="text-base font-bold" style={{ color: 'var(--admin-text-primary)', margin: 0, border: 'none', padding: 0 }}>Add API Key</h2>
+              <h2 style={{ color: 'var(--admin-text-primary)', margin: 0, border: 'none', padding: 0 }}>Add API Key</h2>
               <p className="text-sm mt-1" style={{ color: 'var(--admin-text-subtle)' }}>Keys are stored encrypted and only accessible to admin users.</p>
             </div>
-            <button onClick={() => { setShowCreate(false); clearMessages(); }} className="admin-icon-btn" aria-label="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button onClick={() => { setShowCreate(false); clearMessages(); setFieldErrors({}); }} className="admin-icon-btn" aria-label="Close add API key form">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
-              <label className={LABEL} style={LABEL_STYLE}>Label</label>
-              <input className={INPUT} style={INPUT_STYLE} value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. OpenAI Production" />
+              <label htmlFor="apikey-label" className={LABEL_CLS} style={LABEL_STYLE}>Label</label>
+              <input id="apikey-label" className={INPUT} style={fieldErrors.label ? INPUT_ERR : INPUT_STYLE}
+                value={label} onChange={e => { setLabel(e.target.value); setFieldErrors(f => ({ ...f, label: "" })); }}
+                placeholder="e.g. OpenAI Production" autoComplete="off" />
+              {fieldErrors.label && <p className="admin-field-error" role="alert"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>{fieldErrors.label}</p>}
             </div>
             <div>
-              <label className={LABEL} style={LABEL_STYLE}>Provider</label>
-              <select className={INPUT} style={INPUT_STYLE} value={provider} onChange={e => setProvider(e.target.value)}>
+              <label htmlFor="apikey-provider" className={LABEL_CLS} style={LABEL_STYLE}>Provider</label>
+              <select id="apikey-provider" className={INPUT} style={INPUT_STYLE} value={provider} onChange={e => setProvider(e.target.value)}>
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
                 <option value="google">Google</option>
@@ -125,16 +139,19 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
               </select>
             </div>
             <div>
-              <label className={LABEL} style={LABEL_STYLE}>API Key</label>
-              <input type="password" className={INPUT} style={INPUT_STYLE} value={keyValue} onChange={e => setKeyValue(e.target.value)} placeholder="sk-..." />
+              <label htmlFor="apikey-value" className={LABEL_CLS} style={LABEL_STYLE}>API Key</label>
+              <input id="apikey-value" type="password" className={INPUT} style={fieldErrors.keyValue ? INPUT_ERR : INPUT_STYLE}
+                value={keyValue} onChange={e => { setKeyValue(e.target.value); setFieldErrors(f => ({ ...f, keyValue: "" })); }}
+                placeholder="sk-..." autoComplete="off" />
+              {fieldErrors.keyValue && <p className="admin-field-error" role="alert"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>{fieldErrors.keyValue}</p>}
             </div>
           </div>
-          {error && <div className="admin-alert admin-alert-error mb-6">{error}</div>}
+          {error && <div className="admin-alert admin-alert-error mb-6" role="alert">{error}</div>}
           <div className="flex gap-3">
-            <button onClick={handleCreate} disabled={busy} className="admin-btn admin-btn-primary" style={{ opacity: busy ? 0.6 : 1 }}>
+            <button onClick={() => { const e = validateCreate(); if (Object.keys(e).length) { setFieldErrors(e); return; } handleCreate(); }} disabled={busy} className="admin-btn admin-btn-primary" style={{ opacity: busy ? 0.6 : 1 }}>
               {busy ? "Saving…" : "Add Key"}
             </button>
-            <button onClick={() => { setShowCreate(false); clearMessages(); }} className="admin-btn admin-btn-secondary">
+            <button onClick={() => { setShowCreate(false); clearMessages(); setFieldErrors({}); }} className="admin-btn admin-btn-secondary">
               Cancel
             </button>
           </div>
@@ -145,8 +162,8 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
       {!showCreate && (
         <div className="flex items-center justify-between">
           <span className="text-sm" style={{ color: "var(--admin-text-subtle)" }}>{keys.length} key{keys.length !== 1 ? "s" : ""} configured</span>
-          <button onClick={() => { setShowCreate(true); clearMessages(); }} className="admin-btn admin-btn-primary">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button onClick={() => { setShowCreate(true); clearMessages(); setFieldErrors({}); }} className="admin-btn admin-btn-primary">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add API Key
           </button>
         </div>
@@ -166,12 +183,12 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Label</th>
-                <th>Provider</th>
-                <th className="hidden md:table-cell">Key</th>
-                <th className="hidden md:table-cell">Added</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th scope="col">Label</th>
+                <th scope="col">Provider</th>
+                <th scope="col" className="hidden md:table-cell">Key</th>
+                <th scope="col" className="hidden md:table-cell">Added</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -208,15 +225,28 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
                       </button>
                     </td>
                     <td>
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleDelete(key)} disabled={busy}
-                          className="admin-icon-btn" title="Delete key"
-                          style={{ color: "var(--admin-danger)" }}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
-                          </svg>
-                        </button>
-                      </div>
+                      {confirmDelete === key.id ? (
+                        <div className="admin-danger-confirm">
+                          <span>Delete <strong>{key.label}</strong>?</span>
+                          <button onClick={() => handleDelete(key)} disabled={busy}
+                            className="admin-btn admin-btn-danger" style={{ padding: "4px 10px", fontSize: "0.75rem", opacity: busy ? 0.6 : 1 }}>
+                            {busy ? "Deleting…" : "Yes, delete"}
+                          </button>
+                          <button onClick={() => setConfirmDelete(null)} className="admin-btn admin-btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => { setConfirmDelete(key.id); clearMessages(); }} disabled={busy}
+                            className="admin-icon-btn" aria-label={`Delete API key ${key.label}`}
+                            style={{ color: "var(--admin-danger)" }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
