@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -10,8 +11,15 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Middleware handles auth redirect — by the time we're here, user is authenticated.
-  // Just get the user for display purposes; fall back gracefully if unavailable.
+  // Read x-pathname set by middleware to detect login page
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') ?? '';
+
+  // Login page renders standalone — no sidebar, no header
+  if (pathname === '/admin/login') {
+    return <div className="admin-shell">{children}</div>;
+  }
+
   let email = '';
   try {
     const supabase = await createClient();
