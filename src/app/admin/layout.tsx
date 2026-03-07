@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import './admin.css';
 
 export const metadata = {
   title: 'Admin — Schools Wellbeing Australia',
