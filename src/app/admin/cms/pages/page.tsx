@@ -79,11 +79,19 @@ export default async function CmsPagesPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Link href={`/pages/${page.slug}`} target="_blank"
-                        className="text-xs font-semibold px-3 py-1.5 rounded"
-                        style={{ background: "#161B22", color: "#6E7681", border: "1px solid #21262D" }}>
-                        View ↗
-                      </Link>
+                      {page.status === "published" ? (
+                        <Link href={`/pages/${page.slug}`} target="_blank"
+                          className="text-xs font-semibold px-3 py-1.5 rounded"
+                          style={{ background: "#161B22", color: "#6E7681", border: "1px solid #21262D" }}>
+                          View ↗
+                        </Link>
+                      ) : (
+                        <span className="text-xs px-3 py-1.5 rounded"
+                          style={{ background: "#161B22", color: "#30363D", border: "1px solid #21262D", cursor: "default" }}
+                          title="Publish to preview">
+                          View ↗
+                        </span>
+                      )}
                       <Link href={`/admin/cms/pages/${page.id}`}
                         className="text-xs font-semibold px-3 py-1.5 rounded"
                         style={{ background: "#21262D", color: "#C9D1D9" }}>

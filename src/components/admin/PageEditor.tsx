@@ -24,6 +24,7 @@ interface Page {
   show_in_menu: boolean;
   meta_title: string;
   meta_desc: string;
+  og_image: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -206,7 +207,7 @@ export default function PageEditor({ page }: { page: Page | null }) {
   const [showInMenu, setShowInMenu] = useState(page?.show_in_menu ?? false);
   const [metaTitle, setMetaTitle] = useState(page?.meta_title ?? "");
   const [metaDesc, setMetaDesc] = useState(page?.meta_desc ?? "");
-  const [ogImage, setOgImage] = useState((page as Record<string, string> | null)?.og_image ?? "");
+  const [ogImage, setOgImage] = useState(page?.og_image ?? "");
   const [showBlockPicker, setShowBlockPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -225,6 +226,7 @@ export default function PageEditor({ page }: { page: Page | null }) {
     const def = BLOCK_TYPES.find(b => b.type === type)!;
     setBlocks(b => [...b, { id: uid(), type, data: { ...def.defaults } }]);
     setShowBlockPicker(false);
+    setIsDirty(true);
   }
 
   function updateBlock(id: string, updated: Block) {
@@ -243,6 +245,7 @@ export default function PageEditor({ page }: { page: Page | null }) {
     if (swap < 0 || swap >= next.length) return;
     [next[idx], next[swap]] = [next[swap], next[idx]];
     setBlocks(next);
+    setIsDirty(true);
   }
 
   async function handleSave(publishNow?: boolean) {
