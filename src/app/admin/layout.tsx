@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -11,6 +12,13 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Middleware sets x-pathname — skip auth wrapper for login page
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') ?? '';
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

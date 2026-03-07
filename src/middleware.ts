@@ -5,6 +5,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Build new request headers that include x-pathname (readable by server layouts)
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
   // ── 1. DB-driven redirects (public routes only, no auth needed) ──
   if (
     !pathname.startsWith('/admin') &&
@@ -33,26 +37,24 @@ export async function middleware(request: NextRequest) {
     } catch {
       // redirects table missing or DB unavailable — continue normally
     }
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // ── 2. Auth protection — only runs for /admin routes ─────────────
-  if (!pathname.startsWith('/admin')) {
-    return NextResponse.next();
-  }
 
-  // Always allow the login page through — prevents redirect loops
+  // Always allow the login page through — no auth check, no redirect loop
   if (pathname === '/admin/login') {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  // If Supabase env vars are missing, let the layout handle auth
+  // If Supabase env vars are missing, pass through
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } });
 
   try {
     const supabase = createServerClient(
@@ -67,7 +69,7 @@ export async function middleware(request: NextRequest) {
             cookiesToSet.forEach(({ name, value }) =>
               request.cookies.set(name, value)
             );
-            supabaseResponse = NextResponse.next({ request });
+            supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } });
             cookiesToSet.forEach(({ name, value, options }) =>
               supabaseResponse.cookies.set(name, value, options)
             );
@@ -84,8 +86,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
   } catch {
-    // Auth check failed — let the layout/page handle it
-    return NextResponse.next();
+    // Auth check failed — pass through, layout will handle it
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   return supabaseResponse;
