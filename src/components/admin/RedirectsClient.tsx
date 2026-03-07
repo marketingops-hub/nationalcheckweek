@@ -140,7 +140,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
         {success && <div className="admin-alert admin-alert-success mb-3">{success}</div>}
 
         {/* Table */}
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--admin-border)" }}>
+        <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>

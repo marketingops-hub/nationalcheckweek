@@ -48,7 +48,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="admin-shell flex h-screen overflow-hidden text-slate-900 font-sans">
+    <div className="admin-shell flex h-screen overflow-hidden">
       {fonts}
       <AdminSidebar userEmail={email} />
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">

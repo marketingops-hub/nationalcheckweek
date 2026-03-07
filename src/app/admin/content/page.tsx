@@ -54,7 +54,7 @@ export default async function AdminContentPage() {
           <Link href="/admin/content/new" className="admin-btn admin-btn-primary">Create an area</Link>
         </div>
       ) : areas && areas.length > 0 ? (
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--admin-border)" }}>
+        <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>

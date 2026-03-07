@@ -53,7 +53,7 @@ export default async function AdminIssuesPage() {
           <Link href="/admin/issues/new" className="admin-btn admin-btn-primary">Create an issue</Link>
         </div>
       ) : issues && issues.length > 0 ? (
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--admin-border)" }}>
+        <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>

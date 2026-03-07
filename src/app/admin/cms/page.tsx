@@ -130,7 +130,7 @@ export default async function CmsIndexPage() {
       </div>
 
       {/* All content table */}
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
+      <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
             <tr>

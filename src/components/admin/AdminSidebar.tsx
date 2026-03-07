@@ -15,34 +15,35 @@ const SECTIONS = [
   {
     title: 'Content',
     items: [
-      { label: 'Issues', href: '/admin/issues', ms: 'warning' },
-      { label: 'States', href: '/admin/states', ms: 'analytics' },
-      { label: 'Areas', href: '/admin/content', ms: 'location_on' },
+      { label: 'Issues',     href: '/admin/issues',        ms: 'warning' },
+      { label: 'States',     href: '/admin/states',        ms: 'analytics' },
+      { label: 'Areas',      href: '/admin/content',       ms: 'location_on' },
     ],
   },
   {
     title: 'CMS',
     items: [
-      { label: 'Overview', href: '/admin/cms', ms: 'public' },
-      { label: 'Pages', href: '/admin/cms/pages', ms: 'article' },
-      { label: 'Navigation', href: '/admin/cms/menu', ms: 'menu' },
-      { label: 'Redirects', href: '/admin/cms/redirects', ms: 'alt_route' },
+      { label: 'Overview',   href: '/admin/cms',           ms: 'public' },
+      { label: 'Pages',      href: '/admin/cms/pages',     ms: 'article' },
+      { label: 'Navigation', href: '/admin/cms/menu',      ms: 'menu' },
+      { label: 'Redirects',  href: '/admin/cms/redirects', ms: 'alt_route' },
     ],
   },
   {
     title: 'System',
     items: [
-      { label: 'Vault', href: '/admin/vault/sources', ms: 'lock' },
-      { label: 'Users', href: '/admin/users', ms: 'group' },
-      { label: 'API Keys', href: '/admin/api', ms: 'key' },
-      { label: 'Settings', href: '/admin/settings', ms: 'settings' },
+      { label: 'Vault',      href: '/admin/vault/sources', ms: 'lock' },
+      { label: 'Users',      href: '/admin/users',         ms: 'group' },
+      { label: 'API Keys',   href: '/admin/api',           ms: 'key' },
+      { label: 'Settings',   href: '/admin/settings',      ms: 'settings' },
     ],
   },
 ];
 
 export default function AdminSidebar({ userEmail }: { userEmail: string }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname  = usePathname();
+  const router    = useRouter();
+  const [open, setOpen]           = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
@@ -54,29 +55,57 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
   }
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
-
+    <aside
+      style={{
+        width: open ? '256px' : '64px',
+        transition: 'width 280ms cubic-bezier(0.4,0,0.2,1)',
+        background: '#fff',
+        borderRight: '1px solid var(--admin-border)',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       {/* Brand */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="size-10 rounded-lg bg-[#5925f4] flex items-center justify-center text-white flex-shrink-0">
-          <span className="material-symbols-outlined">grid_view</span>
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 10,
+          background: 'linear-gradient(135deg, #5925f4, #7c4ef7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', flexShrink: 0, boxShadow: '0 2px 8px rgba(89,37,244,0.35)',
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>grid_view</span>
         </div>
-        <div>
-          <h1 className="text-lg font-bold leading-none">SWA Admin</h1>
-          <p className="text-xs text-slate-500">Schools Wellbeing AU</p>
+        <div style={{ overflow: 'hidden', opacity: open ? 1 : 0, transition: 'opacity 200ms ease', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--admin-text-primary)', lineHeight: 1.2 }}>SWA Admin</div>
+          <div style={{ fontSize: '0.6875rem', color: 'var(--admin-text-faint)', marginTop: 1 }}>Schools Wellbeing AU</div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4 mt-2 overflow-y-auto">
+      <nav style={{ flex: 1, padding: '12px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
         {SECTIONS.map((section, sIdx) => (
-          <div key={sIdx} className={sIdx > 0 ? 'mt-4' : ''}>
-            {section.title && (
-              <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <div key={sIdx} style={{ marginTop: sIdx > 0 ? 16 : 0 }}>
+            {section.title && open && (
+              <div style={{
+                padding: '0 10px 6px',
+                fontSize: '0.625rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--admin-text-faint)',
+              }}>
                 {section.title}
-              </p>
+              </div>
             )}
-            <div className="space-y-1">
+            {section.title && !open && (
+              <div style={{ height: 1, background: 'var(--admin-border)', margin: '8px 4px 6px' }} />
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {section.items.map((item) => {
                 const isActive = item.href === '/admin'
                   ? pathname === '/admin'
@@ -85,14 +114,42 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
-                      isActive
-                        ? 'active-nav'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
+                    title={!open ? item.label : undefined}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: open ? '9px 10px' : '9px 0',
+                      justifyContent: open ? 'flex-start' : 'center',
+                      borderRadius: 8,
+                      fontSize: '0.875rem',
+                      fontWeight: isActive ? 600 : 500,
+                      color: isActive ? '#5925f4' : 'var(--admin-text-muted)',
+                      background: isActive ? 'rgba(89,37,244,0.08)' : 'transparent',
+                      borderRight: isActive ? '3px solid #5925f4' : '3px solid transparent',
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                      transition: 'background 150ms, color 150ms',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--admin-bg-elevated)';
+                        (e.currentTarget as HTMLAnchorElement).style.color = 'var(--admin-text-secondary)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
+                        (e.currentTarget as HTMLAnchorElement).style.color = 'var(--admin-text-muted)';
+                      }
+                    }}
                   >
-                    <span className="material-symbols-outlined text-[20px]">{item.ms}</span>
-                    <span>{item.label}</span>
+                    <span className="material-symbols-outlined" style={{
+                      fontSize: 20,
+                      flexShrink: 0,
+                      color: isActive ? '#5925f4' : 'var(--admin-text-faint)',
+                    }}>{item.ms}</span>
+                    {open && <span style={{ overflow: 'hidden', opacity: open ? 1 : 0, transition: 'opacity 180ms ease' }}>{item.label}</span>}
                   </Link>
                 );
               })}
@@ -101,27 +158,65 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
         ))}
       </nav>
 
-      {/* Footer — user profile */}
-      <div className="p-4 mt-auto border-t border-slate-100">
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-[#5925f4]/5">
-          <div className="size-10 rounded-full bg-[#5925f4] flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+      {/* Footer */}
+      <div style={{ borderTop: '1px solid var(--admin-border)', flexShrink: 0 }}>
+        {/* User row */}
+        <div style={{ padding: '12px 8px 8px', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #5925f4, #7c4ef7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.8125rem', fontWeight: 700, color: '#fff', flexShrink: 0,
+          }}>
             {(userEmail || 'A')[0].toUpperCase()}
           </div>
-          <div className="overflow-hidden flex-1">
-            <p className="text-sm font-semibold truncate">
-              {userEmail ? userEmail.split('@')[0] : 'Admin'}
-            </p>
-            <p className="text-xs text-slate-500 truncate">Admin Account</p>
-          </div>
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
-            title="Sign out"
-            className="flex-shrink-0 size-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-          </button>
+          {open && (
+            <div style={{ flex: 1, overflow: 'hidden', opacity: open ? 1 : 0, transition: 'opacity 180ms ease', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--admin-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {userEmail ? userEmail.split('@')[0] : 'Admin'}
+              </div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--admin-text-faint)' }}>Admin Account</div>
+            </div>
+          )}
+          {open && (
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              title="Sign out"
+              style={{
+                flexShrink: 0, width: 30, height: 30,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: 6, border: 'none', background: 'transparent',
+                color: 'var(--admin-text-faint)', cursor: 'pointer',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
+            </button>
+          )}
         </div>
+
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setOpen(!open)}
+          style={{
+            width: '100%', padding: '10px 0',
+            display: 'flex', alignItems: 'center',
+            justifyContent: open ? 'flex-start' : 'center',
+            paddingLeft: open ? 18 : 0,
+            gap: 8,
+            background: 'transparent', border: 'none',
+            borderTop: '1px solid var(--admin-border)',
+            color: 'var(--admin-text-faint)',
+            cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 500,
+          }}
+        >
+          <span className="material-symbols-outlined" style={{
+            fontSize: 18,
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 280ms cubic-bezier(0.4,0,0.2,1)',
+          }}>chevrons_right</span>
+          {open && <span style={{ opacity: open ? 1 : 0, transition: 'opacity 180ms ease' }}>Collapse</span>}
+        </button>
       </div>
     </aside>
   );

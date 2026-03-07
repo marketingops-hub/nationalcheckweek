@@ -52,7 +52,7 @@
   --admin-radius-lg: 14px;
   --admin-transition: 150ms ease-out;
 
-  font-family: var(--font-inter, 'Inter'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--admin-text-secondary);
   background: var(--admin-bg-page);
   line-height: 1.6;
@@ -163,10 +163,12 @@
 .admin-shell .admin-icon-btn:active { transform: scale(0.93); }
 
 /* ── Table ── */
-.admin-shell .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.admin-shell .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
+.admin-shell .admin-table thead tr { background: var(--admin-bg-elevated); }
 .admin-shell .admin-table thead th {
   text-align: left;
-  padding: 10px 20px;
+  padding: 12px 16px;
+  font-family: inherit;
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -174,24 +176,37 @@
   color: var(--admin-text-subtle);
   background: var(--admin-bg-elevated);
   border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
 }
 .admin-shell .admin-table thead th:last-child { text-align: right; }
 .admin-shell .admin-table tbody tr {
   background: #fff;
   border-left: 3px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease;
 }
 .admin-shell .admin-table tbody tr:hover {
   background: var(--admin-bg-elevated);
   border-left-color: var(--admin-accent);
 }
 .admin-shell .admin-table tbody td {
-  padding: 16px 20px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--admin-border);
   vertical-align: middle;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--admin-text-secondary);
+  line-height: 1.5;
 }
 .admin-shell .admin-table tbody td:last-child { text-align: right; }
 .admin-shell .admin-table tbody tr:last-child td { border-bottom: none; }
 .admin-shell .admin-table tbody tr:hover .admin-icon-btn { color: var(--admin-text-muted); }
+/* Table container — rounded wrapper */
+.admin-shell .admin-table-wrap {
+  border-radius: var(--admin-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-card);
+}
 
 /* ── Badges / Pills ── */
 .admin-shell .admin-badge {
