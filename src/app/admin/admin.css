@@ -1,8 +1,14 @@
 /* ═══════════════════════════════════════
-   ADMIN SHELL — Light Theme (2026 Design)
-   #f1f5f9 page · White cards · Indigo accents
-   Scoped entirely to .admin-shell
+   ADMIN SHELL — ModularAdmin Suite v2.0 Style
+   Scoped to .admin-shell
 ═══════════════════════════════════════ */
+
+/* active-nav — exact match to reference */
+.active-nav {
+  background-color: rgba(89, 37, 244, 0.1);
+  color: #5925f4;
+  border-right: 3px solid #5925f4;
+}
 
 /* ── Design Tokens ── */
 .admin-shell {
@@ -56,13 +62,13 @@
 }
 
 /* ── Global Transitions ── */
-.admin-shell * {
-  transition: background-color var(--admin-transition),
-              border-color var(--admin-transition),
-              color var(--admin-transition),
-              box-shadow var(--admin-transition),
-              transform var(--admin-transition),
-              opacity var(--admin-transition);
+.admin-shell a,
+.admin-shell button {
+  transition: background-color 150ms ease-out,
+              border-color 150ms ease-out,
+              color 150ms ease-out,
+              opacity 150ms ease-out,
+              transform 150ms ease-out;
 }
 
 /* ── Typography ── */
@@ -198,7 +204,7 @@
   border-radius: 9999px;
   letter-spacing: 0.01em;
 }
-.admin-shell .admin-badge-indigo { background: #ede9fe; color: #4338ca; }
+.admin-shell .admin-badge-indigo { background: rgba(89,37,244,0.1); color: #5925f4; }
 .admin-shell .admin-badge-green  { background: #dcfce7; color: #166534; }
 .admin-shell .admin-badge-red    { background: #fee2e2; color: #991b1b; }
 .admin-shell .admin-badge-yellow { background: #fef9c3; color: #854d0e; }

@@ -8,6 +8,13 @@ export const metadata = {
   title: 'Admin — Schools Wellbeing Australia',
 };
 
+export function generateStaticParams() { return []; }
+
+const MATERIAL_SYMBOLS_URL =
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap';
+const INTER_URL =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+
 export default async function AdminLayout({
   children,
 }: {
@@ -17,9 +24,18 @@ export default async function AdminLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') ?? '';
 
+  const fonts = (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link rel="stylesheet" href={INTER_URL} />
+      <link rel="stylesheet" href={MATERIAL_SYMBOLS_URL} />
+    </>
+  );
+
   // Login page renders standalone — no sidebar, no header
   if (pathname === '/admin/login') {
-    return <div className="admin-shell">{children}</div>;
+    return <div className="admin-shell">{fonts}{children}</div>;
   }
 
   let email = '';
@@ -32,12 +48,12 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="admin-shell min-h-screen flex" style={{ background: 'var(--admin-bg-page)' }}>
+    <div className="admin-shell flex h-screen overflow-hidden bg-[#f6f5f8] text-slate-900 font-sans">
+      {fonts}
       <AdminSidebar userEmail={email} />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <AdminTopbar email={email} />
-        {/* Page content */}
-        <div className="flex-1 overflow-y-auto p-8 lg:p-10">
+        <div className="p-8 space-y-8">
           {children}
         </div>
       </main>
