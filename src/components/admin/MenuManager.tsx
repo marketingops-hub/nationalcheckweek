@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface MenuItem {
@@ -21,10 +21,10 @@ interface Page {
   status: string;
 }
 
-const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500";
-const IS = { background: "#0D1117", border: "1px solid #30363D", color: "#C9D1D9" };
+const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none";
+const IS: React.CSSProperties = { background: "#fff", border: "1px solid var(--admin-border-strong)", color: "var(--admin-text-primary)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
 const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
-const LS = { color: "#6E7681" };
+const LS: React.CSSProperties = { color: "var(--admin-text-subtle)" };
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
@@ -152,16 +152,16 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
     <div className="flex gap-6 items-start">
       {/* Menu tree */}
       <div className="flex-1 min-w-0">
-        {error && <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>{error}</div>}
-        {success && <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#0D2D1A", color: "#6EE7B7", border: "1px solid #166534" }}>{success}</div>}
+        {error && <div className="admin-alert admin-alert-error mb-4">{error}</div>}
+        {success && <div className="admin-alert admin-alert-success mb-4">{success}</div>}
 
         {/* Live preview bar */}
-        <div className="rounded-xl px-6 py-3 mb-6 flex items-center gap-6 overflow-x-auto" style={{ background: "#0B1D35", border: "1px solid #1E3A5F" }}>
-          <span className="text-sm font-bold flex-shrink-0" style={{ color: "#FFFFFF" }}>
-            <span style={{ color: "#22D3EE" }}>Schools</span>Wellbeing.com.au
+        <div className="rounded-xl px-6 py-3 mb-6 flex items-center gap-6 overflow-x-auto" style={{ background: "linear-gradient(135deg, #5925f4, #7c56ff)", border: "none" }}>
+          <span className="text-sm font-bold flex-shrink-0 text-white">
+            SchoolsWellbeing.com.au
           </span>
           {sorted.filter(i => !i.parent_id && i.is_active).map(item => (
-            <span key={item.id} className="text-sm flex-shrink-0" style={{ color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+            <span key={item.id} className="text-sm flex-shrink-0" style={{ color: "rgba(255,255,255,0.8)", whiteSpace: "nowrap" }}>
               {item.label}
             </span>
           ))}
@@ -170,8 +170,8 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
         {/* Items */}
         <div className="space-y-2">
           {topLevel.length === 0 && (
-            <div className="rounded-xl p-8 text-center" style={{ background: "#161B22", border: "2px dashed #21262D" }}>
-              <p className="text-sm" style={{ color: "#484F58" }}>No menu items yet. Add your first item →</p>
+            <div className="rounded-xl p-8 text-center" style={{ background: "var(--admin-bg-elevated)", border: "2px dashed var(--admin-border)" }}>
+              <p className="text-sm" style={{ color: "var(--admin-text-faint)" }}>No menu items yet. Add your first item →</p>
             </div>
           )}
 
@@ -182,56 +182,47 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
                 <div
                   className="rounded-xl flex items-center gap-3 px-4 py-3"
                   style={{
-                    background: item.is_active ? "#0D1117" : "#161B22",
-                    border: `1px solid ${item.is_active ? "#21262D" : "#30363D"}`,
+                    background: "#fff",
+                    border: `1px solid var(--admin-border)`,
                     opacity: item.is_active ? 1 : 0.6,
                   }}
                 >
                   {/* Drag handle / order */}
                   <div className="flex flex-col gap-0.5">
                     <button onClick={() => handleMove(item, -1)} disabled={idx === 0}
-                      className="text-xs px-1.5 rounded" style={{ background: "#21262D", color: idx === 0 ? "#30363D" : "#8B949E" }}>↑</button>
+                      className="text-xs px-1.5 rounded" style={{ background: "var(--admin-bg-deep)", color: idx === 0 ? "var(--admin-border-strong)" : "var(--admin-text-muted)" }}>↑</button>
                     <button onClick={() => handleMove(item, 1)} disabled={idx === topLevel.length - 1}
-                      className="text-xs px-1.5 rounded" style={{ background: "#21262D", color: idx === topLevel.length - 1 ? "#30363D" : "#8B949E" }}>↓</button>
+                      className="text-xs px-1.5 rounded" style={{ background: "var(--admin-bg-deep)", color: idx === topLevel.length - 1 ? "var(--admin-border-strong)" : "var(--admin-text-muted)" }}>↓</button>
                   </div>
 
                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                    style={{ background: "#21262D", color: "#6E7681" }}>
+                    style={{ background: "rgba(89,37,244,0.1)", color: "#5925f4" }}>
                     {item.position}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm" style={{ color: "#E6EDF3" }}>{item.label}</span>
+                      <span className="font-semibold text-sm" style={{ color: "var(--admin-text-primary)" }}>{item.label}</span>
                       {item.target === "_blank" && (
-                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#21262D", color: "#8B949E" }}>↗ new tab</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--admin-bg-elevated)", color: "var(--admin-text-muted)" }}>↗ new tab</span>
                       )}
                       {item.page_id && (
-                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#1C2A3A", color: "#58A6FF" }}>CMS Page</span>
+                        <span className="admin-badge admin-badge-indigo">CMS Page</span>
                       )}
                     </div>
-                    <div className="text-xs mt-0.5" style={{ color: "#484F58" }}>{item.href}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-faint)" }}>{item.href}</div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button onClick={() => handleToggle(item)}
-                      className="text-xs font-bold px-2 py-1 rounded"
-                      style={{
-                        background: item.is_active ? "#0D2D1A" : "#21262D",
-                        color: item.is_active ? "#6EE7B7" : "#484F58",
-                        border: `1px solid ${item.is_active ? "#166534" : "#30363D"}`,
-                      }}>
+                      className={`admin-badge cursor-pointer ${item.is_active ? "admin-badge-green" : "admin-badge-slate"}`}>
                       {item.is_active ? "Active" : "Hidden"}
                     </button>
-                    <button onClick={() => openEdit(item)}
-                      className="text-xs font-semibold px-3 py-1.5 rounded"
-                      style={{ background: "#21262D", color: "#C9D1D9" }}>
-                      Edit
+                    <button onClick={() => openEdit(item)} className="admin-icon-btn" title="Edit">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button onClick={() => handleDelete(item)}
-                      className="text-xs font-semibold px-3 py-1.5 rounded"
-                      style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>
-                      ✕
+                    <button onClick={() => handleDelete(item)} className="admin-icon-btn" title="Remove" style={{ color: "var(--admin-danger)" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                     </button>
                   </div>
                 </div>
@@ -239,21 +230,23 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
                 {/* Children (sub-items) */}
                 {children.map(child => (
                   <div key={child.id} className="ml-10 mt-1 rounded-xl flex items-center gap-3 px-4 py-2.5"
-                    style={{ background: "#161B22", border: "1px solid #21262D", opacity: child.is_active ? 1 : 0.5 }}>
-                    <span className="text-xs" style={{ color: "#484F58" }}>└</span>
+                    style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)", opacity: child.is_active ? 1 : 0.5 }}>
+                    <span className="text-xs" style={{ color: "var(--admin-text-faint)" }}>└</span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm" style={{ color: "#C9D1D9" }}>{child.label}</span>
-                      <span className="text-xs ml-2" style={{ color: "#484F58" }}>{child.href}</span>
+                      <span className="text-sm" style={{ color: "var(--admin-text-secondary)" }}>{child.label}</span>
+                      <span className="text-xs ml-2" style={{ color: "var(--admin-text-faint)" }}>{child.href}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => handleToggle(child)} className="text-xs font-bold px-2 py-1 rounded"
-                        style={{ background: child.is_active ? "#0D2D1A" : "#21262D", color: child.is_active ? "#6EE7B7" : "#484F58" }}>
+                      <button onClick={() => handleToggle(child)}
+                        className={`admin-badge cursor-pointer ${child.is_active ? "admin-badge-green" : "admin-badge-slate"}`}>
                         {child.is_active ? "Active" : "Hidden"}
                       </button>
-                      <button onClick={() => openEdit(child)} className="text-xs font-semibold px-3 py-1.5 rounded"
-                        style={{ background: "#21262D", color: "#C9D1D9" }}>Edit</button>
-                      <button onClick={() => handleDelete(child)} className="text-xs font-semibold px-3 py-1.5 rounded"
-                        style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>✕</button>
+                      <button onClick={() => openEdit(child)} className="admin-icon-btn" title="Edit">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button onClick={() => handleDelete(child)} className="admin-icon-btn" title="Remove" style={{ color: "var(--admin-danger)" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -266,8 +259,8 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
       {/* Right panel */}
       <div className="w-72 flex-shrink-0 sticky top-6">
         {showAdd ? (
-          <div className="rounded-xl p-5" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-            <h3 className="text-sm font-semibold mb-4" style={{ color: "#E6EDF3" }}>
+          <div className="rounded-xl p-5" style={{ background: "#fff", border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--admin-text-primary)" }}>
               {editId ? "Edit Item" : "Add Menu Item"}
             </h3>
 
@@ -279,11 +272,11 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
 
             <div className="mb-4">
               <label className={LABEL} style={LS}>Link Type</label>
-              <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid #30363D" }}>
+              <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid var(--admin-border-strong)" }}>
                 {(["custom", "page"] as const).map(t => (
                   <button key={t} onClick={() => setLinkType(t)}
                     className="flex-1 text-xs font-semibold py-2 capitalize"
-                    style={{ background: linkType === t ? "#21262D" : "transparent", color: linkType === t ? "#E6EDF3" : "#6E7681" }}>
+                    style={{ background: linkType === t ? "rgba(89,37,244,0.1)" : "transparent", color: linkType === t ? "#5925f4" : "var(--admin-text-subtle)" }}>
                     {t === "custom" ? "Custom URL" : "CMS Page"}
                   </button>
                 ))}
@@ -294,7 +287,7 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
               <div className="mb-4">
                 <label className={LABEL} style={LS}>Select Page</label>
                 {pages.length === 0 ? (
-                  <p className="text-xs" style={{ color: "#484F58" }}>No published pages yet. Create one in Pages first.</p>
+                  <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>No published pages yet. Create one in Pages first.</p>
                 ) : (
                   <select className={INPUT} style={IS}
                     value={form.page_id ?? ""}
@@ -338,40 +331,37 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
                 onChange={e => setF("position", e.target.value)} min={1} />
             </div>
 
-            {error && <div className="mb-3 px-3 py-2 rounded text-xs" style={{ background: "#3D1515", color: "#F87171" }}>{error}</div>}
+            {error && <div className="admin-alert admin-alert-error mb-3 text-xs">{error}</div>}
 
             <div className="flex gap-2">
               <button onClick={handleSave} disabled={saving}
-                className="flex-1 text-sm font-semibold py-2 rounded-lg"
-                style={{ background: "#238636", color: "#FFFFFF", opacity: saving ? 0.6 : 1 }}>
+                className="admin-btn admin-btn-primary flex-1"
+                style={{ opacity: saving ? 0.6 : 1 }}>
                 {saving ? "Saving…" : editId ? "Update" : "Add"}
               </button>
               <button onClick={() => { setShowAdd(false); clearMessages(); }}
-                className="flex-1 text-sm font-semibold py-2 rounded-lg"
-                style={{ background: "#21262D", color: "#C9D1D9" }}>
+                className="admin-btn admin-btn-secondary flex-1">
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <div className="rounded-xl p-5" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-            <p className="text-xs mb-4" style={{ color: "#6E7681" }}>
+          <div className="rounded-xl p-5" style={{ background: "#fff", border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
+            <p className="text-xs mb-4" style={{ color: "var(--admin-text-subtle)" }}>
               {items.length} item{items.length !== 1 ? "s" : ""} in the navigation. Changes are saved immediately to the database and reflected on the live site.
             </p>
-            <button onClick={openAdd}
-              className="w-full text-sm font-semibold py-2.5 rounded-lg"
-              style={{ background: "#238636", color: "#FFFFFF" }}>
+            <button onClick={openAdd} className="admin-btn admin-btn-primary w-full">
               + Add Menu Item
             </button>
 
-            {success && <div className="mt-4 px-3 py-2 rounded text-xs" style={{ background: "#0D2D1A", color: "#6EE7B7", border: "1px solid #166534" }}>{success}</div>}
+            {success && <div className="admin-alert admin-alert-success mt-4">{success}</div>}
           </div>
         )}
 
-        <div className="mt-4 rounded-xl p-4" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-          <div className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "#58A6FF" }}>Tips</div>
-          <ul className="text-xs space-y-1.5" style={{ color: "#6E7681" }}>
-            <li>• Use <code style={{ color: "#8B949E" }}>/#section</code> to link to homepage anchors</li>
+        <div className="mt-4 rounded-xl p-4" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+          <div className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--admin-accent)" }}>Tips</div>
+          <ul className="text-xs space-y-1.5" style={{ color: "var(--admin-text-subtle)" }}>
+            <li>• Use <code style={{ color: "var(--admin-text-muted)" }}>/#section</code> to link to homepage anchors</li>
             <li>• Set a Parent Item to create dropdown sub-menus</li>
             <li>• Toggle Active/Hidden without deleting</li>
             <li>• Changes go live instantly — no rebuild needed</li>

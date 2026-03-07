@@ -46,10 +46,10 @@ const BLOCK_TYPES: { type: BlockType; label: string; icon: string; defaults: Rec
 ];
 
 // ─── Styles ─────────────────────────────────────────────────────
-const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500";
-const IS = { background: "#0D1117", border: "1px solid #30363D", color: "#C9D1D9" };
+const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none";
+const IS: React.CSSProperties = { background: "#fff", border: "1px solid var(--admin-border-strong)", color: "var(--admin-text-primary)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
 const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
-const LS = { color: "#6E7681" };
+const LS: React.CSSProperties = { color: "var(--admin-text-subtle)" };
 const FIELD = "mb-4";
 
 // ─── Block editor ───────────────────────────────────────────────
@@ -60,28 +60,25 @@ function BlockEditor({ block, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
     onChange({ ...block, data: { ...block.data, [key]: val } });
   }
 
-  const headerBg = "#161B22";
-  const borderColor = "#21262D";
-
   return (
-    <div className="rounded-xl overflow-hidden mb-3" style={{ border: `1px solid ${borderColor}` }}>
+    <div className="rounded-xl overflow-hidden mb-3" style={{ border: "1px solid var(--admin-border)", background: "#fff" }}>
       {/* Block header */}
-      <div className="flex items-center gap-2 px-4 py-2" style={{ background: headerBg, borderBottom: `1px solid ${borderColor}` }}>
-        <span className="text-xs font-mono" style={{ color: "#484F58" }}>
+      <div className="flex items-center gap-2 px-4 py-2" style={{ background: "var(--admin-bg-elevated)", borderBottom: "1px solid var(--admin-border)" }}>
+        <span className="text-xs font-mono" style={{ color: "var(--admin-text-faint)" }}>
           {BLOCK_TYPES.find(b => b.type === block.type)?.icon}
         </span>
-        <span className="text-xs font-semibold uppercase tracking-wide flex-1" style={{ color: "#6E7681" }}>
+        <span className="text-xs font-semibold uppercase tracking-wide flex-1" style={{ color: "var(--admin-text-subtle)" }}>
           {BLOCK_TYPES.find(b => b.type === block.type)?.label}
         </span>
         <div className="flex items-center gap-1">
-          <button onClick={onMoveUp} disabled={isFirst} className="text-xs px-2 py-1 rounded" style={{ background: "#21262D", color: isFirst ? "#30363D" : "#8B949E" }}>↑</button>
-          <button onClick={onMoveDown} disabled={isLast} className="text-xs px-2 py-1 rounded" style={{ background: "#21262D", color: isLast ? "#30363D" : "#8B949E" }}>↓</button>
-          <button onClick={onDelete} className="text-xs px-2 py-1 rounded" style={{ background: "#3D1515", color: "#F87171" }}>✕</button>
+          <button onClick={onMoveUp} disabled={isFirst} className="text-xs px-2 py-1 rounded" style={{ background: "var(--admin-bg-deep)", color: isFirst ? "var(--admin-border-strong)" : "var(--admin-text-muted)" }}>↑</button>
+          <button onClick={onMoveDown} disabled={isLast} className="text-xs px-2 py-1 rounded" style={{ background: "var(--admin-bg-deep)", color: isLast ? "var(--admin-border-strong)" : "var(--admin-text-muted)" }}>↓</button>
+          <button onClick={onDelete} className="text-xs px-2 py-1 rounded" style={{ background: "var(--admin-danger-bg)", color: "var(--admin-danger-text)" }}>✕</button>
         </div>
       </div>
 
       {/* Block fields */}
-      <div className="p-4" style={{ background: "#0D1117" }}>
+      <div className="p-4">
         {block.type === "heading" && (
           <div className="flex gap-3">
             <div className="w-24 flex-shrink-0">
@@ -178,7 +175,7 @@ function BlockEditor({ block, onChange, onDelete, onMoveUp, onMoveDown, isFirst,
         )}
 
         {block.type === "divider" && (
-          <p className="text-xs text-center py-1" style={{ color: "#484F58" }}>— horizontal rule —</p>
+          <p className="text-xs text-center py-1" style={{ color: "var(--admin-text-faint)" }}>— horizontal rule —</p>
         )}
 
         {block.type === "html" && (
@@ -306,13 +303,13 @@ export default function PageEditor({ page }: { page: Page | null }) {
       {/* Main editor */}
       <div className="flex-1 min-w-0">
         {/* Tabs */}
-        <div className="flex gap-1 mb-6" style={{ borderBottom: "1px solid #21262D" }}>
+        <div className="flex gap-1 mb-6" style={{ borderBottom: "1px solid var(--admin-border)" }}>
           {(["content", "settings"] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className="text-sm font-semibold px-4 py-2.5 capitalize"
               style={{
-                color: activeTab === tab ? "#E6EDF3" : "#6E7681",
-                borderBottom: activeTab === tab ? "2px solid #58A6FF" : "2px solid transparent",
+                color: activeTab === tab ? "var(--admin-text-primary)" : "var(--admin-text-subtle)",
+                borderBottom: activeTab === tab ? "2px solid #5925f4" : "2px solid transparent",
                 marginBottom: "-1px",
               }}>
               {tab}
@@ -333,12 +330,12 @@ export default function PageEditor({ page }: { page: Page | null }) {
             {/* Slug */}
             <div className={FIELD}>
               <label className={LABEL} style={LS}>Slug</label>
-              <div className="flex items-center rounded-lg overflow-hidden" style={{ border: "1px solid #30363D" }}>
-                <span className="px-3 py-2 text-sm flex-shrink-0" style={{ background: "#161B22", color: "#484F58", borderRight: "1px solid #30363D" }}>
+              <div className="flex items-center rounded-lg overflow-hidden" style={{ border: "1px solid var(--admin-border-strong)" }}>
+                <span className="px-3 py-2 text-sm flex-shrink-0" style={{ background: "var(--admin-bg-elevated)", color: "var(--admin-text-subtle)", borderRight: "1px solid var(--admin-border-strong)" }}>
                   /pages/
                 </span>
                 <input className="flex-1 px-3 py-2 text-sm outline-none"
-                  style={{ background: "#0D1117", color: "#C9D1D9" }}
+                  style={{ background: "var(--admin-bg-deep)", color: "var(--admin-text-secondary)" }}
                   value={slug} onChange={e => setSlug(slugify(e.target.value))} />
               </div>
             </div>
@@ -353,25 +350,25 @@ export default function PageEditor({ page }: { page: Page | null }) {
 
             {/* Blocks */}
             <div className="mt-6 mb-3 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6E7681" }}>
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--admin-text-subtle)" }}>
                 Content Blocks ({blocks.length})
               </span>
               <button onClick={() => setShowBlockPicker(!showBlockPicker)}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                style={{ background: "#238636", color: "#FFFFFF" }}>
+                style={{ background: "#5925f4", color: "#fff" }}>
                 + Add Block
               </button>
             </div>
 
             {/* Block picker */}
             {showBlockPicker && (
-              <div className="rounded-xl p-4 mb-4 grid grid-cols-4 gap-2" style={{ background: "#161B22", border: "1px solid #21262D" }}>
+              <div className="rounded-xl p-4 mb-4 grid grid-cols-4 gap-2" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
                 {BLOCK_TYPES.map(bt => (
                   <button key={bt.type} onClick={() => addBlock(bt.type)}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-lg text-center transition-colors"
-                    style={{ background: "#0D1117", border: "1px solid #21262D", color: "#C9D1D9" }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = "#58A6FF")}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = "#21262D")}
+                    style={{ background: "#fff", border: "1px solid var(--admin-border)", color: "var(--admin-text-secondary)" }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = "#5925f4")}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--admin-border)")}
                   >
                     <span className="text-lg">{bt.icon}</span>
                     <span className="text-xs font-medium">{bt.label}</span>
@@ -381,8 +378,8 @@ export default function PageEditor({ page }: { page: Page | null }) {
             )}
 
             {blocks.length === 0 ? (
-              <div className="rounded-xl p-8 text-center" style={{ background: "#161B22", border: "2px dashed #21262D" }}>
-                <p className="text-sm" style={{ color: "#484F58" }}>No blocks yet — click "Add Block" to start building the page.</p>
+              <div className="rounded-xl p-8 text-center" style={{ background: "var(--admin-bg-elevated)", border: "2px dashed var(--admin-border)" }}>
+                <p className="text-sm" style={{ color: "var(--admin-text-faint)" }}>No blocks yet — click "Add Block" to start building the page.</p>
               </div>
             ) : (
               blocks.map((block, idx) => (
@@ -403,8 +400,8 @@ export default function PageEditor({ page }: { page: Page | null }) {
 
         {activeTab === "settings" && (
           <>
-            <div className="rounded-xl p-6 mb-6" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-              <h2 className="text-sm font-semibold mb-5" style={{ color: "#E6EDF3" }}>Page Settings</h2>
+            <div className="rounded-xl p-6 mb-6" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+              <h2 className="text-sm font-semibold mb-5" style={{ color: "var(--admin-text-primary)" }}>Page Settings</h2>
               <div className={FIELD}>
                 <label className={LABEL} style={LS}>Status</label>
                 <select className={INPUT} style={IS} value={status} onChange={e => setStatus(e.target.value)}>
@@ -416,12 +413,12 @@ export default function PageEditor({ page }: { page: Page | null }) {
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div className="relative">
                     <input type="checkbox" className="sr-only" checked={showInMenu} onChange={e => setShowInMenu(e.target.checked)} />
-                    <div className="w-10 h-6 rounded-full transition-colors" style={{ background: showInMenu ? "#238636" : "#21262D" }}>
+                    <div className="w-10 h-6 rounded-full transition-colors" style={{ background: showInMenu ? "#5925f4" : "var(--admin-border-strong)" }}>
                       <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
                         style={{ transform: showInMenu ? "translateX(16px)" : "translateX(0)" }} />
                     </div>
                   </div>
-                  <span className="text-sm" style={{ color: "#C9D1D9" }}>Show in navigation menu</span>
+                  <span className="text-sm" style={{ color: "var(--admin-text-secondary)" }}>Show in navigation menu</span>
                 </label>
               </div>
             </div>
@@ -444,50 +441,48 @@ export default function PageEditor({ page }: { page: Page | null }) {
 
       {/* Sidebar actions */}
       <div className="w-56 flex-shrink-0 sticky top-6">
-        <div className="rounded-xl p-4 mb-4" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#6E7681" }}>Publish</div>
+        <div className="rounded-xl p-4 mb-4" style={{ background: "#fff", border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--admin-text-subtle)" }}>Publish</div>
 
           <div className="mb-3">
-            <span className="text-xs" style={{ color: "#6E7681" }}>Status: </span>
-            <span className="text-xs font-bold" style={{ color: status === "published" ? "#6EE7B7" : "#8B949E" }}>
+            <span className="text-xs" style={{ color: "var(--admin-text-subtle)" }}>Status: </span>
+            <span className="text-xs font-bold" style={{ color: status === "published" ? "var(--admin-success)" : "var(--admin-text-faint)" }}>
               {status === "published" ? "● Published" : "○ Draft"}
             </span>
           </div>
 
-          {error && <div className="mb-3 px-3 py-2 rounded text-xs" style={{ background: "#3D1515", color: "#F87171" }}>{error}</div>}
-          {success && <div className="mb-3 px-3 py-2 rounded text-xs" style={{ background: "#0D2D1A", color: "#6EE7B7" }}>{success}</div>}
+          {error && <div className="admin-alert admin-alert-error mb-3 text-xs">{error}</div>}
+          {success && <div className="admin-alert admin-alert-success mb-3 text-xs">{success}</div>}
 
           <button onClick={() => handleSave()} disabled={saving}
-            className="w-full text-sm font-semibold py-2 rounded-lg mb-2"
-            style={{ background: "#21262D", color: "#C9D1D9", opacity: saving ? 0.6 : 1 }}>
+            className="admin-btn admin-btn-secondary w-full mb-2"
+            style={{ opacity: saving ? 0.6 : 1 }}>
             {saving ? "Saving…" : "Save Draft"}
           </button>
 
           {status !== "published" && (
             <button onClick={() => handleSave(true)} disabled={saving}
-              className="w-full text-sm font-semibold py-2 rounded-lg mb-2"
-              style={{ background: "#238636", color: "#FFFFFF", opacity: saving ? 0.6 : 1 }}>
+              className="admin-btn admin-btn-primary w-full mb-2"
+              style={{ opacity: saving ? 0.6 : 1 }}>
               Publish
             </button>
           )}
 
           {isDirty && (
-            <div className="mt-2 text-xs text-center" style={{ color: "#F0883E" }}>Unsaved changes</div>
+            <div className="mt-2 text-xs text-center" style={{ color: "var(--admin-warning-light)" }}>Unsaved changes</div>
           )}
 
           <button onClick={() => router.push("/admin/cms/pages")}
-            className="w-full text-sm py-2 rounded-lg"
-            style={{ background: "transparent", color: "#6E7681" }}>
+            className="admin-btn admin-btn-ghost w-full">
             ← Back to pages
           </button>
         </div>
 
         {!isNew && (
-          <div className="rounded-xl p-4" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-            <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#6E7681" }}>Danger Zone</div>
+          <div className="rounded-xl p-4" style={{ background: "#fff", border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
+            <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--admin-text-subtle)" }}>Danger Zone</div>
             <button onClick={handleDelete} disabled={deleting}
-              className="w-full text-sm font-semibold py-2 rounded-lg"
-              style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>
+              className="admin-btn admin-btn-danger w-full">
               {deleting ? "Deleting…" : "Delete Page"}
             </button>
           </div>

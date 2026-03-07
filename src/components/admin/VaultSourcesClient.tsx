@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface VaultSource {
@@ -16,10 +16,10 @@ interface VaultSource {
 
 const CATEGORIES = ["general", "mental health", "education", "government", "research", "statistics", "other"];
 
-const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-500";
-const INPUT_STYLE = { background: "#0D1117", border: "1px solid #30363D", color: "#C9D1D9" };
+const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none";
+const INPUT_STYLE: React.CSSProperties = { background: "#fff", border: "1px solid var(--admin-border-strong)", color: "var(--admin-text-primary)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
 const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
-const LABEL_STYLE = { color: "#6E7681" };
+const LABEL_STYLE: React.CSSProperties = { color: "var(--admin-text-subtle)" };
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
@@ -141,16 +141,18 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
     <div className="mt-6">
       {/* Stats bar */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { label: "Total Sources", value: sources.length, color: "#58A6FF", bg: "#1C2A3A" },
-          { label: "Approved", value: approvedCount, color: "#6EE7B7", bg: "#0D2D1A" },
-          { label: "Suspended", value: sources.length - approvedCount, color: "#F0883E", bg: "#2D1A0E" },
-        ].map(stat => (
-          <div key={stat.label} className="rounded-xl px-5 py-4" style={{ background: stat.bg, border: `1px solid ${stat.color}22` }}>
-            <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
-            <div className="text-xs mt-0.5" style={{ color: "#6E7681" }}>{stat.label}</div>
-          </div>
-        ))}
+        <div className="admin-card py-4">
+          <div className="text-2xl font-bold" style={{ color: "var(--admin-accent)" }}>{sources.length}</div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-subtle)" }}>Total Sources</div>
+        </div>
+        <div className="admin-card py-4">
+          <div className="text-2xl font-bold" style={{ color: "var(--admin-success)" }}>{approvedCount}</div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-subtle)" }}>Approved</div>
+        </div>
+        <div className="admin-card py-4">
+          <div className="text-2xl font-bold" style={{ color: "var(--admin-warning)" }}>{sources.length - approvedCount}</div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-subtle)" }}>Suspended</div>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -173,24 +175,23 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
         </select>
         <button
           onClick={() => { setShowAdd(true); clearMessages(); setPasteText(""); setTitle(""); setDescription(""); setCategory("general"); }}
-          className="text-sm font-semibold px-4 py-2 rounded-lg flex-shrink-0"
-          style={{ background: "#F0883E", color: "#FFFFFF" }}
+          className="admin-btn admin-btn-primary flex-shrink-0"
         >
           + Add Source
         </button>
       </div>
 
       {/* Feedback */}
-      {error && <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>{error}</div>}
-      {success && <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#0D2D1A", color: "#6EE7B7", border: "1px solid #166534" }}>{success}</div>}
+      {error && <div className="admin-alert admin-alert-error mb-4">{error}</div>}
+      {success && <div className="admin-alert admin-alert-success mb-4">{success}</div>}
 
       {/* Edit Source Modal */}
       {editSource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-          <div className="w-full max-w-lg rounded-xl p-6" style={{ background: "#161B22", border: "1px solid #30363D" }}>
-            <h2 className="text-base font-semibold mb-1" style={{ color: "#E6EDF3" }}>Edit Source</h2>
-            <p className="text-xs mb-1 font-mono truncate" style={{ color: "#484F58" }}>{editSource.url}</p>
-            <p className="text-xs mb-5" style={{ color: "#6E7681" }}>URL cannot be changed. Delete and re-add to change the URL.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-lg rounded-2xl p-6" style={{ background: "var(--admin-bg-surface)", border: "1px solid var(--admin-border-strong)", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+            <h2 className="text-base font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Edit Source</h2>
+            <p className="text-xs mb-1 font-mono truncate" style={{ color: "var(--admin-text-faint)" }}>{editSource.url}</p>
+            <p className="text-xs mb-5" style={{ color: "var(--admin-text-subtle)" }}>URL cannot be changed. Delete and re-add to change the URL.</p>
             <div className="mb-4">
               <label className={LABEL} style={LABEL_STYLE}>Title</label>
               <input className={INPUT} style={INPUT_STYLE} value={editTitle}
@@ -207,16 +208,15 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            {error && <div className="mb-4 px-3 py-2 rounded text-xs" style={{ background: "#3D1515", color: "#F87171" }}>{error}</div>}
+            {error && <div className="admin-alert admin-alert-error mb-4">{error}</div>}
             <div className="flex gap-3">
               <button onClick={handleEdit} disabled={busy}
-                className="flex-1 text-sm font-semibold py-2.5 rounded-lg"
-                style={{ background: "#F0883E", color: "#FFFFFF", opacity: busy ? 0.6 : 1 }}>
+                className="admin-btn admin-btn-primary flex-1"
+                style={{ opacity: busy ? 0.6 : 1 }}>
                 {busy ? "Saving…" : "Save Changes"}
               </button>
               <button onClick={() => { setEditSource(null); clearMessages(); }}
-                className="flex-1 text-sm font-semibold py-2.5 rounded-lg"
-                style={{ background: "#21262D", color: "#C9D1D9" }}>
+                className="admin-btn admin-btn-secondary flex-1">
                 Cancel
               </button>
             </div>
@@ -226,13 +226,13 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
 
       {/* Add Source Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-          <div className="w-full max-w-lg rounded-xl p-6" style={{ background: "#161B22", border: "1px solid #30363D" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-lg rounded-2xl p-6" style={{ background: "var(--admin-bg-surface)", border: "1px solid var(--admin-border-strong)", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#F0883E" }}>The Vault</span>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--admin-accent)" }}>The Vault</span>
             </div>
-            <h2 className="text-base font-semibold mb-1" style={{ color: "#E6EDF3" }}>Add Approved Source</h2>
-            <p className="text-xs mb-5" style={{ color: "#6E7681" }}>
+            <h2 className="text-base font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Add Approved Source</h2>
+            <p className="text-xs mb-5" style={{ color: "var(--admin-text-subtle)" }}>
               Paste a URL below. OpenAI will only use approved vault sources when generating content.
             </p>
 
@@ -249,13 +249,13 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
               />
             </div>
             <div className="mb-4">
-              <label className={LABEL} style={LABEL_STYLE}>Title <span style={{ color: "#484F58", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional — auto-filled from domain if blank)</span></label>
+              <label className={LABEL} style={LABEL_STYLE}>Title <span style={{ color: "var(--admin-text-faint)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional — auto-filled from domain if blank)</span></label>
               <input className={INPUT} style={INPUT_STYLE} value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="e.g. AIHW Mental Health Report 2023" />
             </div>
             <div className="mb-4">
-              <label className={LABEL} style={LABEL_STYLE}>Description <span style={{ color: "#484F58", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
+              <label className={LABEL} style={LABEL_STYLE}>Description <span style={{ color: "var(--admin-text-faint)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
               <textarea rows={2} className={INPUT} style={{ ...INPUT_STYLE, resize: "none" }}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
@@ -268,17 +268,16 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
               </select>
             </div>
 
-            {error && <div className="mb-4 px-3 py-2 rounded text-xs" style={{ background: "#3D1515", color: "#F87171" }}>{error}</div>}
+            {error && <div className="admin-alert admin-alert-error mb-4">{error}</div>}
 
             <div className="flex gap-3">
               <button onClick={handleAdd} disabled={busy}
-                className="flex-1 text-sm font-semibold py-2.5 rounded-lg"
-                style={{ background: busy ? "#21262D" : "#F0883E", color: "#FFFFFF", opacity: busy ? 0.6 : 1 }}>
+                className="admin-btn admin-btn-primary flex-1"
+                style={{ opacity: busy ? 0.6 : 1 }}>
                 {busy ? "Adding…" : "Add to Vault"}
               </button>
               <button onClick={() => { setShowAdd(false); clearMessages(); }}
-                className="flex-1 text-sm font-semibold py-2.5 rounded-lg"
-                style={{ background: "#21262D", color: "#C9D1D9" }}>
+                className="admin-btn admin-btn-secondary flex-1">
                 Cancel
               </button>
             </div>
@@ -288,12 +287,12 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
 
       {/* Sources list */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl p-10 text-center" style={{ background: "#161B22", border: "1px solid #21262D" }}>
+        <div className="admin-empty">
           <div className="text-3xl mb-3">🔒</div>
-          <p className="text-sm font-medium mb-1" style={{ color: "#C9D1D9" }}>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--admin-text-secondary)" }}>
             {sources.length === 0 ? "No sources in the vault yet" : "No sources match your filters"}
           </p>
-          <p className="text-xs" style={{ color: "#484F58" }}>
+          <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>
             {sources.length === 0
               ? "Add your first approved source above. AI content generation will only use URLs from this vault."
               : "Try adjusting your search or filters."}
@@ -306,38 +305,34 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
               key={source.id}
               className="rounded-xl p-4"
               style={{
-                background: "#0D1117",
-                border: `1px solid ${source.is_approved ? "#21262D" : "#3D1515"}`,
+                background: "#fff",
+                border: `1px solid ${source.is_approved ? "var(--admin-border)" : "var(--admin-danger-light)"}`,
+                boxShadow: "var(--admin-shadow-card)",
               }}
             >
               <div className="flex items-start gap-3">
                 {/* Domain favicon placeholder */}
                 <div
                   className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
-                  style={{ background: "#161B22", border: "1px solid #21262D", color: "#6E7681" }}
+                  style={{ background: "rgba(89,37,244,0.1)", color: "#5925f4" }}
                 >
                   {source.domain.slice(0, 2).toUpperCase()}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="font-semibold text-sm truncate" style={{ color: "#E6EDF3" }}>
+                    <span className="font-semibold text-sm truncate" style={{ color: "var(--admin-text-primary)" }}>
                       {source.title || source.domain}
                     </span>
                     {/* Approved badge */}
                     <button
                       onClick={() => handleToggleApproved(source)}
-                      className="text-xs font-bold px-2 py-0.5 rounded flex-shrink-0"
-                      style={{
-                        background: source.is_approved ? "#0D2D1A" : "#3D1515",
-                        color: source.is_approved ? "#6EE7B7" : "#F87171",
-                        border: `1px solid ${source.is_approved ? "#166534" : "#7F1D1D"}`,
-                      }}
+                      className={`admin-badge cursor-pointer ${source.is_approved ? "admin-badge-green" : "admin-badge-red"}`}
                     >
                       {source.is_approved ? "✓ Approved" : "✗ Suspended"}
                     </button>
                     {/* Category */}
-                    <span className="text-xs px-2 py-0.5 rounded capitalize" style={{ background: "#21262D", color: "#8B949E" }}>
+                    <span className="admin-badge admin-badge-slate capitalize">
                       {source.category}
                     </span>
                   </div>
@@ -348,35 +343,34 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs block truncate mb-1"
-                    style={{ color: "#58A6FF" }}
+                    style={{ color: "var(--admin-accent)" }}
                   >
                     {source.url}
                   </a>
 
                   {/* Description */}
                   {source.description && (
-                    <p className="text-xs" style={{ color: "#6E7681" }}>{source.description}</p>
+                    <p className="text-xs" style={{ color: "var(--admin-text-subtle)" }}>{source.description}</p>
                   )}
 
-                  <div className="text-xs mt-1.5" style={{ color: "#484F58" }}>Added {fmt(source.created_at)}</div>
+                  <div className="text-xs mt-1.5" style={{ color: "var(--admin-text-faint)" }}>Added {fmt(source.created_at)}</div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex flex-col gap-1.5 flex-shrink-0">
                   <button
                     onClick={() => { setEditSource(source); setEditTitle(source.title); setEditDescription(source.description); setEditCategory(source.category); clearMessages(); }}
-                    className="text-xs font-semibold px-3 py-1.5 rounded"
-                    style={{ background: "#21262D", color: "#C9D1D9" }}
+                    className="admin-icon-btn" title="Edit"
                   >
-                    Edit
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button
                     onClick={() => handleDelete(source)}
                     disabled={busy}
-                    className="text-xs font-semibold px-3 py-1.5 rounded"
-                    style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}
+                    className="admin-icon-btn" title="Remove"
+                    style={{ color: "var(--admin-danger)" }}
                   >
-                    Remove
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                   </button>
                 </div>
               </div>
@@ -386,10 +380,10 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
       )}
 
       {/* Info callout */}
-      <div className="mt-6 rounded-xl p-4" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-        <div className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#F0883E" }}>How the Vault works</div>
-        <p className="text-xs leading-relaxed" style={{ color: "#6E7681" }}>
-          When AI content generation is triggered, the system passes only the <strong style={{ color: "#8B949E" }}>approved</strong> vault sources to OpenAI as its permitted knowledge base. OpenAI is instructed to base all factual claims exclusively on these URLs and cite them in its output — preventing hallucinated statistics or uncited claims. Suspending a source removes it from AI prompts without deleting it.
+      <div className="mt-6 rounded-xl p-4" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(89,37,244,0.12)" }}>
+        <div className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--admin-accent)" }}>How the Vault works</div>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--admin-text-muted)" }}>
+          When AI content generation is triggered, the system passes only the <strong style={{ color: "var(--admin-text-secondary)" }}>approved</strong> vault sources to OpenAI as its permitted knowledge base. OpenAI is instructed to base all factual claims exclusively on these URLs and cite them in its output — preventing hallucinated statistics or uncited claims. Suspending a source removes it from AI prompts without deleting it.
         </p>
       </div>
     </div>
