@@ -26,9 +26,11 @@ export default async function AdminLayout({
     redirect('/admin/login');
   }
 
+  const email = (user as NonNullable<typeof user>).email ?? '';
+
   return (
     <div className="min-h-screen flex" style={{ background: '#0D1117' }}>
-      <AdminSidebar userEmail={user.email ?? ''} />
+      <AdminSidebar userEmail={email} />
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header
@@ -37,12 +39,12 @@ export default async function AdminLayout({
         >
           <div />
           <div className="flex items-center gap-3">
-            <span className="text-xs" style={{ color: '#6E7681' }}>{user.email}</span>
+            <span className="text-xs" style={{ color: '#6E7681' }}>{email}</span>
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold"
               style={{ background: '#1C7ED6', color: '#fff' }}
             >
-              {(user.email ?? 'A')[0].toUpperCase()}
+              {(email || 'A')[0].toUpperCase()}
             </div>
           </div>
         </header>
