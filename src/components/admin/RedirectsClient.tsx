@@ -238,7 +238,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
           <div className="mb-5">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.is_active} onChange={e => setField("is_active", e.target.checked)}
-                className="w-4 h-4 rounded" style={{ accentColor: "#4f46e5" }} />
+                className="w-4 h-4 rounded" style={{ accentColor: "#5925f4" }} />
               <span className="text-sm font-medium" style={{ color: "var(--admin-text-secondary)" }}>Active</span>
             </label>
           </div>

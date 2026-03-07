@@ -306,7 +306,7 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
             )}
 
             <div className="mb-4">
-              <label className={LABEL} style={LS}>Parent Item <span style={{ color: "#484F58", textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(optional)</span></label>
+              <label className={LABEL} style={LS}>Parent Item <span style={{ color: "var(--admin-text-faint)", textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(optional)</span></label>
               <select className={INPUT} style={IS}
                 value={form.parent_id ?? ""}
                 onChange={e => setF("parent_id", e.target.value || null)}>

@@ -39,8 +39,8 @@ export default async function CmsIndexPage() {
       editHref: `/admin/cms/pages/${p.id}`,
       viewHref: `/pages/${p.slug}`,
       badge: p.status === "published" ? "Published" : "Draft",
-      badgeColor: p.status === "published" ? "#6EE7B7" : "#8B949E",
-      badgeBg: p.status === "published" ? "#0D2D1A" : "#21262D",
+      badgeColor: p.status === "published" ? "#166534" : "#475569",
+      badgeBg: p.status === "published" ? "#dcfce7" : "#f1f5f9",
     })),
     ...(issues ?? []).map(i => ({
       id: i.id, title: i.title, slug: i.slug,
@@ -50,8 +50,8 @@ export default async function CmsIndexPage() {
       editHref: `/admin/issues/${i.id}`,
       viewHref: `/issues/${i.slug}`,
       badge: "Issue",
-      badgeColor: "#F87171",
-      badgeBg: "#3D1515",
+      badgeColor: "#991b1b",
+      badgeBg: "#fee2e2",
     })),
     ...(states ?? []).map(s => ({
       id: s.id, title: s.name, slug: s.slug,
@@ -61,8 +61,8 @@ export default async function CmsIndexPage() {
       editHref: `/admin/states/${s.id}`,
       viewHref: `/states/${s.slug}`,
       badge: "State",
-      badgeColor: "#58A6FF",
-      badgeBg: "#1C2A3A",
+      badgeColor: "#5925f4",
+      badgeBg: "rgba(89,37,244,0.1)",
     })),
     ...(areas ?? []).map(a => ({
       id: a.id, title: a.name, slug: a.slug,
@@ -72,8 +72,8 @@ export default async function CmsIndexPage() {
       editHref: `/admin/content/${a.id}`,
       viewHref: `/areas/${a.slug}`,
       badge: "Area",
-      badgeColor: "#C084FC",
-      badgeBg: "#2D1A40",
+      badgeColor: "#854d0e",
+      badgeBg: "#fef9c3",
     })),
   ];
 
@@ -86,21 +86,14 @@ export default async function CmsIndexPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
+      <div className="admin-page-header">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#58A6FF" }}>CMS</span>
-          </div>
-          <h1 className="text-xl font-semibold mb-1" style={{ color: "#E6EDF3" }}>All Content</h1>
-          <p className="text-sm" style={{ color: "#6E7681" }}>
+          <h1>All Content</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--admin-text-subtle)" }}>
             Every editable page on the site. Each content type opens its own structured editor — respecting its module layout.
           </p>
         </div>
-        <Link
-          href="/admin/cms/pages/new"
-          className="text-sm font-semibold px-4 py-2 rounded-lg flex-shrink-0"
-          style={{ background: "#238636", color: "#FFFFFF" }}
-        >
+        <Link href="/admin/cms/pages/new" className="admin-btn admin-btn-primary">
           + New CMS Page
         </Link>
       </div>
@@ -108,15 +101,15 @@ export default async function CmsIndexPage() {
       {/* Type legend */}
       <div className="flex flex-wrap gap-3 mb-6">
         {[
-          { type: "page",  label: "CMS Page",    color: "#6EE7B7", bg: "#0D2D1A", desc: "Free-form block editor" },
-          { type: "issue", label: "Issue",        color: "#F87171", bg: "#3D1515", desc: "Structured wellbeing issue" },
-          { type: "state", label: "State",        color: "#58A6FF", bg: "#1C2A3A", desc: "State data page" },
-          { type: "area",  label: "Area / City",  color: "#C084FC", bg: "#2D1A40", desc: "City or region page" },
+          { type: "page",  label: "CMS Page",   badgeClass: "admin-badge-green",  desc: "Free-form block editor" },
+          { type: "issue", label: "Issue",       badgeClass: "admin-badge-red",    desc: "Structured wellbeing issue" },
+          { type: "state", label: "State",       badgeClass: "admin-badge-indigo", desc: "State data page" },
+          { type: "area",  label: "Area / City", badgeClass: "admin-badge-yellow", desc: "City or region page" },
         ].map(t => (
           <div key={t.type} className="flex items-center gap-2 px-3 py-2 rounded-lg"
-            style={{ background: t.bg, border: `1px solid ${t.color}22` }}>
-            <span className="text-xs font-bold" style={{ color: t.color }}>{t.label}</span>
-            <span className="text-xs" style={{ color: "#6E7681" }}>— {t.desc}</span>
+            style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+            <span className={`admin-badge ${t.badgeClass}`}>{t.label}</span>
+            <span className="text-xs" style={{ color: "var(--admin-text-subtle)" }}>— {t.desc}</span>
           </div>
         ))}
       </div>
@@ -124,65 +117,59 @@ export default async function CmsIndexPage() {
       {/* Quick links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         {[
-          { label: "CMS Pages",  count: pages?.length ?? 0,  href: "/admin/cms/pages",    color: "#6EE7B7", bg: "#0D2D1A" },
-          { label: "Issues",     count: issues?.length ?? 0, href: "/admin/issues",        color: "#F87171", bg: "#3D1515" },
-          { label: "States",     count: states?.length ?? 0, href: "/admin/states",        color: "#58A6FF", bg: "#1C2A3A" },
-          { label: "Areas",      count: areas?.length ?? 0,  href: "/admin/content",       color: "#C084FC", bg: "#2D1A40" },
+          { label: "CMS Pages", count: pages?.length ?? 0,  href: "/admin/cms/pages", colorVar: "var(--admin-success)" },
+          { label: "Issues",    count: issues?.length ?? 0, href: "/admin/issues",     colorVar: "var(--admin-danger)" },
+          { label: "States",    count: states?.length ?? 0, href: "/admin/states",     colorVar: "var(--admin-accent)" },
+          { label: "Areas",     count: areas?.length ?? 0,  href: "/admin/content",    colorVar: "var(--admin-warning-light)" },
         ].map(s => (
-          <Link key={s.label} href={s.href} className="rounded-xl px-4 py-4 block"
-            style={{ background: s.bg, border: `1px solid ${s.color}22`, textDecoration: "none" }}>
-            <div className="text-2xl font-bold mb-0.5" style={{ color: s.color }}>{s.count}</div>
-            <div className="text-xs" style={{ color: "#6E7681" }}>{s.label}</div>
+          <Link key={s.label} href={s.href} className="admin-card block py-4 hover:shadow-md transition-shadow">
+            <div className="text-2xl font-bold mb-0.5" style={{ color: s.colorVar }}>{s.count}</div>
+            <div className="text-xs" style={{ color: "var(--admin-text-subtle)" }}>{s.label}</div>
           </Link>
         ))}
       </div>
 
       {/* All content table */}
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #21262D" }}>
-        <table className="w-full text-sm">
+      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
+        <table className="admin-table">
           <thead>
-            <tr style={{ background: "#161B22", borderBottom: "1px solid #21262D" }}>
-              <th className="text-left px-4 py-3 font-semibold" style={{ color: "#6E7681" }}>Title</th>
-              <th className="text-left px-4 py-3 font-semibold" style={{ color: "#6E7681" }}>Type</th>
-              <th className="text-left px-4 py-3 font-semibold hidden md:table-cell" style={{ color: "#6E7681" }}>Slug</th>
-              <th className="text-left px-4 py-3 font-semibold hidden lg:table-cell" style={{ color: "#6E7681" }}>Updated</th>
-              <th className="text-right px-4 py-3 font-semibold" style={{ color: "#6E7681" }}>Actions</th>
+            <tr>
+              <th>Title</th>
+              <th>Type</th>
+              <th className="hidden md:table-cell">Slug</th>
+              <th className="hidden lg:table-cell">Updated</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, idx) => (
-              <tr key={`${row.type}-${row.id}`}
-                style={{ background: idx % 2 === 0 ? "#0D1117" : "#161B22", borderBottom: "1px solid #21262D" }}>
-                <td className="px-4 py-3">
-                  <div className="font-medium" style={{ color: "#C9D1D9" }}>{row.title}</div>
+            {rows.map((row) => (
+              <tr key={`${row.type}-${row.id}`}>
+                <td>
+                  <div className="font-medium" style={{ color: "var(--admin-text-primary)" }}>{row.title}</div>
                 </td>
-                <td className="px-4 py-3">
+                <td>
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded w-fit"
+                    <span className="admin-badge text-xs font-bold rounded w-fit"
                       style={{ background: row.badgeBg, color: row.badgeColor }}>
                       {row.badge}
                     </span>
-                    <span className="text-xs hidden sm:block" style={{ color: "#484F58" }}>
+                    <span className="text-xs hidden sm:block" style={{ color: "var(--admin-text-faint)" }}>
                       {TYPE_LABELS[row.type]}
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 hidden md:table-cell">
-                  <span className="text-xs font-mono" style={{ color: "#484F58" }}>/{row.slug}</span>
+                <td className="hidden md:table-cell">
+                  <span className="text-xs font-mono" style={{ color: "var(--admin-text-faint)" }}>/{row.slug}</span>
                 </td>
-                <td className="px-4 py-3 text-xs hidden lg:table-cell" style={{ color: "#6E7681" }}>
+                <td className="text-xs hidden lg:table-cell" style={{ color: "var(--admin-text-subtle)" }}>
                   {new Date(row.updated_at).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td>
                   <div className="flex items-center justify-end gap-2">
-                    <Link href={row.viewHref} target="_blank"
-                      className="text-xs font-semibold px-3 py-1.5 rounded"
-                      style={{ background: "#161B22", color: "#6E7681", border: "1px solid #21262D" }}>
+                    <Link href={row.viewHref} target="_blank" className="admin-btn admin-btn-secondary text-xs py-1 px-3">
                       View ↗
                     </Link>
-                    <Link href={row.editHref}
-                      className="text-xs font-semibold px-3 py-1.5 rounded"
-                      style={{ background: "#21262D", color: "#C9D1D9" }}>
+                    <Link href={row.editHref} className="admin-btn admin-btn-primary text-xs py-1 px-3">
                       Edit
                     </Link>
                   </div>
@@ -194,20 +181,20 @@ export default async function CmsIndexPage() {
       </div>
 
       {/* Editor guide */}
-      <div className="mt-6 rounded-xl p-5" style={{ background: "#161B22", border: "1px solid #21262D" }}>
-        <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "#58A6FF" }}>How editing works per content type</div>
+      <div className="mt-6 rounded-xl p-5" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(89,37,244,0.12)" }}>
+        <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "var(--admin-accent)" }}>How editing works per content type</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { label: "CMS Pages", color: "#6EE7B7", desc: "Free-form block editor. Add, remove and reorder any blocks (heading, paragraph, image, CTA, callout, two-col, HTML). Full creative control. No locked structure." },
-            { label: "Issues", color: "#F87171", desc: "Structured form editor with dedicated fields: title, definition, Australian data, mechanisms, impact boxes, at-risk groups, and sources. Layout is fixed by the Issue page template." },
-            { label: "States", color: "#58A6FF", desc: "Structured form with state name, subtitle, and a JSONB array of priority wellbeing issues (name, badge color, stat, description). Layout is fixed by the State page template." },
-            { label: "Areas / Cities", color: "#C084FC", desc: "Structured form with area name, type, population, schools, overview, key stats, priority issues, and prevention note. Layout is fixed by the Area page template." },
+            { label: "CMS Pages",     color: "var(--admin-success)",      desc: "Free-form block editor. Add, remove and reorder any blocks (heading, paragraph, image, CTA, callout, two-col, HTML). Full creative control. No locked structure." },
+            { label: "Issues",        color: "var(--admin-danger)",        desc: "Structured form editor with dedicated fields: title, definition, Australian data, mechanisms, impact boxes, at-risk groups, and sources. Layout is fixed by the Issue page template." },
+            { label: "States",        color: "var(--admin-accent)",        desc: "Structured form with state name, subtitle, and a JSONB array of priority wellbeing issues (name, badge color, stat, description). Layout is fixed by the State page template." },
+            { label: "Areas / Cities",color: "var(--admin-warning-light)", desc: "Structured form with area name, type, population, schools, overview, key stats, priority issues, and prevention note. Layout is fixed by the Area page template." },
           ].map(item => (
             <div key={item.label} className="flex gap-3">
               <div className="w-1.5 rounded-full flex-shrink-0 mt-1" style={{ background: item.color, minHeight: "16px" }} />
               <div>
                 <div className="text-xs font-bold mb-1" style={{ color: item.color }}>{item.label}</div>
-                <div className="text-xs leading-relaxed" style={{ color: "#6E7681" }}>{item.desc}</div>
+                <div className="text-xs leading-relaxed" style={{ color: "var(--admin-text-muted)" }}>{item.desc}</div>
               </div>
             </div>
           ))}
