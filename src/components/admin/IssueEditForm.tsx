@@ -33,25 +33,26 @@ const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
 const LABEL_STYLE = { color: "#6E7681" };
 const FIELD = "mb-5";
 
-export default function IssueEditForm({ issue }: { issue: Issue }) {
+export default function IssueEditForm({ issue }: { issue: Issue | null }) {
   const router = useRouter();
+  const isNew = !issue;
   const [form, setForm] = useState({
-    rank: issue.rank,
-    slug: issue.slug,
-    icon: issue.icon,
-    severity: issue.severity,
-    title: issue.title,
-    anchor_stat: issue.anchor_stat,
-    short_desc: issue.short_desc,
-    definition: issue.definition,
-    australian_data: issue.australian_data,
-    mechanisms: issue.mechanisms,
-    impacts: JSON.stringify(issue.impacts, null, 2),
-    groups: (issue.groups as string[]).join("\n"),
-    sources: (issue.sources as string[]).join("\n"),
-    seo_title: issue.seo_title ?? "",
-    seo_desc: issue.seo_desc ?? "",
-    og_image: issue.og_image ?? "",
+    rank: issue?.rank ?? 0,
+    slug: issue?.slug ?? "",
+    icon: issue?.icon ?? "",
+    severity: issue?.severity ?? "notable",
+    title: issue?.title ?? "",
+    anchor_stat: issue?.anchor_stat ?? "",
+    short_desc: issue?.short_desc ?? "",
+    definition: issue?.definition ?? "",
+    australian_data: issue?.australian_data ?? "",
+    mechanisms: issue?.mechanisms ?? "",
+    impacts: JSON.stringify(issue?.impacts ?? [], null, 2),
+    groups: (issue?.groups as string[] ?? []).join("\n"),
+    sources: (issue?.sources as string[] ?? []).join("\n"),
+    seo_title: issue?.seo_title ?? "",
+    seo_desc: issue?.seo_desc ?? "",
+    og_image: issue?.og_image ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -81,7 +82,7 @@ export default function IssueEditForm({ issue }: { issue: Issue }) {
     }
 
     const sb = createClient();
-    const { error: err } = await sb.from("issues").update({
+    const payload = {
       rank: Number(form.rank),
       slug: form.slug.trim(),
       icon: form.icon.trim(),
@@ -98,19 +99,24 @@ export default function IssueEditForm({ issue }: { issue: Issue }) {
       seo_title: form.seo_title.trim(),
       seo_desc: form.seo_desc.trim(),
       og_image: form.og_image.trim(),
-    }).eq("id", issue.id);
+    };
 
-    if (err) {
-      setError(err.message);
+    if (isNew) {
+      const { data, error: err } = await sb.from("issues").insert(payload).select("id").single();
+      if (err) { setError(err.message); } else if (data) {
+        router.push(`/admin/issues/${data.id}`);
+        router.refresh();
+        return;
+      }
     } else {
-      setSuccess(true);
-      router.refresh();
+      const { error: err } = await sb.from("issues").update(payload).eq("id", issue!.id);
+      if (err) { setError(err.message); } else { setSuccess(true); router.refresh(); }
     }
     setSaving(false);
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${issue.title}"? This cannot be undone.`)) return;
+    if (!issue || !confirm(`Delete "${issue.title}"? This cannot be undone.`)) return;
     const sb = createClient();
     await sb.from("issues").delete().eq("id", issue.id);
     router.push("/admin/issues");

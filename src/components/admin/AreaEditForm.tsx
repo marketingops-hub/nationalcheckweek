@@ -152,28 +152,29 @@ function parseJsonArray<T>(raw: unknown, fallback: T[]): T[] {
   return fallback;
 }
 
-export default function AreaEditForm({ area }: { area: Area }) {
+export default function AreaEditForm({ area }: { area: Area | null }) {
   const router = useRouter();
+  const isNew = !area;
   const [tab, setTab] = useState<"info" | "stats" | "issues" | "seo">("info");
   const [form, setForm] = useState({
-    slug: area.slug ?? "",
-    name: area.name ?? "",
-    state: area.state ?? "",
-    state_slug: area.state_slug ?? "",
-    type: area.type ?? "city",
-    population: area.population ?? "",
-    schools: area.schools ?? "",
-    overview: area.overview ?? "",
-    prevention: area.prevention ?? "",
-    seo_title: area.seo_title ?? "",
-    seo_desc: area.seo_desc ?? "",
-    og_image: area.og_image ?? "",
+    slug: area?.slug ?? "",
+    name: area?.name ?? "",
+    state: area?.state ?? "",
+    state_slug: area?.state_slug ?? "",
+    type: area?.type ?? "city",
+    population: area?.population ?? "",
+    schools: area?.schools ?? "",
+    overview: area?.overview ?? "",
+    prevention: area?.prevention ?? "",
+    seo_title: area?.seo_title ?? "",
+    seo_desc: area?.seo_desc ?? "",
+    og_image: area?.og_image ?? "",
   });
   const [keyStats, setKeyStats] = useState<KeyStat[]>(
-    parseJsonArray<KeyStat>(area.key_stats, [])
+    parseJsonArray<KeyStat>(area?.key_stats, [])
   );
   const [issues, setIssues] = useState<Issue[]>(
-    parseJsonArray<Issue>(area.issues, [])
+    parseJsonArray<Issue>(area?.issues, [])
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -197,11 +198,13 @@ export default function AreaEditForm({ area }: { area: Area }) {
   function addIssue() { setIssues(s => [...s, { title: "", severity: "notable", stat: "", desc: "" }]); }
 
   async function handleSave() {
+    if (!form.name.trim()) { setError("Name is required."); return; }
+    if (!form.slug.trim()) { setError("Slug is required."); return; }
     setSaving(true);
     setError("");
     setSuccess(false);
     const sb = createClient();
-    const { error: err } = await sb.from("areas").update({
+    const payload = {
       slug: form.slug.trim(),
       name: form.name.trim(),
       state: form.state.trim(),
@@ -216,13 +219,24 @@ export default function AreaEditForm({ area }: { area: Area }) {
       seo_title: form.seo_title.trim(),
       seo_desc: form.seo_desc.trim(),
       og_image: form.og_image.trim(),
-    }).eq("id", area.id);
-    if (err) { setError(err.message); } else { setSuccess(true); router.refresh(); }
+    };
+
+    if (isNew) {
+      const { data, error: err } = await sb.from("areas").insert(payload).select("id").single();
+      if (err) { setError(err.message); } else if (data) {
+        router.push(`/admin/content/${data.id}`);
+        router.refresh();
+        return;
+      }
+    } else {
+      const { error: err } = await sb.from("areas").update(payload).eq("id", area!.id);
+      if (err) { setError(err.message); } else { setSuccess(true); router.refresh(); }
+    }
     setSaving(false);
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${area.name}"? This cannot be undone.`)) return;
+    if (!area || !confirm(`Delete "${area.name}"? This cannot be undone.`)) return;
     const sb = createClient();
     await sb.from("areas").delete().eq("id", area.id);
     router.push("/admin/content");

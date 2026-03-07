@@ -25,17 +25,18 @@ const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
 const LABEL_STYLE = { color: "#6E7681" };
 const FIELD = "mb-5";
 
-export default function StateEditForm({ state }: { state: State }) {
+export default function StateEditForm({ state }: { state: State | null }) {
   const router = useRouter();
+  const isNew = !state;
   const [form, setForm] = useState({
-    slug: state.slug,
-    name: state.name,
-    icon: state.icon,
-    subtitle: state.subtitle,
-    issues: JSON.stringify(state.issues, null, 2),
-    seo_title: state.seo_title ?? "",
-    seo_desc: state.seo_desc ?? "",
-    og_image: state.og_image ?? "",
+    slug: state?.slug ?? "",
+    name: state?.name ?? "",
+    icon: state?.icon ?? "",
+    subtitle: state?.subtitle ?? "",
+    issues: JSON.stringify(state?.issues ?? [], null, 2),
+    seo_title: state?.seo_title ?? "",
+    seo_desc: state?.seo_desc ?? "",
+    og_image: state?.og_image ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -61,7 +62,7 @@ export default function StateEditForm({ state }: { state: State }) {
     }
 
     const sb = createClient();
-    const { error: err } = await sb.from("states").update({
+    const payload = {
       slug: form.slug.trim(),
       name: form.name.trim(),
       icon: form.icon.trim(),
@@ -70,19 +71,24 @@ export default function StateEditForm({ state }: { state: State }) {
       seo_title: form.seo_title.trim(),
       seo_desc: form.seo_desc.trim(),
       og_image: form.og_image.trim(),
-    }).eq("id", state.id);
+    };
 
-    if (err) {
-      setError(err.message);
+    if (isNew) {
+      const { data, error: err } = await sb.from("states").insert(payload).select("id").single();
+      if (err) { setError(err.message); } else if (data) {
+        router.push(`/admin/states/${data.id}`);
+        router.refresh();
+        return;
+      }
     } else {
-      setSuccess(true);
-      router.refresh();
+      const { error: err } = await sb.from("states").update(payload).eq("id", state!.id);
+      if (err) { setError(err.message); } else { setSuccess(true); router.refresh(); }
     }
     setSaving(false);
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${state.name}"? This cannot be undone.`)) return;
+    if (!state || !confirm(`Delete "${state.name}"? This cannot be undone.`)) return;
     const sb = createClient();
     await sb.from("states").delete().eq("id", state.id);
     router.push("/admin/states");

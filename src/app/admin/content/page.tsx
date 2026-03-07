@@ -2,12 +2,21 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminContentPage() {
-  const sb = await createClient();
-  const { data: areas } = await sb
-    .from("areas")
-    .select("id, slug, name, state, type, issues, updated_at")
-    .order("state")
-    .order("name");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let areas: any[] | null = null;
+  let fetchError = "";
+  try {
+    const sb = await createClient();
+    const res = await sb
+      .from("areas")
+      .select("id, slug, name, state, type, issues, updated_at")
+      .order("state")
+      .order("name");
+    areas = res.data;
+    if (res.error) fetchError = res.error.message;
+  } catch (e) {
+    fetchError = e instanceof Error ? e.message : "Failed to load areas.";
+  }
 
   return (
     <div>
@@ -27,6 +36,23 @@ export default async function AdminContentPage() {
         </Link>
       </div>
 
+      {fetchError && (
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#3D1515", color: "#F87171", border: "1px solid #7F1D1D" }}>
+          {fetchError}
+        </div>
+      )}
+
+      {(!areas || areas.length === 0) && !fetchError ? (
+        <div className="rounded-xl p-10 text-center" style={{ background: "#161B22", border: "1px solid #21262D" }}>
+          <div className="text-3xl mb-3">🗺️</div>
+          <p className="text-sm font-medium mb-1" style={{ color: "#C9D1D9" }}>No areas yet</p>
+          <p className="text-xs mb-4" style={{ color: "#484F58" }}>Create your first area, city or LGA.</p>
+          <Link href="/admin/content/new" className="text-sm font-semibold px-4 py-2 rounded-lg inline-block"
+            style={{ background: "#238636", color: "#FFFFFF" }}>
+            Create an area
+          </Link>
+        </div>
+      ) : areas && areas.length > 0 ? (
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #21262D" }}>
         <table className="w-full text-sm">
           <thead>
@@ -100,6 +126,7 @@ export default async function AdminContentPage() {
           </tbody>
         </table>
       </div>
+      ) : null}
     </div>
   );
 }

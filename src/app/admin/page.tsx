@@ -2,17 +2,31 @@ import { createClient } from '@/lib/supabase/server';
 
 export default async function AdminDashboard() {
   let userEmail = '';
+  let issueCount = 0;
+  let stateCount = 0;
+  let areaCount = 0;
+  let pageCount = 0;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     userEmail = user?.email ?? '';
+    const [issues, states, areas, pages] = await Promise.all([
+      supabase.from('issues').select('id', { count: 'exact', head: true }),
+      supabase.from('states').select('id', { count: 'exact', head: true }),
+      supabase.from('areas').select('id', { count: 'exact', head: true }),
+      supabase.from('pages').select('id', { count: 'exact', head: true }),
+    ]);
+    issueCount = issues.count ?? 0;
+    stateCount = states.count ?? 0;
+    areaCount = areas.count ?? 0;
+    pageCount = pages.count ?? 0;
   } catch { /* middleware ensures auth, this is just for display */ }
 
   const stats = [
-    { label: 'Issues Tracked', value: '15', change: 'Active', color: '#1C7ED6' },
-    { label: 'States Covered', value: '8', change: 'All territories', color: '#2DA44E' },
-    { label: 'Data Sources', value: '12+', change: 'AIHW, Mission AU…', color: '#9B59B6' },
-    { label: 'Last Updated', value: 'Today', change: 'Mar 2026', color: '#E67E22' },
+    { label: 'Issues Tracked', value: String(issueCount), change: 'Wellbeing issues', color: '#1C7ED6' },
+    { label: 'States & Territories', value: String(stateCount), change: 'With priority data', color: '#2DA44E' },
+    { label: 'Areas / Cities', value: String(areaCount), change: 'LGAs and regions', color: '#9B59B6' },
+    { label: 'CMS Pages', value: String(pageCount), change: 'Custom pages', color: '#E67E22' },
   ];
 
   return (
