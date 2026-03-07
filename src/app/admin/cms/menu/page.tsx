@@ -16,16 +16,11 @@ export default async function CmsMenuPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#58A6FF" }}>CMS</span>
-          <span style={{ color: "#30363D" }}>/</span>
-          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#6E7681" }}>Menu</span>
+      <div className="admin-page-header">
+        <div>
+          <h1>Navigation Menu</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--admin-text-subtle)" }}>Build the front-end navigation. Drag to reorder, link to CMS pages or any custom URL.</p>
         </div>
-        <h1 className="text-xl font-semibold mb-1" style={{ color: "#E6EDF3" }}>Navigation Menu</h1>
-        <p className="text-sm" style={{ color: "#6E7681" }}>
-          Build the front-end navigation. Drag to reorder, link to CMS pages or any custom URL.
-        </p>
       </div>
       <MenuManager initialItems={menuItems ?? []} pages={pages ?? []} />
     </div>
