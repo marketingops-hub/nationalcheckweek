@@ -5,8 +5,25 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SeoPanel from "@/components/admin/SeoPanel";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import type { IssueSource } from "@/components/admin/ui";
 
 interface ImpactBox { title: string; text: string; }
+
+/** Shape returned by POST /api/admin/verify */
+interface VerifyResult {
+  status: "verified" | "partially_verified" | "unverified";
+  confidence: "high" | "medium" | "low";
+  notes: string;
+  sources: { num: number; title: string; url: string; publisher: string; year: string }[];
+  annotated_content: string;
+}
+
+interface PendingVerify {
+  section: string;            // form field key
+  sectionLabel: string;
+  result: VerifyResult;
+  prevContent: string;        // original text before annotation
+}
 
 interface Issue {
   id: string; rank: number; slug: string; icon: string; severity: string;
@@ -79,10 +96,10 @@ function TagList({ items, onAdd, onRemove, placeholder }: {
   );
 }
 
-export default function IssueEditForm({ issue }: { issue: Issue | null }) {
+export default function IssueEditForm({ issue, initialSources = [] }: { issue: Issue | null; initialSources?: IssueSource[] }) {
   const router = useRouter();
   const isNew = !issue;
-  const [tab, setTab] = useState<"basic" | "content" | "impacts" | "seo">("basic");
+  const [tab, setTab] = useState<"basic" | "content" | "impacts" | "sources" | "seo">("basic");
   const [dirty, setDirty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -97,6 +114,17 @@ export default function IssueEditForm({ issue }: { issue: Issue | null }) {
   const [impacts, setImpacts] = useState<ImpactBox[]>(parseJsonArray<ImpactBox>(issue?.impacts, []));
   const [groups, setGroups] = useState<string[]>(parseJsonArray<string>(issue?.groups, []));
   const [sources, setSources] = useState<string[]>(parseJsonArray<string>(issue?.sources, []));
+
+  // ── DB-backed sources ──
+  const [dbSources, setDbSources] = useState<IssueSource[]>(initialSources);
+  const [addingSource, setAddingSource] = useState(false);
+  const [newSource, setNewSource] = useState({ title: "", url: "", publisher: "", year: "" });
+
+  // ── Verification state ──
+  const [verifying, setVerifying] = useState<string | null>(null); // field key being verified
+  const [pendingVerify, setPendingVerify] = useState<PendingVerify | null>(null);
+  const [verifyError, setVerifyError] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -151,10 +179,115 @@ export default function IssueEditForm({ issue }: { issue: Issue | null }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleSave]);
 
+  // ── Verify a content section ──
+  async function handleVerify(fieldKey: string, label: string) {
+    const content = form[fieldKey as keyof typeof form];
+    if (!content || typeof content !== "string" || !content.trim()) {
+      setVerifyError(`"${label}" is empty — nothing to verify.`);
+      return;
+    }
+    if (!issue?.id) { setVerifyError("Save the issue first."); return; }
+
+    setVerifying(fieldKey); setVerifyError(""); setPendingVerify(null);
+
+    try {
+      const sb = createClient();
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) { setVerifyError("Not authenticated."); return; }
+
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          content,
+          section_label: label,
+          issue_title: form.title,
+          existing_source_count: dbSources.length,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) { setVerifyError(json.error ?? "Verification failed."); return; }
+
+      setPendingVerify({
+        section: fieldKey,
+        sectionLabel: label,
+        result: json as VerifyResult,
+        prevContent: content as string,
+      });
+    } catch {
+      setVerifyError("Network error during verification.");
+    } finally {
+      setVerifying(null);
+    }
+  }
+
+  function acceptVerification() {
+    if (!pendingVerify) return;
+    const { section, result } = pendingVerify;
+    // Apply annotated content
+    if (result.annotated_content) {
+      setForm(f => ({ ...f, [section]: result.annotated_content }));
+      setDirty(true);
+    }
+    // Add suggested sources to DB
+    if (result.sources?.length && issue?.id) {
+      const sb = createClient();
+      result.sources.forEach(async (s) => {
+        const { data } = await sb.from("issue_sources").insert({
+          issue_id: issue!.id,
+          num: s.num,
+          title: s.title,
+          url: s.url,
+          publisher: s.publisher ?? "",
+          year: s.year ?? "",
+          verified: true,
+        }).select().single();
+        if (data) setDbSources(prev => [...prev, data]);
+      });
+    }
+    setPendingVerify(null);
+    setVerifyError("");
+  }
+
+  function rejectVerification() {
+    if (!pendingVerify) return;
+    setForm(f => ({ ...f, [pendingVerify.section]: pendingVerify.prevContent }));
+    setPendingVerify(null);
+    setVerifyError("");
+  }
+
+  // ── Source CRUD (DB-backed) ──
+  async function handleAddSource() {
+    if (!issue?.id || !newSource.title.trim()) return;
+    const nextNum = dbSources.length > 0 ? Math.max(...dbSources.map(s => s.num)) + 1 : 1;
+    const sb = createClient();
+    const { data, error: err } = await sb.from("issue_sources").insert({
+      issue_id: issue.id,
+      num: nextNum,
+      title: newSource.title.trim(),
+      url: newSource.url.trim(),
+      publisher: newSource.publisher.trim(),
+      year: newSource.year.trim(),
+      verified: false,
+    }).select().single();
+    if (err) { setError(err.message); return; }
+    if (data) setDbSources(prev => [...prev, data]);
+    setNewSource({ title: "", url: "", publisher: "", year: "" });
+    setAddingSource(false);
+  }
+
+  async function handleDeleteSource(sourceId: string) {
+    const sb = createClient();
+    const { error: err } = await sb.from("issue_sources").delete().eq("id", sourceId);
+    if (err) { setError(err.message); return; }
+    setDbSources(prev => prev.filter(s => s.id !== sourceId));
+  }
+
   const TABS = [
     { id: "basic",   label: "Basic Info",     count: null },
     { id: "content", label: "Content",        count: null },
     { id: "impacts", label: "Impacts & Data", count: impacts.length },
+    { id: "sources", label: "Sources",        count: dbSources.length },
     { id: "seo",     label: "SEO",            count: null },
   ] as const;
 
@@ -213,15 +346,82 @@ export default function IssueEditForm({ issue }: { issue: Issue | null }) {
       {/* ── Tab: Content ── */}
       {tab === "content" && (
         <div className="admin-card">
-          <Field label="Definition (What Is It?)">
-            <textarea rows={5} className={I} style={{ ...IS, resize: "vertical" }} value={form.definition} onChange={e => set("definition", e.target.value)} placeholder="Detailed definition of this wellbeing issue…" />
-          </Field>
-          <Field label="Australian Data">
-            <textarea rows={5} className={I} style={{ ...IS, resize: "vertical" }} value={form.australian_data} onChange={e => set("australian_data", e.target.value)} placeholder="Key Australian statistics and findings…" />
-          </Field>
-          <Field label="Mechanisms (How It Affects Learning)">
-            <textarea rows={5} className={I} style={{ ...IS, resize: "vertical" }} value={form.mechanisms} onChange={e => set("mechanisms", e.target.value)} placeholder="Describe the pathways through which this issue impacts student learning…" />
-          </Field>
+          {/* Verify feedback */}
+          {verifyError && <div className="admin-alert admin-alert-error mb-4">{verifyError}</div>}
+
+          {/* Accept/Reject banner */}
+          {pendingVerify && (
+            <div className="mb-6" style={{ padding: "14px 18px", borderRadius: 12, background: pendingVerify.result.status === "verified" ? "#F0FDF4" : pendingVerify.result.status === "partially_verified" ? "#FFFBEB" : "#FEF2F2", border: `1px solid ${pendingVerify.result.status === "verified" ? "#BBF7D0" : pendingVerify.result.status === "partially_verified" ? "#FDE68A" : "#FECACA"}` }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span style={{ fontSize: 18 }}>{pendingVerify.result.status === "verified" ? "✓" : pendingVerify.result.status === "partially_verified" ? "⚠" : "✗"}</span>
+                <strong className="text-sm" style={{ textTransform: "capitalize" }}>{pendingVerify.result.status.replace("_", " ")}</strong>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(0,0,0,0.06)" }}>
+                  {pendingVerify.result.confidence} confidence
+                </span>
+                <span className="text-xs" style={{ color: "var(--admin-text-subtle)" }}>— {pendingVerify.sectionLabel}</span>
+              </div>
+              <p className="text-sm mb-3" style={{ color: "var(--admin-text-secondary)", lineHeight: 1.6 }}>{pendingVerify.result.notes}</p>
+              {pendingVerify.result.sources?.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--admin-text-subtle)" }}>Suggested Sources ({pendingVerify.result.sources.length})</p>
+                  <div className="space-y-1">
+                    {pendingVerify.result.sources.map((s, i) => (
+                      <div key={i} className="text-xs" style={{ color: "var(--admin-text-secondary)" }}>
+                        <strong>({s.num})</strong> {s.title} {s.publisher && `— ${s.publisher}`} {s.year && `(${s.year})`}
+                        {s.url && <> — <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--admin-accent)" }}>{s.url.slice(0, 60)}…</a></>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button onClick={acceptVerification} className="admin-btn admin-btn-primary admin-btn-sm" style={{ gap: 5 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Accept &amp; Add Sources
+                </button>
+                <button onClick={rejectVerification} className="admin-btn admin-btn-danger admin-btn-sm" style={{ gap: 5 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Reject
+                </button>
+              </div>
+            </div>
+          )}
+
+          {[
+            { key: "definition", label: "Definition (What Is It?)", placeholder: "Detailed definition of this wellbeing issue…" },
+            { key: "australian_data", label: "Australian Data", placeholder: "Key Australian statistics and findings…" },
+            { key: "mechanisms", label: "Mechanisms (How It Affects Learning)", placeholder: "Describe the pathways through which this issue impacts student learning…" },
+          ].map(sec => (
+            <div key={sec.key} className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <label className={L} style={{ ...LS, margin: 0 }}>{sec.label}</label>
+                {!isNew && (
+                  <button
+                    type="button"
+                    onClick={() => handleVerify(sec.key, sec.label)}
+                    disabled={verifying === sec.key}
+                    className="admin-btn admin-btn-secondary admin-btn-sm"
+                    style={{ opacity: verifying === sec.key ? 0.6 : 1, gap: 5 }}
+                  >
+                    {verifying === sec.key ? (
+                      <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                    ) : (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                    )}
+                    {verifying === sec.key ? "Verifying…" : "Verify"}
+                  </button>
+                )}
+              </div>
+              <textarea
+                rows={5}
+                className={I}
+                style={{ ...IS, resize: "vertical", ...(pendingVerify?.section === sec.key ? { borderColor: "var(--admin-accent)", boxShadow: "0 0 0 2px rgba(89,37,244,0.15)" } : {}) }}
+                value={form[sec.key as keyof typeof form] as string}
+                onChange={e => set(sec.key, e.target.value)}
+                placeholder={sec.placeholder}
+              />
+            </div>
+          ))}
         </div>
       )}
 
@@ -255,13 +455,101 @@ export default function IssueEditForm({ issue }: { issue: Issue | null }) {
               placeholder="e.g. Indigenous students, Rural students…" />
           </div>
 
+        </div>
+      )}
+
+      {/* ── Tab: Sources ── */}
+      {tab === "sources" && (
+        <div className="space-y-4">
           <div className="admin-card">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Sources & Citations</h2>
-            <p className="text-xs mb-4" style={{ color: "var(--admin-text-subtle)" }}>Add reference URLs or citation text — press Enter after each</p>
-            <TagList items={sources} onAdd={val => { setSources(s => [...s, val]); setDirty(true); }}
-              onRemove={idx => { setSources(s => s.filter((_, i) => i !== idx)); setDirty(true); }}
-              placeholder="e.g. https://aihw.gov.au/reports/…" />
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>References &amp; Citations</h2>
+                <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>
+                  Authoritative sources backing the data on this page. Use <strong>Verify</strong> in the Content tab to auto-discover sources.
+                </p>
+              </div>
+              {!isNew && (
+                <button onClick={() => setAddingSource(true)} className="admin-btn admin-btn-primary text-xs">+ Add Source</button>
+              )}
+            </div>
+
+            {/* Add source form */}
+            {addingSource && (
+              <div className="rounded-xl p-4 mb-4" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <Field label="Title *">
+                    <input className={I} style={IS} value={newSource.title} onChange={e => setNewSource(s => ({ ...s, title: e.target.value }))} placeholder="e.g. AIHW Mental Health Report 2024" />
+                  </Field>
+                  <Field label="URL">
+                    <input className={I} style={IS} value={newSource.url} onChange={e => setNewSource(s => ({ ...s, url: e.target.value }))} placeholder="https://..." />
+                  </Field>
+                  <Field label="Publisher">
+                    <input className={I} style={IS} value={newSource.publisher} onChange={e => setNewSource(s => ({ ...s, publisher: e.target.value }))} placeholder="e.g. Australian Institute of Health and Welfare" />
+                  </Field>
+                  <Field label="Year">
+                    <input className={I} style={IS} value={newSource.year} onChange={e => setNewSource(s => ({ ...s, year: e.target.value }))} placeholder="e.g. 2024" />
+                  </Field>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleAddSource} className="admin-btn admin-btn-primary admin-btn-sm">Add</button>
+                  <button onClick={() => { setAddingSource(false); setNewSource({ title: "", url: "", publisher: "", year: "" }); }} className="admin-btn admin-btn-secondary admin-btn-sm">Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {/* Sources list */}
+            {dbSources.length === 0 ? (
+              <div className="rounded-xl p-8 text-center" style={{ border: "2px dashed var(--admin-border)" }}>
+                <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>
+                  No sources yet. Use the <strong>Verify</strong> button in the Content tab to auto-discover sources, or add them manually.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {dbSources.sort((a, b) => a.num - b.num).map(src => (
+                  <div key={src.id} className="flex items-start gap-3 rounded-xl p-3" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+                    <span className="text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ width: 28, height: 28, background: src.verified ? "#DCFCE7" : "var(--admin-border)", color: src.verified ? "#166534" : "var(--admin-text-subtle)" }}>
+                      {src.num}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>
+                        {src.title}
+                        {src.verified && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: "#DCFCE7", color: "#166534" }}>VERIFIED</span>}
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-subtle)" }}>
+                        {src.publisher}{src.publisher && src.year && " · "}{src.year}
+                      </div>
+                      {src.url && (
+                        <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs mt-0.5 block truncate" style={{ color: "var(--admin-accent)" }}>
+                          {src.url}
+                        </a>
+                      )}
+                    </div>
+                    <button onClick={() => handleDeleteSource(src.id)} className="admin-icon-btn flex-shrink-0" aria-label={`Delete source ${src.num}`}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Legacy sources (from JSONB — read-only migration hint) */}
+          {sources.length > 0 && (
+            <div className="admin-card">
+              <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Legacy Sources (from old format)</h2>
+              <p className="text-xs mb-3" style={{ color: "var(--admin-text-subtle)" }}>These are stored in the old JSONB format. Consider migrating them to the new structured sources above.</p>
+              <div className="space-y-1">
+                {sources.map((s, i) => (
+                  <div key={i} className="text-xs py-1.5 px-2 rounded" style={{ background: "var(--admin-bg-elevated)", color: "var(--admin-text-secondary)" }}>
+                    📄 {s}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

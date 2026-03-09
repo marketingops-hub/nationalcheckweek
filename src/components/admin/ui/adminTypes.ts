@@ -46,6 +46,20 @@ export interface AdminVaultSource {
   created_at: string;
 }
 
+/** Row shape returned by the issue_sources table. */
+export interface IssueSource {
+  id: string;
+  issue_id: string;
+  num: number;
+  title: string;
+  url: string;
+  publisher: string;
+  year: string;
+  accessed_at: string;
+  verified: boolean;
+  created_at: string;
+}
+
 /** Row shape returned by the vault_content table. */
 export interface AdminVaultContent {
   id: string;

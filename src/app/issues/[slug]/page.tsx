@@ -3,6 +3,38 @@ import Link from "next/link";
 import InnerNav from "@/components/InnerNav";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createBrowserClient } from "@supabase/supabase-js";
+import React from "react";
+
+interface DbSource {
+  id: string; num: number; title: string; url: string;
+  publisher: string; year: string; verified: boolean;
+}
+
+/** Renders text with inline (N) markers as anchor links to #source-N */
+function CitedText({ text, sources }: { text: string; sources: DbSource[] }) {
+  if (!sources.length) return <>{text}</>;
+  const nums = new Set(sources.map(s => s.num));
+  // Match (1), (2), (3) etc.
+  const parts = text.split(/(\(\d+\))/);
+  return (
+    <>
+      {parts.map((part, i) => {
+        const match = part.match(/^\((\d+)\)$/);
+        if (match && nums.has(Number(match[1]))) {
+          const num = match[1];
+          return (
+            <a key={i} href={`#source-${num}`}
+              style={{ color: "var(--teal)", fontWeight: 600, fontSize: "0.8em", textDecoration: "none", verticalAlign: "super" }}
+              title={`Source ${num}`}>
+              ({num})
+            </a>
+          );
+        }
+        return <React.Fragment key={i}>{part}</React.Fragment>;
+      })}
+    </>
+  );
+}
 
 export async function generateStaticParams() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,6 +59,14 @@ export default async function IssuePage({ params }: Props) {
     .eq("slug", slug)
     .single();
   if (!issue) notFound();
+
+  // Fetch structured sources from DB
+  const { data: dbSources } = await sb
+    .from("issue_sources")
+    .select("id, num, title, url, publisher, year, verified")
+    .eq("issue_id", issue.id)
+    .order("num");
+  const issueSources: DbSource[] = dbSources ?? [];
 
   const { data: prevData } = await sb
     .from("issues")
@@ -115,7 +155,7 @@ export default async function IssuePage({ params }: Props) {
           <h2 style={{ fontSize: "1.3rem", color: "var(--navy)", marginBottom: "16px", paddingBottom: "12px", borderBottom: "2px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             What Is It?
           </h2>
-          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}>{issue.definition}</p>
+          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}><CitedText text={issue.definition} sources={issueSources} /></p>
         </section>
 
         {/* AUSTRALIAN DATA */}
@@ -123,7 +163,7 @@ export default async function IssuePage({ params }: Props) {
           <h2 style={{ fontSize: "1.3rem", color: "var(--navy)", marginBottom: "16px", paddingBottom: "12px", borderBottom: "2px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             What the Australian Data Shows
           </h2>
-          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}>{issue.australian_data}</p>
+          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}><CitedText text={issue.australian_data} sources={issueSources} /></p>
         </section>
 
         {/* HOW IT AFFECTS LEARNING */}
@@ -131,7 +171,7 @@ export default async function IssuePage({ params }: Props) {
           <h2 style={{ fontSize: "1.3rem", color: "var(--navy)", marginBottom: "16px", paddingBottom: "12px", borderBottom: "2px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             How It Affects Learning & Development
           </h2>
-          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}>{issue.mechanisms}</p>
+          <p style={{ fontSize: "1rem", color: "var(--text-mid)", lineHeight: 1.85 }}><CitedText text={issue.mechanisms} sources={issueSources} /></p>
         </section>
 
         {/* IMPACT AREAS */}
@@ -186,17 +226,59 @@ export default async function IssuePage({ params }: Props) {
         </section>
 
         {/* SOURCES */}
-        <section style={{ marginBottom: "52px" }}>
+        <section id="sources" style={{ marginBottom: "52px" }}>
           <h2 style={{ fontSize: "1.3rem", color: "var(--navy)", marginBottom: "16px", paddingBottom: "12px", borderBottom: "2px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Sources
+            Sources &amp; References
           </h2>
-          <div>
-            {(issue.sources as string[]).map((s) => (
-              <div key={s} style={{ fontSize: "0.9rem", color: "var(--text-light)", padding: "10px 0", borderBottom: "1px solid var(--border)", lineHeight: 1.6 }}>
-                📄 {s}
-              </div>
-            ))}
-          </div>
+
+          {/* Structured DB sources */}
+          {issueSources.length > 0 && (
+            <div style={{ marginBottom: "20px" }}>
+              {issueSources.map((src) => (
+                <div key={src.id} id={`source-${src.num}`} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0, fontSize: "0.75rem", fontWeight: 700,
+                    background: src.verified ? "#DCFCE7" : "rgba(11,29,53,0.06)",
+                    color: src.verified ? "#166534" : "var(--navy)",
+                  }}>
+                    {src.num}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--navy)" }}>
+                      {src.url ? (
+                        <a href={src.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--navy)", textDecoration: "none", borderBottom: "1px solid var(--border)" }}>
+                          {src.title}
+                        </a>
+                      ) : src.title}
+                      {src.verified && (
+                        <span style={{ marginLeft: 8, fontSize: "0.65rem", fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#DCFCE7", color: "#166534", verticalAlign: "middle" }}>VERIFIED</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--text-light)", marginTop: 2 }}>
+                      {src.publisher}{src.publisher && src.year && " · "}{src.year}
+                      {src.url && <span style={{ marginLeft: 8 }}><a href={src.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--teal)", fontSize: "0.8rem" }}>↗ View source</a></span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Legacy JSONB sources fallback */}
+          {(!issueSources.length && (issue.sources as string[])?.length > 0) && (
+            <div>
+              {(issue.sources as string[]).map((s) => (
+                <div key={s} style={{ fontSize: "0.9rem", color: "var(--text-light)", padding: "10px 0", borderBottom: "1px solid var(--border)", lineHeight: 1.6 }}>
+                  📄 {s}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {issueSources.length === 0 && !(issue.sources as string[])?.length && (
+            <p style={{ fontSize: "0.9rem", color: "var(--text-light)", fontStyle: "italic" }}>Sources will be added as this content is verified.</p>
+          )}
         </section>
 
         {/* PREV / NEXT */}

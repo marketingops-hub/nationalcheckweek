@@ -14,6 +14,13 @@ export default async function EditIssuePage({ params }: Props) {
   const { data: issue } = await sb.from("issues").select("*").eq("id", id).single();
   if (!issue) notFound();
 
+  // Fetch sources from dedicated table (graceful fallback if table doesn't exist yet)
+  const { data: dbSources } = await sb
+    .from("issue_sources")
+    .select("*")
+    .eq("issue_id", id)
+    .order("num");
+
   return (
     <div>
       <div className="mb-8">
@@ -33,7 +40,7 @@ export default async function EditIssuePage({ params }: Props) {
           </Link>
         </div>
       </div>
-      <IssueEditForm issue={issue} />
+      <IssueEditForm issue={issue} initialSources={dbSources ?? []} />
     </div>
   );
 }
