@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   AdminField,
@@ -19,12 +19,12 @@ import {
 // Module-level constants (not recreated on every render)
 // ---------------------------------------------------------------------------
 
-/** Provider badge colours keyed by provider slug. */
-const PROVIDER_COLORS: Record<string, { bg: string; color: string }> = {
-  openai:    { bg: "#dcfce7",              color: "#15803d" },
-  anthropic: { bg: "rgba(89,37,244,0.1)", color: "#5925f4" },
-  google:    { bg: "#fef9c3",              color: "#854d0e" },
-  other:     { bg: "#f1f5f9",              color: "#475569" },
+/** Maps provider slug → SWA badge class. */
+const PROVIDER_BADGE: Record<string, string> = {
+  openai:    "swa-badge--success",
+  anthropic: "swa-badge--primary",
+  google:    "swa-badge--warning",
+  other:     "swa-badge--info",
 };
 
 /** Validates the add-key form. Returns a FieldErrors map (empty = valid). */
@@ -45,6 +45,7 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
   const [keys, setKeys]               = useState<AdminApiKey[]>(initialKeys);
   const [showCreate, setShowCreate]   = useState(false);
   const [revealed, setRevealed]       = useState<Set<string>>(new Set());
+  const [search, setSearch]           = useState("");
   const [label, setLabel]             = useState("");
   const [provider, setProvider]       = useState("openai");
   const [keyValue, setKeyValue]       = useState("");
@@ -53,6 +54,18 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
   const [success, setSuccess]         = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  // ── Derived data ──
+  const activeCount = keys.filter(k => k.is_active).length;
+  const providerCount = new Set(keys.map(k => k.provider)).size;
+
+  const filtered = useMemo(() => {
+    if (!search) return keys;
+    const q = search.toLowerCase();
+    return keys.filter(k =>
+      k.label.toLowerCase().includes(q) || k.provider.toLowerCase().includes(q)
+    );
+  }, [keys, search]);
 
   // ── Helpers ──
 
@@ -127,14 +140,57 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
   // ── Render ──
 
   return (
-    <div className="space-y-8">
-      {/* Global feedback (hidden while create panel is open) */}
+    <div>
+      {/* ── Stat Cards ── */}
+      <div className="swa-stat-grid" style={{ marginBottom: 24 }}>
+        <div className="swa-stat-card">
+          <div className="swa-stat-card__top">
+            <span className="swa-stat-card__label">Total Keys</span>
+            <span className="swa-badge swa-badge--primary">
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>vpn_key</span>
+              All
+            </span>
+          </div>
+          <div className="swa-stat-card__value">{keys.length}</div>
+          <div className="swa-stat-card__bottom">
+            <span className="swa-stat-card__delta">API keys configured</span>
+          </div>
+        </div>
+
+        <div className="swa-stat-card">
+          <div className="swa-stat-card__top">
+            <span className="swa-stat-card__label">Active Keys</span>
+            <span className="swa-badge swa-badge--success">In use</span>
+          </div>
+          <div className="swa-stat-card__value">{activeCount}</div>
+          <div className="swa-stat-card__bottom">
+            <span className="swa-stat-card__delta">
+              {keys.length > 0
+                ? `${Math.round((activeCount / keys.length) * 100)}% active`
+                : "No keys yet"}
+            </span>
+          </div>
+        </div>
+
+        <div className="swa-stat-card">
+          <div className="swa-stat-card__top">
+            <span className="swa-stat-card__label">Providers</span>
+            <span className="swa-badge swa-badge--info">Integrations</span>
+          </div>
+          <div className="swa-stat-card__value">{providerCount}</div>
+          <div className="swa-stat-card__bottom">
+            <span className="swa-stat-card__delta">Distinct providers</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Global feedback ── */}
       {!showCreate && error   && <div className="admin-alert admin-alert-error"  role="alert">{error}</div>}
       {!showCreate && success && <div className="admin-alert admin-alert-success" role="status">{success}</div>}
 
       {/* ── Add Key inline panel ── */}
       {showCreate && (
-        <div className="admin-form-panel" role="region" aria-label="Add API key">
+        <div className="swa-card" role="region" aria-label="Add API key" style={{ marginBottom: 24 }}>
           <FormPanelHeader
             title="Add API Key"
             subtitle="Keys are stored encrypted and only accessible to admin users."
@@ -186,114 +242,153 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
 
           {error && <div className="admin-alert admin-alert-error mb-6" role="alert">{error}</div>}
 
-          <div className="flex gap-3">
+          <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={handleCreate}
               disabled={busy}
-              className="admin-btn admin-btn-primary"
+              className="swa-btn swa-btn-primary"
               style={{ opacity: busy ? 0.6 : 1 }}
             >
               {busy ? "Saving…" : "Add Key"}
             </button>
-            <button onClick={closeCreatePanel} className="admin-btn admin-btn-secondary">
+            <button
+              onClick={closeCreatePanel}
+              style={{
+                padding: "9px 16px",
+                fontSize: 13,
+                fontWeight: 600,
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--color-border)",
+                background: "var(--color-card)",
+                color: "var(--color-text-muted)",
+                cursor: "pointer",
+              }}
+            >
               Cancel
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Toolbar ── */}
+      {/* ── Toolbar: Search + Add button ── */}
       {!showCreate && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: "var(--admin-text-subtle)" }}>
-            {keys.length} key{keys.length !== 1 ? "s" : ""} configured
-          </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <input
+              className="swa-search"
+              placeholder="Search keys…"
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <span style={{ fontSize: 13, color: "var(--color-text-faint)" }}>
+              {filtered.length} of {keys.length} keys
+            </span>
+          </div>
           <button
             onClick={() => { setShowCreate(true); clearMessages(); setFieldErrors({}); }}
-            className="admin-btn admin-btn-primary"
+            className="swa-btn swa-btn-primary"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
             Add API Key
           </button>
         </div>
       )}
 
       {/* ── Keys table / empty state ── */}
-      {keys.length === 0 ? (
-        <div className="admin-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-          </svg>
-          <h3>No API keys yet</h3>
-          <p>Add a key above to enable AI content generation.</p>
-          <button
-            onClick={() => { setShowCreate(true); clearMessages(); }}
-            className="admin-btn admin-btn-primary"
+      {filtered.length === 0 ? (
+        <div className="swa-card" style={{ textAlign: "center", padding: "48px 24px" }}>
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 48, color: "var(--color-text-faint)", marginBottom: 12, display: "block" }}
           >
-            Add your first key
-          </button>
+            vpn_key
+          </span>
+          <div style={{ fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 4 }}>
+            {keys.length === 0 ? "No API keys yet" : "No keys match your search"}
+          </div>
+          <div style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 20 }}>
+            {keys.length === 0
+              ? "Add your first key to enable AI content generation."
+              : `No results for "${search}"`}
+          </div>
+          {keys.length === 0 && (
+            <button
+              onClick={() => { setShowCreate(true); clearMessages(); }}
+              className="swa-btn swa-btn-primary"
+            >
+              Add your first key
+            </button>
+          )}
         </div>
       ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <div className="swa-card" style={{ padding: 0, overflowX: "auto" }}>
+          <table className="swa-table" style={{ minWidth: 800 }}>
             <thead>
               <tr>
                 <th scope="col">Label</th>
                 <th scope="col">Provider</th>
-                <th scope="col" className="hidden md:table-cell">Key</th>
-                <th scope="col" className="hidden md:table-cell">Added</th>
+                <th scope="col">Key</th>
+                <th scope="col">Added</th>
                 <th scope="col">Status</th>
-                <th scope="col">Actions</th>
+                <th scope="col" style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {keys.map(key => {
-                const pc = PROVIDER_COLORS[key.provider] ?? PROVIDER_COLORS.other;
+              {filtered.map(key => {
+                const badgeCls = PROVIDER_BADGE[key.provider] ?? PROVIDER_BADGE.other;
                 const isRevealed = revealed.has(key.id);
                 return (
                   <tr key={key.id}>
                     <td>
-                      <div className="text-[15px] font-semibold" style={{ color: "var(--admin-text-primary)" }}>
+                      <div style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>
                         {key.label}
                       </div>
                     </td>
                     <td>
-                      <span className="admin-badge capitalize" style={{ background: pc.bg, color: pc.color }}>
+                      <span className={`swa-badge ${badgeCls}`} style={{ textTransform: "capitalize" }}>
                         {key.provider}
                       </span>
                     </td>
-                    <td className="hidden md:table-cell">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs" style={{ color: "var(--admin-text-muted)" }}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--color-text-muted)" }}>
                           {isRevealed ? key.key_value : maskKey(key.key_value)}
                         </span>
                         <button
                           onClick={() => toggleReveal(key.id)}
-                          className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
-                          style={{ background: "var(--admin-bg-elevated)", color: "var(--admin-text-subtle)", border: "1px solid var(--admin-border)" }}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "3px 8px",
+                            borderRadius: "var(--radius-sm)",
+                            background: "var(--color-primary-pale)",
+                            color: "var(--color-primary)",
+                            border: "1px solid var(--color-primary-light)",
+                            cursor: "pointer",
+                          }}
                           aria-label={isRevealed ? `Hide key for ${key.label}` : `Show key for ${key.label}`}
                         >
                           {isRevealed ? "Hide" : "Show"}
                         </button>
                       </div>
                     </td>
-                    <td className="hidden md:table-cell">
-                      <span className="text-sm" style={{ color: "var(--admin-text-muted)" }}>
+                    <td>
+                      <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
                         {fmtDate(key.created_at)}
                       </span>
                     </td>
                     <td>
                       <button
                         onClick={() => handleToggle(key)}
-                        className={`admin-badge cursor-pointer ${key.is_active ? "admin-badge-green" : "admin-badge-slate"}`}
+                        className={`swa-badge ${key.is_active ? "swa-badge--success" : "swa-badge--error"}`}
+                        style={{ cursor: "pointer", border: "none" }}
                         aria-label={`Toggle ${key.label} ${key.is_active ? "inactive" : "active"}`}
                       >
                         {key.is_active ? "Active" : "Inactive"}
                       </button>
                     </td>
-                    <td>
+                    <td style={{ textAlign: "right" }}>
                       {confirmDelete === key.id ? (
                         <DangerConfirm
                           message={<>Delete <strong>{key.label}</strong>?</>}
@@ -302,21 +397,29 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
                           busy={busy}
                         />
                       ) : (
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => { setConfirmDelete(key.id); clearMessages(); }}
-                            disabled={busy}
-                            className="admin-icon-btn"
-                            aria-label={`Delete API key ${key.label}`}
-                            style={{ color: "var(--admin-danger)" }}
-                          >
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <polyline points="3 6 5 6 21 6"/>
-                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                              <path d="M10 11v6"/><path d="M14 11v6"/>
-                            </svg>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => { setConfirmDelete(key.id); clearMessages(); }}
+                          disabled={busy}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 34,
+                            height: 34,
+                            borderRadius: "var(--radius-sm)",
+                            background: "transparent",
+                            color: "var(--color-error)",
+                            border: "1px solid transparent",
+                            cursor: "pointer",
+                          }}
+                          aria-label={`Delete API key ${key.label}`}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6"/><path d="M14 11v6"/>
+                          </svg>
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -328,12 +431,20 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
       )}
 
       {/* ── Security info callout ── */}
-      <div className="rounded-xl p-4" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(89,37,244,0.12)" }}>
-        <p className="text-xs" style={{ color: "var(--admin-text-muted)" }}>
-          <strong style={{ color: "var(--admin-accent)" }}>Security note:</strong>{" "}
+      <div
+        style={{
+          marginTop: 24,
+          borderRadius: "var(--radius-lg)",
+          padding: 16,
+          background: "var(--color-primary-pale)",
+          border: "1px solid var(--color-primary-light)",
+        }}
+      >
+        <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
+          <strong style={{ color: "var(--color-primary)" }}>Security note:</strong>{" "}
           API keys are stored encrypted at rest in Supabase and are only accessible to authenticated admin users.
           Keys marked{" "}
-          <span style={{ color: "var(--admin-success-light)", fontWeight: 600 }}>Active</span>{" "}
+          <span style={{ color: "var(--color-success)", fontWeight: 600 }}>Active</span>{" "}
           will be used by the AI content generation tools.
         </p>
       </div>
