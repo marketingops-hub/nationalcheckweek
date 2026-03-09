@@ -61,57 +61,30 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
   }
 
   return (
-    <aside
-      style={{
-        width: open ? '256px' : '64px',
-        transition: 'width 280ms cubic-bezier(0.4,0,0.2,1)',
-        background: '#fff',
-        borderRight: '1px solid var(--admin-border)',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Brand — exactly 64px to align with topbar h-16 */}
-      <div style={{ height: 64, padding: '0 16px', borderBottom: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: 10,
-          background: 'linear-gradient(135deg, #5925f4, #7c4ef7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', flexShrink: 0, boxShadow: '0 2px 8px rgba(89,37,244,0.35)',
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>grid_view</span>
+    <aside className={`admin-sidebar${open ? '' : ' collapsed'}`}>
+
+      {/* Brand */}
+      <div className="admin-sidebar-brand">
+        <div className="admin-sidebar-logo">
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>grid_view</span>
         </div>
-        <div style={{ overflow: 'hidden', opacity: open ? 1 : 0, transition: 'opacity 200ms ease', whiteSpace: 'nowrap' }}>
-          <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--admin-text-primary)', lineHeight: 1.2 }}>SWA Admin</div>
-          <div style={{ fontSize: '0.6875rem', color: 'var(--admin-text-faint)', marginTop: 1 }}>Schools Wellbeing AU</div>
+        <div className="admin-sidebar-brand-text">
+          <strong>SWA Admin</strong>
+          <span>Schools Wellbeing AU</span>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '12px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
+      <nav className="admin-sidebar-nav" aria-label="Admin navigation">
         {SECTIONS.map((section, sIdx) => (
-          <div key={sIdx} style={{ marginTop: sIdx > 0 ? 16 : 0 }}>
+          <div key={sIdx} className="admin-sidebar-section">
             {section.title && open && (
-              <div style={{
-                padding: '0 10px 6px',
-                fontSize: '0.6875rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: 'var(--admin-text-faint)',
-              }}>
-                {section.title}
-              </div>
+              <div className="admin-sidebar-section-title">{section.title}</div>
             )}
             {section.title && !open && (
-              <div style={{ height: 1, background: 'var(--admin-border)', margin: '8px 4px 6px' }} />
+              <div className="admin-sidebar-divider" />
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div className="admin-sidebar-items">
               {section.items.map((item) => {
                 const isActive = item.href === '/admin'
                   ? pathname === '/admin'
@@ -122,41 +95,10 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
                     href={item.href}
                     title={!open ? item.label : undefined}
                     aria-current={isActive ? 'page' : undefined}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: open ? '9px 10px' : '9px 0',
-                      justifyContent: open ? 'flex-start' : 'center',
-                      borderRadius: 8,
-                      fontSize: '0.875rem',
-                      fontWeight: isActive ? 600 : 500,
-                      color: isActive ? '#5925f4' : 'var(--admin-text-muted)',
-                      background: isActive ? 'rgba(89,37,244,0.08)' : 'transparent',
-                      borderRight: isActive ? '3px solid #5925f4' : '3px solid transparent',
-                      textDecoration: 'none',
-                      whiteSpace: 'nowrap',
-                      transition: 'background 150ms, color 150ms',
-                    }}
-                    onMouseEnter={e => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--admin-bg-elevated)';
-                        (e.currentTarget as HTMLAnchorElement).style.color = 'var(--admin-text-secondary)';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
-                        (e.currentTarget as HTMLAnchorElement).style.color = 'var(--admin-text-muted)';
-                      }
-                    }}
+                    className={`admin-sidebar-link${isActive ? ' active' : ''}`}
                   >
-                    <span aria-hidden="true" className="material-symbols-outlined" style={{
-                      fontSize: 20,
-                      flexShrink: 0,
-                      color: isActive ? '#5925f4' : 'var(--admin-text-faint)',
-                    }}>{item.ms}</span>
-                    {open && <span style={{ overflow: 'hidden', opacity: open ? 1 : 0, transition: 'opacity 180ms ease' }}>{item.label}</span>}
+                    <span aria-hidden="true" className="material-symbols-outlined admin-sidebar-icon">{item.ms}</span>
+                    <span className="admin-sidebar-link-label">{item.label}</span>
                   </Link>
                 );
               })}
@@ -166,64 +108,32 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
       </nav>
 
       {/* Footer */}
-      <div style={{ borderTop: '1px solid var(--admin-border)', flexShrink: 0 }}>
-        {/* User row */}
-        <div style={{ padding: '12px 8px 8px', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #5925f4, #7c4ef7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.8125rem', fontWeight: 700, color: '#fff', flexShrink: 0,
-          }}>
+      <div className="admin-sidebar-footer">
+        <div className="admin-sidebar-user">
+          <div className="admin-sidebar-avatar">
             {(userEmail || 'A')[0].toUpperCase()}
           </div>
-          {open && (
-            <div style={{ flex: 1, overflow: 'hidden', opacity: open ? 1 : 0, transition: 'opacity 180ms ease', whiteSpace: 'nowrap' }}>
-              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--admin-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {userEmail ? userEmail.split('@')[0] : 'Admin'}
-              </div>
-              <div style={{ fontSize: '0.6875rem', color: 'var(--admin-text-faint)' }}>Admin Account</div>
-            </div>
-          )}
-          {open && (
-            <button
-              onClick={handleSignOut}
-              disabled={signingOut}
-              aria-label="Sign out"
-              style={{
-                flexShrink: 0, width: 30, height: 30,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: 6, border: 'none', background: 'transparent',
-                color: 'var(--admin-text-faint)', cursor: 'pointer',
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
-            </button>
-          )}
+          <div className="admin-sidebar-user-info">
+            <strong>{userEmail ? userEmail.split('@')[0] : 'Admin'}</strong>
+            <span>Admin Account</span>
+          </div>
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            aria-label="Sign out"
+            className="admin-sidebar-signout"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>logout</span>
+          </button>
         </div>
 
-        {/* Collapse toggle */}
         <button
           onClick={() => setOpen(!open)}
           aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
-          style={{
-            width: '100%', padding: '10px 0',
-            display: 'flex', alignItems: 'center',
-            justifyContent: open ? 'flex-start' : 'center',
-            paddingLeft: open ? 18 : 0,
-            gap: 8,
-            background: 'transparent', border: 'none',
-            borderTop: '1px solid var(--admin-border)',
-            color: 'var(--admin-text-faint)',
-            cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 500,
-          }}
+          className="admin-sidebar-toggle"
         >
-          <span aria-hidden="true" className="material-symbols-outlined" style={{
-            fontSize: 18,
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 280ms cubic-bezier(0.4,0,0.2,1)',
-          }}>chevrons_right</span>
-          {open && <span aria-hidden="true" style={{ opacity: 1, transition: 'opacity 180ms ease' }}>Collapse</span>}
+          <span aria-hidden="true" className={`material-symbols-outlined admin-sidebar-toggle-icon${open ? ' open' : ''}`}>chevrons_right</span>
+          <span className="admin-sidebar-toggle-label">Collapse</span>
         </button>
       </div>
     </aside>

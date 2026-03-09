@@ -506,6 +506,229 @@
 .admin-shell ::-webkit-scrollbar-thumb:hover { background: var(--admin-text-faint); }
 
 /* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+
+.admin-sidebar {
+  width: 256px;
+  transition: width 280ms cubic-bezier(0.4,0,0.2,1);
+  background: #fff;
+  border-right: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.admin-sidebar.collapsed { width: 64px; }
+
+/* Brand bar */
+.admin-sidebar-brand {
+  height: 64px;
+  padding: 0 var(--admin-space-4);
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  gap: var(--admin-space-3);
+  flex-shrink: 0;
+}
+.admin-sidebar-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--admin-accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(89,37,244,0.35);
+}
+.admin-sidebar-brand-text {
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 200ms ease;
+}
+.admin-sidebar-brand-text strong {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  line-height: 1.2;
+}
+.admin-sidebar-brand-text span {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--admin-text-faint);
+  margin-top: 1px;
+}
+.admin-sidebar.collapsed .admin-sidebar-brand-text { opacity: 0; pointer-events: none; }
+
+/* Nav */
+.admin-sidebar-nav {
+  flex: 1;
+  padding: var(--admin-space-3) var(--admin-space-2);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.admin-sidebar-section { margin-top: var(--admin-space-4); }
+.admin-sidebar-section:first-child { margin-top: 0; }
+.admin-sidebar-section-title {
+  padding: 0 10px var(--admin-space-1);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-text-faint);
+  white-space: nowrap;
+}
+.admin-sidebar-divider {
+  height: 1px;
+  background: var(--admin-border);
+  margin: var(--admin-space-2) var(--admin-space-1) var(--admin-space-1);
+}
+.admin-sidebar-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Nav link */
+.admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--admin-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-right: 3px solid transparent;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.admin-sidebar-link:hover {
+  background: var(--admin-bg-elevated);
+  color: var(--admin-text-secondary);
+}
+.admin-sidebar-link.active {
+  background: var(--admin-accent-bg);
+  color: var(--admin-accent);
+  font-weight: 600;
+  border-right-color: var(--admin-accent);
+}
+.admin-sidebar-link .admin-sidebar-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  color: var(--admin-text-faint);
+  transition: color 150ms ease;
+}
+.admin-sidebar-link:hover .admin-sidebar-icon { color: var(--admin-text-muted); }
+.admin-sidebar-link.active .admin-sidebar-icon { color: var(--admin-accent); }
+.admin-sidebar-link-label {
+  overflow: hidden;
+  transition: opacity 180ms ease;
+}
+.admin-sidebar.collapsed .admin-sidebar-link {
+  padding: 9px 0;
+  justify-content: center;
+}
+.admin-sidebar.collapsed .admin-sidebar-link-label { opacity: 0; width: 0; }
+
+/* Footer */
+.admin-sidebar-footer {
+  border-top: 1px solid var(--admin-border);
+  flex-shrink: 0;
+}
+.admin-sidebar-user {
+  padding: var(--admin-space-3) var(--admin-space-2) var(--admin-space-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+.admin-sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--admin-accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.admin-sidebar-user-info {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 180ms ease;
+}
+.admin-sidebar-user-info strong {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-sidebar-user-info span {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--admin-text-faint);
+}
+.admin-sidebar.collapsed .admin-sidebar-user-info { opacity: 0; width: 0; }
+.admin-sidebar-signout {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--admin-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--admin-text-faint);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+.admin-sidebar-signout:hover { background: var(--admin-bg-elevated); color: var(--admin-danger); }
+.admin-sidebar.collapsed .admin-sidebar-signout { display: none; }
+
+/* Collapse toggle */
+.admin-sidebar-toggle {
+  width: 100%;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 18px;
+  gap: var(--admin-space-2);
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--admin-border);
+  color: var(--admin-text-faint);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background 150ms ease, color 150ms ease;
+}
+.admin-sidebar-toggle:hover { background: var(--admin-bg-elevated); color: var(--admin-text-secondary); }
+.admin-sidebar.collapsed .admin-sidebar-toggle { justify-content: center; padding-left: 0; }
+.admin-sidebar-toggle-icon {
+  font-size: 18px;
+  transition: transform 280ms cubic-bezier(0.4,0,0.2,1);
+}
+.admin-sidebar-toggle-icon.open { transform: rotate(180deg); }
+.admin-sidebar-toggle-label { transition: opacity 180ms ease; white-space: nowrap; }
+.admin-sidebar.collapsed .admin-sidebar-toggle-label { opacity: 0; width: 0; overflow: hidden; }
+
+/* ═══════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════ */
 

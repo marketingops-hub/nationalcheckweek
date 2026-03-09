@@ -53,7 +53,7 @@ function StateIssueCard({ issue, idx, onChange, onRemove }: {
     <div className="rounded-xl p-4" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)", borderLeft: `3px solid ${leftColor}` }}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--admin-text-faint)" }}>Issue #{idx + 1}</span>
-        <button onClick={() => onRemove(idx)} className="admin-btn admin-btn-danger text-xs px-2.5 py-1">Remove</button>
+        <button onClick={() => onRemove(idx)} className="admin-btn admin-btn-danger admin-btn-sm">Remove</button>
       </div>
       <div className="grid grid-cols-2 gap-3 mb-1">
         <Field label="Issue Name">
@@ -83,7 +83,7 @@ function RegenBtn({ label, onClick, busy }: { label: string; onClick: () => void
       type="button"
       onClick={onClick}
       disabled={busy}
-      className="admin-btn admin-btn-secondary text-xs flex items-center gap-1.5"
+      className="admin-btn admin-btn-secondary admin-btn-sm"
       style={{ opacity: busy ? 0.6 : 1 }}
       title={`Re-generate ${label} with AI`}
     >
@@ -240,7 +240,7 @@ export default function StateEditForm({ state }: { state: State | null }) {
             </div>
             <div className="flex items-center gap-2">
               {!isNew && <RegenBtn label="All Issues" onClick={() => handleRegen(["issues"])} busy={regen.busy === "issues"} />}
-              <button onClick={addIssue} className="admin-btn admin-btn-primary text-xs">+ Add Issue</button>
+              <button onClick={addIssue} className="admin-btn admin-btn-primary admin-btn-sm">+ Add Issue</button>
             </div>
           </div>
           {issues.length === 0 ? (
