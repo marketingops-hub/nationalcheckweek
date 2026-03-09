@@ -506,6 +506,346 @@
 .admin-shell ::-webkit-scrollbar-thumb:hover { background: var(--admin-text-faint); }
 
 /* ═══════════════════════════════════════
+   FIELD LABEL ALIAS
+═══════════════════════════════════════ */
+.admin-shell .admin-field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--admin-text-subtle);
+  margin-bottom: var(--admin-space-2);
+}
+.admin-shell .admin-field-optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--admin-text-faint);
+}
+
+/* ═══════════════════════════════════════
+   PAGE EDITOR LAYOUT
+═══════════════════════════════════════ */
+.admin-shell .admin-page-editor {
+  display: flex;
+  gap: var(--admin-space-6);
+  align-items: flex-start;
+}
+.admin-shell .admin-page-editor-main {
+  flex: 1;
+  min-width: 0;
+}
+.admin-shell .admin-page-editor-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-space-4);
+}
+
+/* Editor tabs */
+.admin-shell .admin-editor-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--admin-space-5);
+  border-bottom: 1.5px solid var(--admin-border);
+}
+.admin-shell .admin-editor-tab {
+  padding: 10px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-subtle);
+  background: transparent;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+}
+.admin-shell .admin-editor-tab:hover { color: var(--admin-text-secondary); }
+.admin-shell .admin-editor-tab.active {
+  color: var(--admin-accent);
+  border-bottom-color: var(--admin-accent);
+}
+
+/* Title input */
+.admin-shell .admin-title-input {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: var(--admin-text-primary) !important;
+  letter-spacing: -0.02em;
+}
+
+/* Slug field */
+.admin-shell .admin-slug-field {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--admin-border-strong);
+  border-radius: var(--admin-radius-md);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.admin-shell .admin-slug-field input {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--admin-bg-deep);
+  flex: 1;
+  padding: 10px 12px;
+}
+.admin-shell .admin-slug-field input:focus {
+  box-shadow: none;
+  border: none;
+  outline: none;
+}
+.admin-shell .admin-slug-prefix {
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  background: var(--admin-bg-elevated);
+  color: var(--admin-text-subtle);
+  border-right: 1.5px solid var(--admin-border-strong);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+/* Blocks area */
+.admin-shell .admin-blocks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--admin-space-4);
+  padding-top: var(--admin-space-6);
+  border-top: 1px solid var(--admin-border);
+}
+.admin-shell .admin-blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-space-2);
+  margin-top: var(--admin-space-3);
+}
+
+/* Block picker */
+.admin-shell .admin-block-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--admin-space-2);
+  padding: var(--admin-space-4);
+  background: var(--admin-bg-elevated);
+  border: 1.5px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  margin-bottom: var(--admin-space-4);
+  animation: adminFadeIn 150ms ease both;
+}
+.admin-shell .admin-block-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--admin-space-3);
+  background: #fff;
+  border: 1.5px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  cursor: pointer;
+  color: var(--admin-text-secondary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.admin-shell .admin-block-pick-btn:hover {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(89,37,244,0.08);
+  color: var(--admin-accent);
+}
+.admin-shell .admin-block-pick-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--admin-radius-sm);
+  background: var(--admin-bg-elevated);
+}
+.admin-shell .admin-block-pick-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Individual block editor */
+.admin-shell .admin-block-editor {
+  border: 1.5px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.admin-shell .admin-block-editor:hover { border-color: var(--admin-border-strong); }
+.admin-shell .admin-block-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-space-2);
+  padding: 10px 12px;
+  background: var(--admin-bg-elevated);
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-shell .admin-block-drag {
+  color: var(--admin-text-faint);
+  cursor: grab;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.admin-shell .admin-block-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--admin-space-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  color: var(--admin-text-secondary);
+}
+.admin-shell .admin-block-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--admin-radius-sm);
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-muted);
+  flex-shrink: 0;
+}
+.admin-shell .admin-block-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+.admin-shell .admin-block-chevron {
+  margin-left: auto;
+  color: var(--admin-text-faint);
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+.admin-shell .admin-block-chevron.open { transform: rotate(180deg); }
+.admin-shell .admin-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.admin-shell .admin-icon-btn-danger:hover {
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger);
+  border-color: #fecaca;
+}
+.admin-shell .admin-block-body {
+  padding: var(--admin-space-4) var(--admin-space-5);
+}
+.admin-shell .admin-block-divider-preview {
+  padding: var(--admin-space-3) 0;
+}
+.admin-shell .admin-block-divider-preview hr {
+  border: none;
+  border-top: 2px dashed var(--admin-border-strong);
+}
+.admin-shell .admin-code-field {
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.6 !important;
+  background: var(--admin-bg-deep) !important;
+}
+
+/* Publish sidebar */
+.admin-shell .admin-publish-card { padding: var(--admin-space-5); }
+.admin-shell .admin-danger-card  { padding: var(--admin-space-5); }
+.admin-shell .admin-publish-status {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-space-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+  margin-bottom: var(--admin-space-4);
+}
+.admin-shell .admin-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--admin-text-faint);
+  flex-shrink: 0;
+}
+.admin-shell .admin-status-dot.published { background: var(--admin-success); }
+.admin-shell .admin-unsaved-badge {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--admin-warning-bg);
+  color: var(--admin-warning-text);
+}
+.admin-shell .admin-publish-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-space-2);
+}
+
+/* Toggle switch */
+.admin-shell .admin-toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-space-4);
+  padding: var(--admin-space-4) 0;
+  border-top: 1px solid var(--admin-border);
+  margin-top: var(--admin-space-2);
+}
+.admin-shell .admin-toggle-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+.admin-shell .admin-toggle-hint {
+  font-size: 0.75rem;
+  color: var(--admin-text-faint);
+  margin-top: 2px;
+}
+.admin-shell .admin-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--admin-border-strong);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 200ms ease;
+  padding: 0;
+}
+.admin-shell .admin-toggle.on { background: var(--admin-accent); }
+.admin-shell .admin-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 200ms ease;
+  display: block;
+}
+.admin-shell .admin-toggle.on .admin-toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* ═══════════════════════════════════════
    SIDEBAR
 ═══════════════════════════════════════ */
 
