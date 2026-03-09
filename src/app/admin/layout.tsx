@@ -53,7 +53,7 @@ export default async function AdminLayout({
       <AdminSidebar userEmail={email} />
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <AdminTopbar email={email} />
-        <div className="p-10 space-y-10">
+        <div className="p-6 lg:p-10 space-y-6 lg:space-y-10 overflow-x-auto">
           {children}
         </div>
       </main>
