@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SeoPanel from "@/components/admin/SeoPanel";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import { useRegenerate } from "@/components/admin/useRegenerate";
 
 interface KeyStat { num: string; label: string; }
 interface Issue { title: string; severity: string; stat: string; desc: string; }
@@ -99,12 +100,33 @@ function parseJsonArray<T>(raw: unknown, fallback: T[]): T[] {
   return fallback;
 }
 
+/** Small re-generate button shown inline next to section labels. */
+function RegenBtn({ label, onClick, busy }: { label: string; onClick: () => void; busy: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className="admin-btn admin-btn-secondary text-xs flex items-center gap-1.5"
+      style={{ opacity: busy ? 0.6 : 1 }}
+      title={`Re-generate ${label} with AI`}
+    >
+      {busy
+        ? <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+        : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.01"/></svg>
+      }
+      {busy ? "Generating…" : `↺ ${label}`}
+    </button>
+  );
+}
+
 export default function AreaEditForm({ area }: { area: Area | null }) {
   const router = useRouter();
   const isNew = !area;
   const [tab, setTab] = useState<"info" | "stats" | "issues" | "seo">("info");
   const [dirty, setDirty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const regen = useRegenerate();
 
   const [form, setForm] = useState({
     slug: area?.slug ?? "", name: area?.name ?? "", state: area?.state ?? "",
@@ -176,6 +198,20 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleSave]);
 
+  /** Apply AI-generated content into local form/array state. */
+  async function handleRegen(sectionKeys?: string[]) {
+    if (!area?.id) { regen.setError("Save the area first before generating content."); return; }
+    const result = await regen.generate("area", area.id, sectionKeys);
+    if (!result) return;
+    const u = result.updated;
+    if (u.overview    && typeof u.overview === "string")    { setForm(f => ({ ...f, overview: u.overview as string })); setDirty(true); }
+    if (u.prevention  && typeof u.prevention === "string")  { setForm(f => ({ ...f, prevention: u.prevention as string })); setDirty(true); }
+    if (u.seo_title   && typeof u.seo_title === "string")   { setForm(f => ({ ...f, seo_title: u.seo_title as string })); setDirty(true); }
+    if (u.seo_desc    && typeof u.seo_desc === "string")    { setForm(f => ({ ...f, seo_desc: u.seo_desc as string })); setDirty(true); }
+    if (Array.isArray(u.issues))    { setIssues(u.issues as Issue[]); setDirty(true); }
+    if (Array.isArray(u.key_stats)) { setKeyStats(u.key_stats as KeyStat[]); setDirty(true); }
+  }
+
   const TABS = [
     { id: "info",   label: "Basic Info",   count: null },
     { id: "stats",  label: "Key Stats",    count: keyStats.length },
@@ -215,6 +251,10 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
         ))}
       </div>
 
+      {/* ── Regen feedback ── */}
+      {regen.error   && <div className="admin-alert admin-alert-error mb-5" role="alert">{regen.error}</div>}
+      {regen.success && <div className="admin-alert admin-alert-success mb-5" role="status">{regen.success}</div>}
+
       {/* ── Tab: Basic Info ── */}
       {tab === "info" && (
         <div className="admin-card">
@@ -241,8 +281,20 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
                 value={form.slug} onChange={e => set("slug", e.target.value)} />
             </div>
           </Field>
-          <Field label="Overview"><textarea rows={4} className={I} style={{ ...IS, resize: "vertical" }} value={form.overview} onChange={e => set("overview", e.target.value)} placeholder="Brief description of this area and its student wellbeing context…" /></Field>
-          <Field label="Prevention Insight"><textarea rows={3} className={I} style={{ ...IS, resize: "vertical" }} value={form.prevention} onChange={e => set("prevention", e.target.value)} placeholder="What prevention or support systems are in place locally…" /></Field>
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className={L} style={{ ...LS, margin: 0 }}>Overview</label>
+              {!isNew && <RegenBtn label="Overview" onClick={() => handleRegen(["overview"])} busy={regen.busy === "overview"} />}
+            </div>
+            <textarea rows={4} className={I} style={{ ...IS, resize: "vertical" }} value={form.overview} onChange={e => set("overview", e.target.value)} placeholder="Brief description of this area and its student wellbeing context…" />
+          </div>
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className={L} style={{ ...LS, margin: 0 }}>Prevention Insight</label>
+              {!isNew && <RegenBtn label="Prevention" onClick={() => handleRegen(["prevention"])} busy={regen.busy === "prevention"} />}
+            </div>
+            <textarea rows={3} className={I} style={{ ...IS, resize: "vertical" }} value={form.prevention} onChange={e => set("prevention", e.target.value)} placeholder="What prevention or support systems are in place locally…" />
+          </div>
         </div>
       )}
 
@@ -254,7 +306,10 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               <p className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>Key Statistics</p>
               <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>Headline numbers shown on the area page</p>
             </div>
-            <button onClick={addStat} className="admin-btn admin-btn-secondary flex-shrink-0">+ Add Stat</button>
+            <div className="flex items-center gap-2">
+              {!isNew && <RegenBtn label="Key Stats" onClick={() => handleRegen(["key_stats"])} busy={regen.busy === "key_stats"} />}
+              <button onClick={addStat} className="admin-btn admin-btn-secondary flex-shrink-0">+ Add Stat</button>
+            </div>
           </div>
           {keyStats.length === 0 && (
             <div className="admin-empty" style={{ border: "2px dashed var(--admin-border)" }}>
@@ -274,7 +329,10 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               <p className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>Local Wellbeing Issues</p>
               <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>Priority issues specific to this area</p>
             </div>
-            <button onClick={addIssue} className="admin-btn admin-btn-primary flex-shrink-0">+ Add Issue</button>
+            <div className="flex items-center gap-2">
+              {!isNew && <RegenBtn label="All Issues" onClick={() => handleRegen(["issues"])} busy={regen.busy === "issues"} />}
+              <button onClick={addIssue} className="admin-btn admin-btn-primary flex-shrink-0">+ Add Issue</button>
+            </div>
           </div>
           {issues.length === 0 && (
             <div className="admin-empty" style={{ border: "2px dashed var(--admin-border)" }}>
@@ -288,9 +346,17 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
 
       {/* ── Tab: SEO ── */}
       {tab === "seo" && (
-        <SeoPanel seoTitle={form.seo_title} seoDesc={form.seo_desc} ogImage={form.og_image}
-          defaultTitle={`${form.name}, ${form.state} — Wellbeing Data`} defaultDesc={form.overview}
-          onChange={(field, value) => set(field, value)} />
+        <>
+          {!isNew && (
+            <div className="flex gap-2 mb-4">
+              <RegenBtn label="SEO Title" onClick={() => handleRegen(["seo_title"])} busy={regen.busy === "seo_title"} />
+              <RegenBtn label="SEO Description" onClick={() => handleRegen(["seo_desc"])} busy={regen.busy === "seo_desc"} />
+            </div>
+          )}
+          <SeoPanel seoTitle={form.seo_title} seoDesc={form.seo_desc} ogImage={form.og_image}
+            defaultTitle={`${form.name}, ${form.state} — Wellbeing Data`} defaultDesc={form.overview}
+            onChange={(field, value) => set(field, value)} />
+        </>
       )}
 
       {/* Status messages */}
@@ -307,6 +373,13 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
         <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary" style={{ minWidth: "130px", background: saving ? "var(--admin-bg-elevated)" : undefined, opacity: saving ? 0.7 : 1 }}>
           {saving ? <><svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Saving…</> : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Save Changes</>}
         </button>
+        {!isNew && (
+          <RegenBtn
+            label="Re-generate All"
+            onClick={() => handleRegen()}
+            busy={regen.busy === "all"}
+          />
+        )}
         {dirty && !saving && (
           <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--admin-warning-light)" }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--admin-warning-light)" }} />

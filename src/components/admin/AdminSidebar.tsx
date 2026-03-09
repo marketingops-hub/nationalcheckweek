@@ -30,9 +30,15 @@ const SECTIONS = [
     ],
   },
   {
+    title: 'AI',
+    items: [
+      { label: 'Prompts',    href: '/admin/prompts',       ms: 'prompt_suggestion' },
+      { label: 'Vault',      href: '/admin/vault/sources', ms: 'lock' },
+    ],
+  },
+  {
     title: 'System',
     items: [
-      { label: 'Vault',      href: '/admin/vault/sources', ms: 'lock' },
       { label: 'Users',      href: '/admin/users',         ms: 'group' },
       { label: 'API Keys',   href: '/admin/api',           ms: 'key' },
       { label: 'Settings',   href: '/admin/settings',      ms: 'settings' },

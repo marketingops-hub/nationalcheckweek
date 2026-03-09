@@ -1,66 +1,87 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  AdminField,
+  DangerConfirm,
+  FormPanelHeader,
+  INPUT_CLS,
+  INPUT_STYLE,
+  inputStyle,
+  fmtDate,
+  getDomainFromUrl,
+  type AdminVaultSource,
+  type FieldErrors,
+} from "@/components/admin/ui";
 
-interface VaultSource {
-  id: string;
-  url: string;
-  title: string;
-  description: string;
-  domain: string;
-  category: string;
-  is_approved: boolean;
-  created_at: string;
-}
+// ---------------------------------------------------------------------------
+// Module-level constants
+// ---------------------------------------------------------------------------
 
 const CATEGORIES = ["general", "mental health", "education", "government", "research", "statistics", "other"];
 
-const INPUT = "w-full rounded-lg px-3 py-2 text-sm outline-none";
-const INPUT_STYLE: React.CSSProperties = { background: "#fff", border: "1px solid var(--admin-border-strong)", color: "var(--admin-text-primary)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
-const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
-const LABEL_STYLE: React.CSSProperties = { color: "var(--admin-text-subtle)" };
-
-function fmt(d: string) {
-  return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+/** Validates the add-source form. Returns a FieldErrors map (empty = valid). */
+function validateAddForm(url: string): FieldErrors {
+  const errs: FieldErrors = {};
+  if (!url) { errs.url = "URL is required."; return errs; }
+  try { new URL(url); } catch { errs.url = "Enter a valid URL starting with http:// or https://"; }
+  return errs;
 }
 
-function getDomainFromUrl(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
-export default function VaultSourcesClient({ initialSources }: { initialSources: VaultSource[] }) {
-  const [sources, setSources] = useState<VaultSource[]>(initialSources);
-  const [showAdd, setShowAdd] = useState(false);
-  const [editSource, setEditSource] = useState<VaultSource | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editCategory, setEditCategory] = useState("general");
-  const [pasteText, setPasteText] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("general");
-  const [search, setSearch] = useState("");
+export default function VaultSourcesClient({ initialSources }: { initialSources: AdminVaultSource[] }) {
+  // ── List state ──
+  const [sources, setSources]           = useState<AdminVaultSource[]>(initialSources);
+  const [search, setSearch]             = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterApproved, setFilterApproved] = useState("all");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+
+  // ── Add-form state ──
+  const [showAdd, setShowAdd]   = useState(false);
+  const [addUrl, setAddUrl]     = useState("");
+  const [addTitle, setAddTitle] = useState("");
+  const [addDesc, setAddDesc]   = useState("");
+  const [addCat, setAddCat]     = useState("general");
+
+  // ── Edit-form state ──
+  const [editSource, setEditSource]           = useState<AdminVaultSource | null>(null);
+  const [editTitle, setEditTitle]             = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory]       = useState("general");
+
+  // ── Shared async state ──
+  const [busy, setBusy]               = useState(false);
+  const [error, setError]             = useState("");
+  const [success, setSuccess]         = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  function clearMessages() { setError(""); setSuccess(""); setFieldErrors({}); }
+  // ── Helpers ──
 
-  function validateAdd() {
-    const errs: Record<string, string> = {};
-    const url = pasteText.trim();
-    if (!url) { errs.pasteText = "URL is required."; return errs; }
-    try { new URL(url); } catch { errs.pasteText = "Enter a valid URL starting with http:// or https://"; }
-    return errs;
+  function clearMessages() { setError(""); setSuccess(""); }
+
+  function closeAddPanel() {
+    setShowAdd(false);
+    setAddUrl(""); setAddTitle(""); setAddDesc(""); setAddCat("general");
+    setFieldErrors({}); clearMessages();
+  }
+
+  function closeEditPanel() {
+    setEditSource(null);
+    setEditTitle(""); setEditDescription(""); setEditCategory("general");
+    clearMessages();
+  }
+
+  function openEditPanel(source: AdminVaultSource) {
+    setEditSource(source);
+    setEditTitle(source.title);
+    setEditDescription(source.description);
+    setEditCategory(source.category);
+    clearMessages(); setFieldErrors({});
   }
 
   const filtered = useMemo(() => {
@@ -74,57 +95,64 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
 
   const approvedCount = sources.filter(s => s.is_approved).length;
 
+  // ── Mutation handlers ──
+
   async function handleAdd() {
-    const errs = validateAdd();
+    const url = addUrl.trim();
+    const errs = validateAddForm(url);
     if (Object.keys(errs).length) { setFieldErrors(errs); return; }
-    const url = pasteText.trim();
     setBusy(true); clearMessages();
     const sb = createClient();
-    const { data, error: err } = await sb
-      .from("vault_sources")
-      .insert({
-        url,
-        title: title.trim() || getDomainFromUrl(url),
-        description: description.trim(),
-        category,
-        is_approved: true,
-      })
-      .select()
-      .single();
-
-    if (err) {
-      if (err.code === "23505") setError("This URL is already in the vault.");
-      else setError(err.message);
+    try {
+      const { data, error: err } = await sb
+        .from("vault_sources")
+        .insert({
+          url,
+          title: addTitle.trim() || getDomainFromUrl(url),
+          description: addDesc.trim(),
+          category: addCat,
+          is_approved: true,
+        })
+        .select()
+        .single();
+      if (err) {
+        setError(err.code === "23505" ? "This URL is already in the vault." : err.message);
+        return;
+      }
+      setSources(s => [data, ...s]);
+      setSuccess(`Source added: ${data.domain}`);
+      closeAddPanel();
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    setSources(s => [data, ...s]);
-    setPasteText(""); setTitle(""); setDescription(""); setCategory("general");
-    setShowAdd(false);
-    setSuccess(`✓ Source added: ${data.domain}`);
-    setBusy(false);
   }
 
   async function handleEdit() {
     if (!editSource) return;
     setBusy(true); clearMessages();
     const sb = createClient();
-    const { error: err } = await sb
-      .from("vault_sources")
-      .update({ title: editTitle.trim(), description: editDescription.trim(), category: editCategory })
-      .eq("id", editSource.id);
-    if (err) { setError(err.message); setBusy(false); return; }
-    setSources(s => s.map(s2 => s2.id === editSource.id
-      ? { ...s2, title: editTitle.trim(), description: editDescription.trim(), category: editCategory }
-      : s2
-    ));
-    setEditSource(null);
-    setSuccess("✓ Source updated.");
-    setBusy(false);
+    try {
+      const { error: err } = await sb
+        .from("vault_sources")
+        .update({ title: editTitle.trim(), description: editDescription.trim(), category: editCategory })
+        .eq("id", editSource.id);
+      if (err) { setError(err.message); return; }
+      setSources(s => s.map(s2 => s2.id === editSource.id
+        ? { ...s2, title: editTitle.trim(), description: editDescription.trim(), category: editCategory }
+        : s2
+      ));
+      setSuccess("Source updated.");
+      closeEditPanel();
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  async function handleToggleApproved(source: VaultSource) {
+  async function handleToggleApproved(source: AdminVaultSource) {
     const sb = createClient();
     const { error: err } = await sb
       .from("vault_sources")
@@ -134,15 +162,20 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
     setSources(s => s.map(s2 => s2.id === source.id ? { ...s2, is_approved: !s2.is_approved } : s2));
   }
 
-  async function handleDelete(source: VaultSource) {
+  async function handleDelete(source: AdminVaultSource) {
     setBusy(true); clearMessages();
     const sb = createClient();
-    const { error: err } = await sb.from("vault_sources").delete().eq("id", source.id);
-    if (err) { setError(err.message); setBusy(false); setConfirmDelete(null); return; }
-    setSources(s => s.filter(s2 => s2.id !== source.id));
-    setSuccess("Source removed from vault.");
-    setConfirmDelete(null);
-    setBusy(false);
+    try {
+      const { error: err } = await sb.from("vault_sources").delete().eq("id", source.id);
+      if (err) { setError(err.message); return; }
+      setSources(s => s.filter(s2 => s2.id !== source.id));
+      setSuccess("Source removed from vault.");
+      setConfirmDelete(null);
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -167,92 +200,140 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
       {!showAdd && !editSource && error   && <div className="admin-alert admin-alert-error" role="alert">{error}</div>}
       {!showAdd && !editSource && success && <div className="admin-alert admin-alert-success" role="status">{success}</div>}
 
-      {/* Add Source inline panel */}
+      {/* ── Add Source inline panel ── */}
       {showAdd && (
         <div className="admin-form-panel" role="region" aria-label="Add vault source">
-          <div className="flex items-center justify-between mb-6 pb-4" style={{ borderBottom: "1px solid var(--admin-border)" }}>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--admin-accent)" }}>The Vault</div>
-              <h2 style={{ margin: 0, border: "none", padding: 0 }}>Add Approved Source</h2>
-              <p className="text-sm mt-1" style={{ color: "var(--admin-text-subtle)" }}>Paste a URL below. OpenAI will only use approved vault sources when generating content.</p>
-            </div>
-            <button onClick={() => { setShowAdd(false); clearMessages(); }} className="admin-icon-btn" aria-label="Close add source form">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
+          <FormPanelHeader
+            title={
+              <>
+                <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--admin-accent)" }}>The Vault</div>
+                Add Approved Source
+              </>
+            }
+            subtitle="Paste a URL below. OpenAI will only use approved vault sources when generating content."
+            onClose={closeAddPanel}
+            closeLabel="Close add source form"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="md:col-span-2">
-              <label htmlFor="vault-url" className={LABEL} style={LABEL_STYLE}>URL — paste here</label>
-              <textarea id="vault-url" rows={2} className={INPUT}
-                style={fieldErrors.pasteText ? { ...INPUT_STYLE, resize: "none", fontFamily: "monospace", fontSize: "0.8rem", border: "1px solid var(--admin-danger)", boxShadow: "0 0 0 3px rgba(220,38,38,0.12)" } : { ...INPUT_STYLE, resize: "none", fontFamily: "monospace", fontSize: "0.8rem" }}
-                value={pasteText} onChange={e => { setPasteText(e.target.value.trim()); setFieldErrors(f => ({ ...f, pasteText: "" })); }}
-                placeholder="https://www.aihw.gov.au/reports/mental-health/..." autoFocus />
-              {fieldErrors.pasteText && <p className="admin-field-error" role="alert"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>{fieldErrors.pasteText}</p>}
-            </div>
-            <div>
-              <label htmlFor="vault-title" className={LABEL} style={LABEL_STYLE}>Title <span style={{ color: "var(--admin-text-faint)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
-              <input id="vault-title" className={INPUT} style={INPUT_STYLE} value={title}
-                onChange={e => setTitle(e.target.value)} placeholder="e.g. AIHW Mental Health Report 2023" />
-            </div>
-            <div>
-              <label htmlFor="vault-category" className={LABEL} style={LABEL_STYLE}>Category</label>
-              <select id="vault-category" className={INPUT} style={INPUT_STYLE} value={category} onChange={e => setCategory(e.target.value)}>
+            <AdminField id="vault-url" label="URL — paste here" error={fieldErrors.url} className="md:col-span-2">
+              <textarea
+                id="vault-url"
+                rows={2}
+                className={INPUT_CLS}
+                style={{
+                  ...inputStyle(!!fieldErrors.url),
+                  resize: "none",
+                  fontFamily: "monospace",
+                  fontSize: "0.8rem",
+                }}
+                value={addUrl}
+                onChange={e => { setAddUrl(e.target.value); setFieldErrors(f => ({ ...f, url: "" })); }}
+                placeholder="https://www.aihw.gov.au/reports/mental-health/..."
+                autoFocus
+              />
+            </AdminField>
+            <AdminField
+              id="vault-title"
+              label={<>Title <span style={{ color: "var(--admin-text-faint)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></>}
+            >
+              <input
+                id="vault-title"
+                className={INPUT_CLS}
+                style={INPUT_STYLE}
+                value={addTitle}
+                onChange={e => setAddTitle(e.target.value)}
+                placeholder="e.g. AIHW Mental Health Report 2023"
+              />
+            </AdminField>
+            <AdminField id="vault-category" label="Category">
+              <select
+                id="vault-category"
+                className={INPUT_CLS}
+                style={INPUT_STYLE}
+                value={addCat}
+                onChange={e => setAddCat(e.target.value)}
+              >
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="vault-desc" className={LABEL} style={LABEL_STYLE}>Description <span style={{ color: "var(--admin-text-faint)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
-              <textarea id="vault-desc" rows={2} className={INPUT} style={{ ...INPUT_STYLE, resize: "none" }}
-                value={description} onChange={e => setDescription(e.target.value)}
-                placeholder="Brief note about what this source covers…" />
-            </div>
+            </AdminField>
+            <AdminField
+              id="vault-desc"
+              label={<>Description <span style={{ color: "var(--admin-text-faint)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></>}
+              className="md:col-span-2"
+            >
+              <textarea
+                id="vault-desc"
+                rows={2}
+                className={INPUT_CLS}
+                style={{ ...INPUT_STYLE, resize: "none" }}
+                value={addDesc}
+                onChange={e => setAddDesc(e.target.value)}
+                placeholder="Brief note about what this source covers…"
+              />
+            </AdminField>
           </div>
           {error && <div className="admin-alert admin-alert-error mb-6" role="alert">{error}</div>}
           <div className="flex gap-3">
             <button onClick={handleAdd} disabled={busy} className="admin-btn admin-btn-primary" style={{ opacity: busy ? 0.6 : 1 }}>
               {busy ? "Adding…" : "Add to Vault"}
             </button>
-            <button onClick={() => { setShowAdd(false); clearMessages(); }} className="admin-btn admin-btn-secondary">Cancel</button>
+            <button onClick={closeAddPanel} className="admin-btn admin-btn-secondary">Cancel</button>
           </div>
         </div>
       )}
 
-      {/* Edit Source inline panel */}
+      {/* ── Edit Source inline panel ── */}
       {editSource && (
         <div className="admin-form-panel" role="region" aria-label="Edit vault source">
-          <div className="flex items-center justify-between mb-6 pb-4" style={{ borderBottom: "1px solid var(--admin-border)" }}>
-            <div>
-              <h2 style={{ margin: 0, border: "none", padding: 0 }}>Edit Source</h2>
-              <p className="text-xs mt-1 font-mono truncate" style={{ color: "var(--admin-text-faint)", maxWidth: 400 }}>{editSource.url}</p>
-              <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>URL cannot be changed. Delete and re-add to change the URL.</p>
-            </div>
-            <button onClick={() => { setEditSource(null); clearMessages(); }} className="admin-icon-btn" aria-label="Close edit source form">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
+          <FormPanelHeader
+            title="Edit Source"
+            subtitle={
+              <>
+                <span className="font-mono truncate block" style={{ color: "var(--admin-text-faint)", maxWidth: 400 }}>{editSource.url}</span>
+                URL cannot be changed. Delete and re-add to change the URL.
+              </>
+            }
+            onClose={closeEditPanel}
+            closeLabel="Close edit source form"
+          />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-              <label htmlFor="edit-vault-title" className={LABEL} style={LABEL_STYLE}>Title</label>
-              <input id="edit-vault-title" className={INPUT} style={INPUT_STYLE} value={editTitle} onChange={e => setEditTitle(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="edit-vault-category" className={LABEL} style={LABEL_STYLE}>Category</label>
-              <select id="edit-vault-category" className={INPUT} style={INPUT_STYLE} value={editCategory} onChange={e => setEditCategory(e.target.value)}>
+            <AdminField id="edit-vault-title" label="Title">
+              <input
+                id="edit-vault-title"
+                className={INPUT_CLS}
+                style={INPUT_STYLE}
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+              />
+            </AdminField>
+            <AdminField id="edit-vault-category" label="Category">
+              <select
+                id="edit-vault-category"
+                className={INPUT_CLS}
+                style={INPUT_STYLE}
+                value={editCategory}
+                onChange={e => setEditCategory(e.target.value)}
+              >
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-            </div>
-            <div className="md:col-span-3">
-              <label htmlFor="edit-vault-desc" className={LABEL} style={LABEL_STYLE}>Description</label>
-              <textarea id="edit-vault-desc" rows={2} className={INPUT} style={{ ...INPUT_STYLE, resize: "none" }}
-                value={editDescription} onChange={e => setEditDescription(e.target.value)} />
-            </div>
+            </AdminField>
+            <AdminField id="edit-vault-desc" label="Description" className="md:col-span-3">
+              <textarea
+                id="edit-vault-desc"
+                rows={2}
+                className={INPUT_CLS}
+                style={{ ...INPUT_STYLE, resize: "none" }}
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+              />
+            </AdminField>
           </div>
           {error && <div className="admin-alert admin-alert-error mb-6" role="alert">{error}</div>}
           <div className="flex gap-3">
             <button onClick={handleEdit} disabled={busy} className="admin-btn admin-btn-primary" style={{ opacity: busy ? 0.6 : 1 }}>
               {busy ? "Saving…" : "Save Changes"}
             </button>
-            <button onClick={() => { setEditSource(null); clearMessages(); }} className="admin-btn admin-btn-secondary">Cancel</button>
+            <button onClick={closeEditPanel} className="admin-btn admin-btn-secondary">Cancel</button>
           </div>
         </div>
       )}
@@ -325,30 +406,26 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
                     <p className="text-xs" style={{ color: "var(--admin-text-subtle)" }}>{source.description}</p>
                   )}
 
-                  <div className="text-xs mt-1.5" style={{ color: "var(--admin-text-faint)" }}>Added {fmt(source.created_at)}</div>
+                  <div className="text-xs mt-1.5" style={{ color: "var(--admin-text-faint)" }}>Added {fmtDate(source.created_at)}</div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex flex-col gap-1.5 flex-shrink-0">
                   <button
-                    onClick={() => { setEditSource(source); setEditTitle(source.title); setEditDescription(source.description); setEditCategory(source.category); clearMessages(); }}
+                    onClick={() => openEditPanel(source)}
                     className="admin-icon-btn" aria-label={`Edit ${source.title || source.domain}`}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   {confirmDelete === source.id ? (
-                    <div className="admin-danger-confirm" style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                      <span style={{ fontSize: "0.75rem" }}>Remove this source?</span>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleDelete(source)} disabled={busy}
-                          className="admin-btn admin-btn-danger" style={{ padding: "3px 8px", fontSize: "0.6875rem", opacity: busy ? 0.6 : 1 }}>
-                          {busy ? "Removing…" : "Yes, remove"}
-                        </button>
-                        <button onClick={() => setConfirmDelete(null)} className="admin-btn admin-btn-secondary" style={{ padding: "3px 8px", fontSize: "0.6875rem" }}>
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
+                    <DangerConfirm
+                      message="Remove this source?"
+                      onConfirm={() => handleDelete(source)}
+                      onCancel={() => setConfirmDelete(null)}
+                      busy={busy}
+                      confirmLabel="Yes, remove"
+                      busyLabel="Removing…"
+                    />
                   ) : (
                     <button
                       onClick={() => { setConfirmDelete(source.id); clearMessages(); }}

@@ -2,24 +2,22 @@
 
 import { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  AdminField,
+  DangerConfirm,
+  INPUT_CLS,
+  INPUT_STYLE,
+  inputStyle,
+  type AdminRedirect,
+  type FieldErrors,
+} from "@/components/admin/ui";
 
-interface Redirect {
-  id: string;
-  from_path: string;
-  to_path: string;
-  status_code: number;
-  is_active: boolean;
-  note: string;
-  created_at: string;
-}
+// ---------------------------------------------------------------------------
+// Module-level constants
+// ---------------------------------------------------------------------------
 
-const INPUT = "w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-all";
-const IS = { background: "#fff", border: "1px solid var(--admin-border-strong)", color: "var(--admin-text-primary)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
-const IS_ERR = { background: "#fff", border: "1px solid var(--admin-danger)", color: "var(--admin-text-primary)", boxShadow: "0 0 0 3px rgba(220,38,38,0.12)" };
-const LABEL = "block text-xs font-semibold mb-1.5 uppercase tracking-wide";
-const LS = { color: "var(--admin-text-subtle)" };
-
-const EMPTY: Omit<Redirect, "id" | "created_at"> = {
+/** Empty form state used to reset after save/cancel. */
+const EMPTY: Omit<AdminRedirect, "id" | "created_at"> = {
   from_path: "",
   to_path: "",
   status_code: 301,
@@ -27,15 +25,29 @@ const EMPTY: Omit<Redirect, "id" | "created_at"> = {
   note: "",
 };
 
-export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
-  const [redirects, setRedirects] = useState<Redirect[]>(initial);
-  const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ ...EMPTY });
-  const [editId, setEditId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+/** Validates the redirect form. Returns a FieldErrors map (empty = valid). */
+function validateForm(form: typeof EMPTY): FieldErrors {
+  const errs: FieldErrors = {};
+  if (!form.from_path.trim()) errs.from_path = "From path is required.";
+  else if (!form.from_path.startsWith("/")) errs.from_path = "Must start with /";
+  if (!form.to_path.trim()) errs.to_path = "Destination path is required.";
+  else if (!form.to_path.startsWith("/") && !form.to_path.startsWith("http")) errs.to_path = "Must start with / or https://";
+  return errs;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export default function RedirectsClient({ initial }: { initial: AdminRedirect[] }) {
+  const [redirects, setRedirects] = useState<AdminRedirect[]>(initial);
+  const [search, setSearch]       = useState("");
+  const [form, setForm]           = useState({ ...EMPTY });
+  const [editId, setEditId]       = useState<string | null>(null);
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState("");
+  const [success, setSuccess]     = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const filtered = useMemo(() =>
@@ -45,7 +57,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
       r.note.toLowerCase().includes(search.toLowerCase())
     ), [redirects, search]);
 
-  function startEdit(r: Redirect) {
+  function startEdit(r: AdminRedirect) {
     setEditId(r.id);
     setForm({ from_path: r.from_path, to_path: r.to_path, status_code: r.status_code, is_active: r.is_active, note: r.note });
     setError(""); setSuccess(""); setFieldErrors({});
@@ -57,26 +69,16 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
     setError(""); setFieldErrors({});
   }
 
-  function validateForm() {
-    const errs: Record<string, string> = {};
-    if (!form.from_path.trim()) errs.from_path = "From path is required.";
-    else if (!form.from_path.startsWith("/")) errs.from_path = "Must start with /";
-    if (!form.to_path.trim()) errs.to_path = "Destination path is required.";
-    else if (!form.to_path.startsWith("/") && !form.to_path.startsWith("http")) errs.to_path = "Must start with / or https://";
-    return errs;
-  }
-
   function setField(key: keyof typeof EMPTY, value: string | number | boolean) {
     setForm(f => ({ ...f, [key]: value }));
   }
 
   async function handleSave() {
-    const errs = validateForm();
+    const errs = validateForm(form);
     if (Object.keys(errs).length) { setFieldErrors(errs); return; }
     setSaving(true);
     setError(""); setSuccess(""); setFieldErrors({});
     const sb = createClient();
-
     const payload = {
       from_path: form.from_path.trim(),
       to_path: form.to_path.trim(),
@@ -84,27 +86,25 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
       is_active: form.is_active,
       note: form.note.trim(),
     };
-
-    if (editId) {
-      const { error: err } = await sb.from("redirects").update(payload).eq("id", editId);
-      if (err) {
-        setError(err.message);
-      } else {
+    try {
+      if (editId) {
+        const { error: err } = await sb.from("redirects").update(payload).eq("id", editId);
+        if (err) { setError(err.message); return; }
         setRedirects(rs => rs.map(r => r.id === editId ? { ...r, ...payload } : r));
         setSuccess("Redirect updated.");
         cancelEdit();
-      }
-    } else {
-      const { data, error: err } = await sb.from("redirects").insert(payload).select().single();
-      if (err) {
-        setError(err.message.includes("unique") ? `A redirect from "${payload.from_path}" already exists.` : err.message);
       } else {
+        const { data, error: err } = await sb.from("redirects").insert(payload).select().single();
+        if (err) { setError(err.message.includes("unique") ? `A redirect from "${payload.from_path}" already exists.` : err.message); return; }
         setRedirects(rs => [data, ...rs]);
         setForm({ ...EMPTY });
         setSuccess("Redirect added.");
       }
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   }
 
   async function handleDelete(id: string) {
@@ -117,7 +117,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
     if (editId === id) cancelEdit();
   }
 
-  async function toggleActive(r: Redirect) {
+  async function toggleActive(r: AdminRedirect) {
     const sb = createClient();
     const { error: err } = await sb.from("redirects").update({ is_active: !r.is_active }).eq("id", r.id);
     if (err) { setError(err.message); return; }
@@ -132,7 +132,7 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
         <div className="mb-4 relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--admin-text-faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <label htmlFor="redirect-search" className="sr-only">Search redirects</label>
-          <input id="redirect-search" className={INPUT} style={{ ...IS, paddingLeft: "2.25rem" }}
+          <input id="redirect-search" className={INPUT_CLS} style={{ ...INPUT_STYLE, paddingLeft: "2.25rem" }}
             placeholder="Search redirects…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
@@ -184,16 +184,11 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
                   </td>
                   <td>
                     {confirmDelete === r.id ? (
-                      <div className="admin-danger-confirm">
-                        <span>Delete <strong>{r.from_path}</strong>?</span>
-                        <button onClick={() => handleDelete(r.id)}
-                          className="admin-btn admin-btn-danger" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
-                          Yes, delete
-                        </button>
-                        <button onClick={() => setConfirmDelete(null)} className="admin-btn admin-btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
-                          Cancel
-                        </button>
-                      </div>
+                      <DangerConfirm
+                        message={<>Delete <strong>{r.from_path}</strong>?</>}
+                        onConfirm={() => handleDelete(r.id)}
+                        onCancel={() => setConfirmDelete(null)}
+                      />
                     ) : (
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => startEdit(r)} className="admin-icon-btn" aria-label={`Edit redirect from ${r.from_path}`}>
@@ -223,42 +218,61 @@ export default function RedirectsClient({ initial }: { initial: Redirect[] }) {
           <h2>{editId ? "Edit Redirect" : "Add Redirect"}</h2>
 
           <div className="space-y-5">
-            <div>
-              <label htmlFor="rdr-from" className={LABEL} style={LS}>From Path</label>
-              <input id="rdr-from" className={INPUT} style={fieldErrors.from_path ? IS_ERR : IS}
-                value={form.from_path} onChange={e => { setField("from_path", e.target.value); setFieldErrors(f => ({ ...f, from_path: "" })); }}
-                placeholder="/old-page-slug" />
-              {fieldErrors.from_path
-                ? <p className="admin-field-error" role="alert"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>{fieldErrors.from_path}</p>
-                : <div className="text-xs mt-1.5" style={{ color: "var(--admin-text-faint)" }}>Must start with /</div>}
-            </div>
+            <AdminField id="rdr-from" label="From Path" error={fieldErrors.from_path} hint="Must start with /">
+              <input
+                id="rdr-from"
+                className={INPUT_CLS}
+                style={inputStyle(!!fieldErrors.from_path)}
+                value={form.from_path}
+                onChange={e => { setField("from_path", e.target.value); setFieldErrors(f => ({ ...f, from_path: "" })); }}
+                placeholder="/old-page-slug"
+              />
+            </AdminField>
 
-            <div>
-              <label htmlFor="rdr-to" className={LABEL} style={LS}>To Path / URL</label>
-              <input id="rdr-to" className={INPUT} style={fieldErrors.to_path ? IS_ERR : IS}
-                value={form.to_path} onChange={e => { setField("to_path", e.target.value); setFieldErrors(f => ({ ...f, to_path: "" })); }}
-                placeholder="/new-page-slug" />
-              {fieldErrors.to_path
-                ? <p className="admin-field-error" role="alert"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>{fieldErrors.to_path}</p>
-                : <div className="text-xs mt-1.5" style={{ color: "var(--admin-text-faint)" }}>Start with / or https://</div>}
-            </div>
+            <AdminField id="rdr-to" label="To Path / URL" error={fieldErrors.to_path} hint="Start with / or https://">
+              <input
+                id="rdr-to"
+                className={INPUT_CLS}
+                style={inputStyle(!!fieldErrors.to_path)}
+                value={form.to_path}
+                onChange={e => { setField("to_path", e.target.value); setFieldErrors(f => ({ ...f, to_path: "" })); }}
+                placeholder="/new-page-slug"
+              />
+            </AdminField>
 
-            <div>
-              <label htmlFor="rdr-code" className={LABEL} style={LS}>Status Code</label>
-              <select id="rdr-code" className={INPUT} style={IS} value={form.status_code} onChange={e => setField("status_code", Number(e.target.value))}>
+            <AdminField id="rdr-code" label="Status Code">
+              <select
+                id="rdr-code"
+                className={INPUT_CLS}
+                style={INPUT_STYLE}
+                value={form.status_code}
+                onChange={e => setField("status_code", Number(e.target.value))}
+              >
                 <option value={301}>301 — Permanent</option>
                 <option value={302}>302 — Temporary</option>
               </select>
-            </div>
+            </AdminField>
 
-            <div>
-              <label htmlFor="rdr-note" className={LABEL} style={LS}>Note (optional)</label>
-              <input id="rdr-note" className={INPUT} style={IS} value={form.note} onChange={e => setField("note", e.target.value)} placeholder="Why this redirect exists" />
-            </div>
+            <AdminField id="rdr-note" label="Note (optional)">
+              <input
+                id="rdr-note"
+                className={INPUT_CLS}
+                style={INPUT_STYLE}
+                value={form.note}
+                onChange={e => setField("note", e.target.value)}
+                placeholder="Why this redirect exists"
+              />
+            </AdminField>
 
             <label htmlFor="rdr-active" className="flex items-center gap-2.5 cursor-pointer">
-              <input id="rdr-active" type="checkbox" checked={form.is_active} onChange={e => setField("is_active", e.target.checked)}
-                className="w-4 h-4 rounded" style={{ accentColor: "#5925f4" }} />
+              <input
+                id="rdr-active"
+                type="checkbox"
+                checked={form.is_active}
+                onChange={e => setField("is_active", e.target.checked)}
+                className="w-4 h-4 rounded"
+                style={{ accentColor: "#5925f4" }}
+              />
               <span className="text-sm font-medium" style={{ color: "var(--admin-text-secondary)" }}>Active</span>
             </label>
           </div>
