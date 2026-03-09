@@ -183,10 +183,8 @@ export default async function AdminDashboard() {
                 { icon: 'location_on', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', title: 'New area added:',     body: 'Northern Beaches (NSW) created.',          time: '1 hour ago' },
                 { icon: 'update',      bg: 'rgba(139,92,246,0.1)', color: '#8b5cf6', title: 'CMS page edited:',    body: 'About page content updated.',              time: '3 hours ago' },
               ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4 px-6 py-4 transition-colors"
+                <div key={i} className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-[var(--admin-bg-elevated)]"
                   style={{ borderBottom: i < 3 ? '1px solid var(--admin-border)' : 'none' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--admin-bg-elevated)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div className="size-10 rounded-full flex items-center justify-center shrink-0" style={{ background: item.bg, color: item.color }}>
                     <span aria-hidden="true" className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -212,16 +210,8 @@ export default async function AdminDashboard() {
             <div className="space-y-2">
               {QUICK_ACTIONS.map((item) => (
                 <Link key={item.href} href={item.href}
-                  className="w-full flex items-center justify-between p-3 rounded-xl group transition-all"
+                  className="w-full flex items-center justify-between p-3 rounded-xl group transition-all hover:bg-[var(--admin-accent-bg)]"
                   style={{ border: '1px solid var(--admin-border)', textDecoration: 'none' }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(89,37,244,0.4)';
-                    (e.currentTarget as HTMLAnchorElement).style.background = 'var(--admin-accent-bg)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--admin-border)';
-                    (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
-                  }}
                 >
                   <div className="flex items-center gap-3">
                     <span aria-hidden="true" className="material-symbols-outlined" style={{ color: 'var(--admin-accent)', fontSize: 20 }}>{item.ms}</span>
