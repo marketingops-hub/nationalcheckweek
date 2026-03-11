@@ -16,6 +16,14 @@ const SECTIONS = [
     ],
   },
   {
+    label: 'Public Pages',
+    items: [
+      { label: 'Ambassadors', href: '/admin/ambassadors', ms: 'diversity_3' },
+      { label: 'Partners',    href: '/admin/partners',    ms: 'handshake' },
+      { label: 'FAQ',         href: '/admin/faq',         ms: 'help' },
+    ],
+  },
+  {
     label: 'CMS',
     items: [
       { label: 'Pages',     href: '/admin/cms/pages',    ms: 'article' },

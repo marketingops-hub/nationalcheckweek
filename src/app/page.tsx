@@ -8,6 +8,7 @@ import LifeSkillsSection from "@/components/LifeSkillsSection";
 import ResearchSection from "@/components/ResearchSection";
 import DataSection from "@/components/DataSection";
 import FinalCTA from "@/components/FinalCTA";
+import PartnersCarousel from "@/components/PartnersCarousel";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
       <LifeSkillsSection />
       <ResearchSection />
       <DataSection />
+      <PartnersCarousel />
       <FinalCTA />
       <Footer />
     </>
