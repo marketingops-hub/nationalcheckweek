@@ -23,15 +23,23 @@ export default function EventsClient({ events }: Props) {
     return matchesSearch && matchesFilter;
   }), [events, search, filter]);
 
-  // Group by month for month view — stable order
+  // Group by month for month view — explicitly sorted chronologically
   const byMonth = useMemo(() => {
+    // Track the earliest event_date per month label so we can sort months
     const map: Record<string, EventListItem[]> = {};
+    const sortKey: Record<string, string> = {};
     for (const ev of filtered) {
       const key = formatDateMonth(ev.event_date);
-      if (!map[key]) map[key] = [];
+      if (!map[key]) {
+        map[key] = [];
+        sortKey[key] = ev.event_date ?? "9999-99";
+      }
       map[key].push(ev);
     }
-    return map;
+    // Return entries sorted by the earliest date in each month group
+    return Object.entries(map).sort(([a], [b]) =>
+      sortKey[a].localeCompare(sortKey[b])
+    );
   }, [filtered]);
 
   return (
@@ -113,7 +121,7 @@ export default function EventsClient({ events }: Props) {
       {/* MONTH VIEW */}
       {view === "month" && filtered.length > 0 && (
         <div className="events-by-month">
-          {Object.entries(byMonth).map(([month, evs]) => (
+          {byMonth.map(([month, evs]) => (
             <div key={month} className="events-month-group">
               <h2 className="section-heading section-heading--md">{month}</h2>
               <div className="events-list">
