@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as staticClient } from "@supabase/supabase-js";
+import BadgePill from "@/components/events/BadgePill";
+import { FORMAT_LABEL, FORMAT_BADGE, STATUS_BADGE, formatDateLong, formatDateShort } from "@/lib/events";
 
 export const revalidate = 60;
 
@@ -45,15 +47,6 @@ export async function generateStaticParams() {
   return (data ?? []).map((e: { slug: string }) => ({ slug: e.slug }));
 }
 
-const FORMAT_LABEL: Record<string, string> = {
-  webinar: "Webinar", "in-person": "In Person",
-  hybrid: "Hybrid", workshop: "Workshop", conference: "Conference",
-};
-
-function formatDate(d: string | null) {
-  if (!d) return "";
-  return new Date(d).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-}
 
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -70,8 +63,10 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const event = data as Event;
 
   const speakers = [...(event.event_speakers ?? [])].sort((a, b) => a.sort_order - b.sort_order);
-  const isPast = event.status === "past";
-  const isLive = event.status === "live";
+  const isPast   = event.status === "past";
+  const isLive   = event.status === "live";
+  const fmtBadge = FORMAT_BADGE[event.format] ?? { bg: "#F9FAFB", color: "#374151" };
+  const stsBadge = STATUS_BADGE[event.status] ?? { bg: "#F9FAFB", color: "#374151" };
 
   return (
     <>
@@ -79,10 +74,11 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       <div className="page-hero" style={{ paddingBottom: 0 }}>
         <div className="page-hero__inner" style={{ maxWidth: 960, margin: "0 auto" }}>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-            <span className="eyebrow-tag">{FORMAT_LABEL[event.format] ?? event.format}</span>
-            {event.is_free && <span className="eyebrow-tag" style={{ background: "var(--green-bg)", color: "var(--green)" }}>Free</span>}
-            {isLive && <span className="eyebrow-tag" style={{ background: "#FEF2F2", color: "#DC2626" }}>● Live now</span>}
-            {isPast && <span className="eyebrow-tag" style={{ background: "var(--gray-100)", color: "var(--text-light)" }}>Past event</span>}
+            <BadgePill {...fmtBadge} label={FORMAT_LABEL[event.format] ?? event.format} />
+            <BadgePill {...stsBadge} label={event.status} />
+            {event.is_free && <BadgePill bg="#F0FDF4" color="#16A34A" label="Free" />}
+            {isLive && <BadgePill bg="#FEF2F2" color="#DC2626" label="● Live now" />}
+            {isPast && <BadgePill bg="#F3F4F6" color="#6B7280" label="Past event" />}
           </div>
           <h1 className="page-hero__title">{event.title}</h1>
           {event.tagline && (
@@ -98,7 +94,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               {event.event_date && (
                 <div style={{ fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 8 }}>
                   <span>📅</span>
-                  <span>{formatDate(event.event_date)}</span>
+                  <span>{formatDateLong(event.event_date)}</span>
                 </div>
               )}
               {event.event_time && (
@@ -123,7 +119,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       </div>
 
       <main id="main-content" className="inner-content" style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 40, alignItems: "start" }}>
+        <div className="event-detail-grid">
 
           {/* LEFT COLUMN — Content */}
           <div>
@@ -200,36 +196,20 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           </div>
 
           {/* RIGHT COLUMN — Register sidebar */}
-          <div style={{ position: "sticky", top: 24 }}>
-            <div style={{
-              border: "1px solid var(--border)", borderRadius: 16,
-              padding: 28, background: "var(--white)",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
-            }}>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--navy)", marginBottom: 4 }}>
+          <div>
+            <div className="event-register-card">
+              <div className="event-register-card__price">
                 {event.is_free ? "Free" : event.price}
               </div>
               {event.event_date && (
-                <div style={{ fontSize: "0.85rem", color: "var(--text-mid)", marginBottom: 20 }}>
-                  {formatDate(event.event_date)}
+                <div className="event-register-card__date">
+                  {formatDateShort(event.event_date)}
                   {event.event_time && <><br />{event.event_time}{event.event_end ? ` – ${event.event_end}` : ""}</>}
                 </div>
               )}
 
               {!isPast && event.register_url && (
-                <a
-                  href={event.register_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "block", textAlign: "center",
-                    background: "var(--teal)", color: "#fff",
-                    padding: "14px 20px", borderRadius: 10,
-                    fontWeight: 700, fontSize: "0.95rem",
-                    textDecoration: "none", marginBottom: 12,
-                    transition: "background 0.15s",
-                  }}
-                >
+                <a href={event.register_url} target="_blank" rel="noopener noreferrer" className="event-register-btn">
                   {isLive ? "Join now →" : "Register for free →"}
                 </a>
               )}
@@ -242,23 +222,15 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
 
               {isPast && event.recording_url && (
                 <a href={event.recording_url} target="_blank" rel="noopener noreferrer"
-                  style={{
-                    display: "block", textAlign: "center",
-                    background: "var(--gray-100)", color: "var(--navy)",
-                    padding: "14px 20px", borderRadius: 10,
-                    fontWeight: 700, fontSize: "0.95rem", textDecoration: "none",
-                  }}
-                >
+                  className="event-register-btn event-register-btn--secondary">
                   Watch recording ↗
                 </a>
               )}
 
-              <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-light)", lineHeight: 1.7 }}>
-                  <div>📅 {FORMAT_LABEL[event.format] ?? event.format}</div>
-                  {event.is_free && <div style={{ marginTop: 4 }}>✅ Free to attend</div>}
-                  {!event.is_free && event.register_url && <div style={{ marginTop: 4 }}>💳 {event.price}</div>}
-                </div>
+              <div className="event-register-card__meta">
+                <div>📅 {FORMAT_LABEL[event.format] ?? event.format}</div>
+                {event.is_free && <div>✅ Free to attend</div>}
+                {!event.is_free && event.price && <div>💳 {event.price}</div>}
               </div>
             </div>
 

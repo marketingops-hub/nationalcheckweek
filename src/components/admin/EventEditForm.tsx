@@ -3,15 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-interface Speaker {
-  id?: string;
-  name: string;
-  title: string;
-  bio: string;
-  photo: string;
-  sort_order: number;
-}
+import { FORMATS, STATUSES, type Speaker } from "@/lib/events";
 
 interface EventForm {
   slug: string;
@@ -50,9 +42,6 @@ const EMPTY: EventForm = {
   register_url: "", recording_url: "", status: "upcoming",
   published: false, seo_title: "", seo_desc: "",
 };
-
-const FORMATS = ["webinar", "in-person", "hybrid", "workshop", "conference"];
-const STATUSES = ["draft", "upcoming", "live", "past", "cancelled"];
 
 const I = "swa-form-input";
 const T = "swa-form-textarea";
@@ -126,9 +115,13 @@ export default function EventEditForm({ event }: Props) {
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error ?? "Save failed"); setSaving(false); return; }
-    setSuccess("✓ Saved");
     setSaving(false);
-    if (isNew) router.push(`/admin/events/${data.id}`);
+    if (isNew) {
+      router.push(`/admin/events/${data.id}`);
+    } else {
+      setSuccess("✓ Saved successfully");
+      setTimeout(() => setSuccess(""), 3000);
+    }
   }
 
   // ── Speaker helpers ──
