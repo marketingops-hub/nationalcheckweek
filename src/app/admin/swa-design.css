@@ -114,7 +114,7 @@
 
 .swa-sidebar__nav { flex: 1; padding: 12px 10px; }
 .swa-sidebar__section-label {
-  color: #8b7db5; font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.45); font-size: 10px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   padding: 0 12px; margin-bottom: 4px; margin-top: 16px;
 }
@@ -122,16 +122,16 @@
   width: 100%; display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: var(--radius-sm);
   border: none; border-left: 3px solid transparent;
-  background: transparent; color: #b8a9d9;
+  background: transparent; color: rgba(255,255,255,0.82);
   font-size: 13px; font-weight: 400; text-align: left;
   text-decoration: none; margin-bottom: 2px;
   cursor: pointer; transition: all 0.15s ease;
 }
 .swa-sidebar__nav-item:hover {
-  background: rgba(124,58,237,0.12); color: var(--color-primary-text);
+  background: rgba(255,255,255,0.08); color: #ffffff;
 }
 .swa-sidebar__nav-item.active {
-  background: rgba(124,58,237,0.25); color: var(--color-primary-text);
+  background: rgba(124,58,237,0.30); color: #ffffff;
   font-weight: 600; border-left-color: var(--color-primary);
 }
 .swa-sidebar__nav-item .material-symbols-outlined {

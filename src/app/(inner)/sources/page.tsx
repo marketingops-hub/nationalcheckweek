@@ -8,27 +8,16 @@ export const metadata = {
 
 export const revalidate = 60;
 
-const CATEGORY_LABEL: Record<string, string> = {
-  "mental-health":  "Mental Health",
-  "attendance":     "Attendance & Engagement",
-  "bullying":       "Bullying & Cyberbullying",
-  "sleep":          "Sleep & Screens",
-  "discrimination": "Discrimination & Inequality",
-  "policy":         "Policy & Governance",
-  "general":        "General",
-  "other":          "Other",
-};
-
 interface Source {
   id: string;
   title: string;
   url: string | null;
   publisher: string;
   year: string;
-  category: string;
-  entity_type: string;
-  entity_slug: string;
   verified: boolean;
+  issue_slug: string;
+  issue_title: string;
+  issue_icon: string;
 }
 
 export default async function SourcesPage() {
@@ -37,25 +26,38 @@ export default async function SourcesPage() {
 
   try {
     const sb = await createClient();
+    // issue_sources stores all sources added via the issue editor
     const { data, error } = await sb
-      .from("site_sources")
-      .select("id,title,url,publisher,year,category,entity_type,entity_slug,verified")
-      .order("category")
-      .order("year", { ascending: false });
+      .from("issue_sources")
+      .select("id, title, url, publisher, year, verified, issues(slug, title, icon)")
+      .order("title");
     if (error) fetchError = error.message;
-    sources = data ?? [];
+    sources = (data ?? []).map((row: Record<string, unknown>) => {
+      const iss = row.issues as Record<string, string> | null;
+      return {
+        id: row.id as string,
+        title: row.title as string,
+        url: (row.url as string) || null,
+        publisher: (row.publisher as string) || "",
+        year: (row.year as string) || "",
+        verified: Boolean(row.verified),
+        issue_slug: iss?.slug ?? "",
+        issue_title: iss?.title ?? "",
+        issue_icon: iss?.icon ?? "",
+      };
+    });
   } catch (e) {
     fetchError = e instanceof Error ? e.message : "Failed to load sources.";
   }
 
-  // Group by category
+  // Group by issue
   const grouped: Record<string, Source[]> = {};
   for (const src of sources) {
-    const cat = src.category ?? "general";
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(src);
+    const key = src.issue_slug || "general";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(src);
   }
-  const categories = Object.keys(grouped).sort();
+  const issueKeys = Object.keys(grouped).sort();
 
   return (
     <>
@@ -108,55 +110,59 @@ export default async function SourcesPage() {
           </div>
         )}
 
-        {/* GROUPED BY CATEGORY */}
-        {categories.map((cat) => (
-          <section key={cat} style={{ marginBottom: 48 }}>
-            <h2 className="section-heading section-heading--md">
-              {CATEGORY_LABEL[cat] ?? cat}
-              <span style={{
-                fontSize: "0.75rem", fontWeight: 600, color: "var(--text-light)",
-                background: "var(--gray-100)", borderRadius: 100, padding: "2px 10px",
-                marginLeft: 10, verticalAlign: "middle"
-              }}>
-                {grouped[cat].length}
-              </span>
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {grouped[cat].map((src) => (
-                <div key={src.id} className="source-item">
-                  <span className={`source-num${src.verified ? " source-num--verified" : ""}`}>
-                    {src.verified ? "✓" : "·"}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <div className="source-title">
-                      {src.url ? (
-                        <a href={src.url} target="_blank" rel="noopener noreferrer">{src.title}</a>
-                      ) : src.title}
-                      {src.verified && <span className="source-verified">VERIFIED</span>}
-                    </div>
-                    <div className="source-meta">
-                      {src.publisher}{src.publisher && src.year ? " · " : ""}{src.year}
-                      {src.entity_slug && (
-                        <span style={{ marginLeft: 8, color: "var(--teal)", fontSize: "0.75rem" }}>
-                          {src.entity_type === "issue" ? (
-                            <a href={`/issues/${src.entity_slug}`} style={{ color: "var(--teal)" }}>
-                              → Issue: {src.entity_slug}
-                            </a>
-                          ) : src.entity_slug}
-                        </span>
-                      )}
-                      {src.url && (
-                        <a href={src.url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8 }}>
-                          ↗ View source
-                        </a>
-                      )}
+        {/* GROUPED BY ISSUE */}
+        {issueKeys.map((key) => {
+          const grp = grouped[key];
+          const first = grp[0];
+          return (
+            <section key={key} style={{ marginBottom: 48 }}>
+              <h2 className="section-heading section-heading--md">
+                {first.issue_icon && <span style={{ marginRight: 8 }}>{first.issue_icon}</span>}
+                {first.issue_title || key}
+                <span style={{
+                  fontSize: "0.75rem", fontWeight: 600, color: "var(--text-light)",
+                  background: "var(--gray-100)", borderRadius: 100, padding: "2px 10px",
+                  marginLeft: 10, verticalAlign: "middle"
+                }}>
+                  {grp.length} source{grp.length !== 1 ? "s" : ""}
+                </span>
+                {first.issue_slug && (
+                  <a
+                    href={`/issues/${first.issue_slug}`}
+                    style={{ fontSize: "0.78rem", fontWeight: 500, color: "var(--teal)", marginLeft: 12, verticalAlign: "middle" }}
+                  >
+                    View issue →
+                  </a>
+                )}
+              </h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {grp.map((src) => (
+                  <div key={src.id} className="source-item">
+                    <span className={`source-num${src.verified ? " source-num--verified" : ""}`}>
+                      {src.verified ? "✓" : "·"}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div className="source-title">
+                        {src.url ? (
+                          <a href={src.url} target="_blank" rel="noopener noreferrer">{src.title}</a>
+                        ) : src.title}
+                        {src.verified && <span className="source-verified">VERIFIED</span>}
+                      </div>
+                      <div className="source-meta">
+                        {src.publisher}{src.publisher && src.year ? " · " : ""}{src.year}
+                        {src.url && (
+                          <a href={src.url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8 }}>
+                            ↗ View source
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
+                ))}
+              </div>
+            </section>
+          );
+        })}
 
       </main>
     </>
