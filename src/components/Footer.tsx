@@ -36,6 +36,7 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Accountability</h4>
           <ul className="footer-list">
+            <li><a href="/events">Events</a></li>
             <li><a href="/sources">Sources &amp; References</a></li>
             <li><a href="/sources">Challenge our data</a></li>
             <li><a href="/faq">FAQ</a></li>
