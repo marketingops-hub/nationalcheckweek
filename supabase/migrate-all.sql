@@ -86,7 +86,8 @@ create table if not exists menu_items (
   target     text not null default '_self' check (target in ('_self','_blank')),
   is_active  boolean not null default true,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  constraint menu_items_href_unique unique (href)
 );
 alter table menu_items enable row level security;
 do $$ begin
