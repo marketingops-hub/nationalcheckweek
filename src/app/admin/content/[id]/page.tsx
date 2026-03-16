@@ -15,13 +15,21 @@ export default async function EditAreaPage({ params }: Props) {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold mb-1" style={{ color: "#E6EDF3" }}>
-          Edit Area
-        </h1>
-        <p className="text-sm" style={{ color: "#6E7681" }}>
-          {area.name} · {area.state}
-        </p>
+      <div className="swa-page-header" style={{ marginBottom: 28 }}>
+        <div>
+          <h1 className="swa-page-title">Edit Area</h1>
+          <p className="swa-page-subtitle">{area.name} · {area.state}</p>
+        </div>
+        <a
+          href={`/areas/${area.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="swa-btn swa-btn--ghost"
+          style={{ fontSize: 13 }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>open_in_new</span>
+          View on site
+        </a>
       </div>
       <AreaEditForm area={area} />
     </div>

@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FORMATS, STATUSES, type Speaker } from "@/lib/events";
-import EventBodyRenderer from "@/components/events/EventBodyRenderer";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 interface EventForm {
   slug: string;
@@ -293,72 +293,32 @@ export default function EventEditForm({ event }: Props) {
 
       {/* CONTENT TAB */}
       {tab === "content" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Description */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
               <label className="swa-form-label" style={{ marginBottom: 0 }}>About the Event (short description)</label>
               <span style={{ fontSize: "0.72rem", color: form.description.length > 400 ? "#EF4444" : "#9CA3AF" }}>
-                {form.description.length} / 500
+                {form.description.length} / 500 chars
               </span>
             </div>
-            <textarea
-              className={T} rows={5} value={form.description}
-              onChange={(e) => set("description", e.target.value)}
+            <RichTextEditor
+              value={form.description}
+              onChange={(v) => set("description", v)}
               placeholder="This evidence-informed webinar is designed for primary school educators…"
-              maxLength={500}
+              minHeight={120}
             />
           </div>
 
-          {/* Body — split editor/preview */}
+          {/* Body */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-              <label className="swa-form-label" style={{ marginBottom: 0 }}>Full Body Content</label>
-              <span style={{ fontSize: "0.72rem", color: "#9CA3AF" }}>{form.body.length} chars</span>
-            </div>
-
-            {/* Format hint */}
-            <div style={{
-              display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10,
-              padding: "10px 14px", background: "#F0FDF4", borderRadius: 8,
-              border: "1px solid #BBF7D0", fontSize: "0.76rem", color: "#166534",
-            }}>
-              <span style={{ fontWeight: 700, marginRight: 4 }}>Format guide:</span>
-              <span style={{ background: "#fff", border: "1px solid #BBF7D0", borderRadius: 4, padding: "1px 7px", fontFamily: "monospace" }}>Section Heading</span>
-              <span style={{ color: "#4B5563" }}>→ short line, no full stop</span>
-              <span style={{ background: "#fff", border: "1px solid #BBF7D0", borderRadius: 4, padding: "1px 7px", fontFamily: "monospace" }}>1. Item text</span>
-              <span style={{ color: "#4B5563" }}>→ numbered list</span>
-              <span style={{ color: "#4B5563" }}>blank line = new paragraph</span>
-            </div>
-
-            {/* Split: editor + live preview */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "start" }}>
-              <textarea
-                className={T} rows={20} value={form.body}
-                onChange={(e) => set("body", e.target.value)}
-                placeholder={`Supporting Student Wellbeing Through Emotional Literacy
-
-1. Gain deeper insight into how emotional states influence attention.
-2. Learn to identify emotional triggers in the classroom.
-3. Build practical strategies you can use tomorrow.
-
-Can't Make It Live?
-
-Register anyway and we'll send you the full recording.`}
-                style={{ fontFamily: "monospace", fontSize: "0.82rem", resize: "vertical" }}
-              />
-              <div style={{
-                border: "1px solid #E5E7EB", borderRadius: 8, padding: "14px 16px",
-                minHeight: 200, background: "#FAFAFA", overflowY: "auto",
-                maxHeight: 480,
-              }}>
-                <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9CA3AF", marginBottom: 10 }}>Live preview</div>
-                {form.body.trim()
-                  ? <EventBodyRenderer content={form.body} />
-                  : <p style={{ color: "#D1D5DB", fontSize: "0.85rem", fontStyle: "italic" }}>Start typing to see a preview…</p>
-                }
-              </div>
-            </div>
+            <label className="swa-form-label">Full Body Content</label>
+            <RichTextEditor
+              value={form.body}
+              onChange={(v) => set("body", v)}
+              placeholder="Write the full event details here. Use H2/H3 for section headings, bullet or numbered lists for key points…"
+              minHeight={280}
+            />
           </div>
         </div>
       )}

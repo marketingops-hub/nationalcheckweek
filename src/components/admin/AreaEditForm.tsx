@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import SeoPanel from "@/components/admin/SeoPanel";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import { useRegenerate } from "@/components/admin/useRegenerate";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 interface KeyStat { num: string; label: string; }
 interface Issue { title: string; severity: string; stat: string; desc: string; }
@@ -286,14 +287,24 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               <label className={L} style={{ ...LS, margin: 0 }}>Overview</label>
               {!isNew && <RegenBtn label="Overview" onClick={() => handleRegen(["overview"])} busy={regen.busy === "overview"} />}
             </div>
-            <textarea rows={4} className={I} style={{ ...IS, resize: "vertical" }} value={form.overview} onChange={e => set("overview", e.target.value)} placeholder="Brief description of this area and its student wellbeing context…" />
+            <RichTextEditor
+              value={form.overview}
+              onChange={(v) => set("overview", v)}
+              placeholder="Brief description of this area and its student wellbeing context…"
+              minHeight={120}
+            />
           </div>
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <label className={L} style={{ ...LS, margin: 0 }}>Prevention Insight</label>
               {!isNew && <RegenBtn label="Prevention" onClick={() => handleRegen(["prevention"])} busy={regen.busy === "prevention"} />}
             </div>
-            <textarea rows={3} className={I} style={{ ...IS, resize: "vertical" }} value={form.prevention} onChange={e => set("prevention", e.target.value)} placeholder="What prevention or support systems are in place locally…" />
+            <RichTextEditor
+              value={form.prevention}
+              onChange={(v) => set("prevention", v)}
+              placeholder="What prevention or support systems are in place locally…"
+              minHeight={100}
+            />
           </div>
         </div>
       )}

@@ -38,6 +38,7 @@ const SECTIONS = [
     items: [
       { label: 'The Vault', href: '/admin/vault/sources', ms: 'lock' },
       { label: 'Prompts',   href: '/admin/prompts',       ms: 'smart_toy' },
+      { label: 'SEO',       href: '/admin/seo',           ms: 'travel_explore' },
     ],
   },
   {
