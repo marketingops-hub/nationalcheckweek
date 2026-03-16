@@ -15,6 +15,11 @@ export default function IssuesSection() {
             <IssueCard key={issue.rank} issue={issue} />
           ))}
         </div>
+        <div style={{ textAlign: "center", marginTop: 40 }}>
+          <a href="/issues" className="hero-btn-secondary" style={{ display: "inline-flex" }}>
+            View all {ISSUES.length} issues →
+          </a>
+        </div>
       </div>
     </section>
   );
