@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TICKER + NEWS TICKER
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* Stat ticker */
 .ticker {
@@ -17,9 +17,9 @@
   margin-right: 48px; border-right: 1px solid var(--border);
 }
 .ticker-item:last-child { border-right: none; }
-.ticker-num { font-family: var(--font-primary); font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1; }
-.ticker-desc { font-family: var(--font-primary); font-size: 0.95rem; color: var(--text-mid); margin-top: 8px; max-width: 220px; line-height: 1.6; font-weight: 400; }
-.ticker-src  { font-family: var(--font-primary); font-size: 0.82rem; color: var(--text-light); margin-top: 5px; font-style: italic; }
+.ticker-num { font-family: var(--font-body); font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1; }
+.ticker-desc { font-family: var(--font-body); font-size: 0.95rem; color: var(--text-mid); margin-top: 8px; max-width: 220px; line-height: 1.6; font-weight: 400; }
+.ticker-src  { font-family: var(--font-body); font-size: 0.82rem; color: var(--text-light); margin-top: 5px; font-style: italic; }
 
 /* News ticker (scrolling alert bar) */
 .news-ticker {
@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(39,174,142,0.3);
+  box-shadow: 0 2px 8px rgba(41,184,232,0.3);
 }
 .news-ticker-label {
   flex-shrink: 0;
@@ -72,7 +72,7 @@
   height: 100%;
 }
 .news-ticker-stat {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 800;
   color: #FFFFFF;
@@ -80,7 +80,7 @@
   text-transform: uppercase;
 }
 .news-ticker-detail {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.78rem;
   font-weight: 600;
   color: rgba(255,255,255,0.9);

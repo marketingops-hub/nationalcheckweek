@@ -1,47 +1,51 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DESIGN TOKENS + RESET + BASE TYPOGRAPHY
-   Schools Wellbeing — Green Design System
-═══════════════════════════════════════ */
+   National Check-in Week â€” Brand Design System
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&family=Poppins:wght@300;400;600;700&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ── Brand ── */
-  --primary:        #27AE8E;
-  --primary-dark:   #1E8C72;
-  --primary-light:  #E8F7F3;
-  --primary-mid:    #3EC9A7;
-  --accent:         #FFD166;
-  --dark:           #1A2E2B;
+  /* â”€â”€ Brand Primary (Cyan) â”€â”€ */
+  --primary:        #29B8E8;
+  --primary-dark:   #1A9DCA;
+  --primary-light:  #E6F7FD;
 
-  /* ── Neutrals ── */
+  /* â”€â”€ Brand Accent (Hot Pink) â”€â”€ */
+  --accent:         #E5007E;
+  --accent-dark:    #C4006B;
+  --accent-light:   #FCEEF6;
+
+  /* â”€â”€ Neutrals â”€â”€ */
   --white:          #FFFFFF;
-  --off-white:      #F7FAF9;
-  --section-tint:   #F0FAF7;
-  --muted-grey:     #718096;
-  --border:         #D1EAE3;
-  --border-strong:  #A8D5C8;
+  --off-white:      #FFFFFF;
+  --section-tint:   #F8F4F7;
+  --dark:           #3D3D3D;
+  --muted-grey:     #6B6B6B;
+  --border:         #E8E8E8;
+  --border-strong:  #D0D0D0;
 
-  /* ── Semantic text ── */
-  --text:           #1A2E2B;
-  --text-mid:       #2D4A46;
-  --text-light:     #718096;
+  /* â”€â”€ Semantic text â”€â”€ */
+  --text:           #3D3D3D;
+  --text-mid:       #6B6B6B;
+  --text-light:     #9B9B9B;
+  --text-body:      #3D3D3D;
 
-  /* ── Semantic aliases (backward compat for inner pages) ── */
-  --navy:           #1A2E2B;
-  --teal:           #27AE8E;
-  --teal-light:     #E8F7F3;
-  --gray-50:        #F7FAF9;
-  --gray-100:       #F0FAF7;
-  --gray-200:       #D1EAE3;
-  --gray-300:       #A8D5C8;
-  --gray-500:       #718096;
-  --gray-700:       #2D4A46;
-  --gray-900:       #1A2E2B;
+  /* â”€â”€ Semantic aliases (backward compat) â”€â”€ */
+  --navy:           #3D3D3D;
+  --teal:           #29B8E8;
+  --teal-light:     #E6F7FD;
+  --gray-50:        #F8F4F7;
+  --gray-100:       #F2F2F2;
+  --gray-200:       #E8E8E8;
+  --gray-300:       #D0D0D0;
+  --gray-500:       #6B6B6B;
+  --gray-700:       #4D4D4D;
+  --gray-900:       #3D3D3D;
 
-  /* ── Status ── */
+  /* â”€â”€ Status â”€â”€ */
   --green:          #16a34a;
   --green-bg:       #DCFCE7;
   --amber:          #B45309;
@@ -50,10 +54,12 @@
   --red-bg:         #FEE2E2;
   --crisis-red:     #7F1D1D;
 
-  /* ── Typography ── */
-  --font-primary:   var(--font-nunito, 'Nunito'), sans-serif;
+  /* â”€â”€ Typography â”€â”€ */
+  --font-display:  var(--font-montserrat, 'Montserrat'), sans-serif;
+  --font-body:     var(--font-poppins, 'Poppins'), sans-serif;
+  --font-primary:  var(--font-poppins, 'Poppins'), sans-serif;
 
-  /* ── Spacing ── */
+  /* â”€â”€ Spacing â”€â”€ */
   --sp-xs:   4px;
   --sp-sm:   8px;
   --sp-md:   16px;
@@ -63,15 +69,15 @@
   --container-max: 1200px;
   --section-padding: 80px 0;
 
-  /* ── Border Radius ── */
+  /* â”€â”€ Border Radius â”€â”€ */
   --radius-sm:   6px;
   --radius-md:   12px;
   --radius-lg:   20px;
   --radius-pill: 999px;
 
-  /* ── Shadows ── */
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.07);
-  --shadow-nav:  0 2px 12px rgba(0, 0, 0, 0.06);
+  /* â”€â”€ Shadows â”€â”€ */
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-nav:  0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 html { scroll-behavior: smooth; }
@@ -97,83 +103,122 @@ html { scroll-behavior: smooth; }
 :focus:not(:focus-visible) { outline: none; }
 
 body {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.7;
   color: var(--text);
-  background: var(--off-white);
+  background: var(--white);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-  font-family: var(--font-primary);
+  font-family: var(--font-display);
   font-size: clamp(2.4rem, 5vw, 3.75rem);
   line-height: 1.1;
   font-weight: 900;
   color: var(--dark);
 }
 h2 {
-  font-family: var(--font-primary);
+  font-family: var(--font-display);
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   line-height: 1.2;
   font-weight: 800;
   color: var(--dark);
 }
 h3 {
-  font-family: var(--font-primary);
+  font-family: var(--font-display);
   font-size: 1.3rem;
   line-height: 1.3;
   font-weight: 700;
   color: var(--dark);
 }
 h4 {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 700;
   color: var(--dark);
 }
 p { font-size: 1rem; line-height: 1.7; color: var(--text-mid); }
 
-/* ── Global button primitives ── */
+/* â”€â”€ Global button primitives â”€â”€ */
 .btn-primary {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--primary); color: #fff;
   border: none; border-radius: var(--radius-pill);
-  padding: 12px 32px;
-  font-family: var(--font-primary); font-weight: 700; font-size: 15px;
+  padding: 14px 32px;
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
+  letter-spacing: 0.01em;
   cursor: pointer; text-decoration: none;
   transition: background 0.2s;
 }
 .btn-primary:hover { background: var(--primary-dark); }
 
+.btn-accent {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-pill);
+  padding: 14px 32px;
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-accent:hover { background: var(--accent-dark); }
+
 .btn-secondary {
   display: inline-flex; align-items: center; gap: 8px;
   background: transparent; color: var(--primary);
   border: 2px solid var(--primary); border-radius: var(--radius-pill);
-  padding: 10px 28px;
-  font-family: var(--font-primary); font-weight: 700; font-size: 15px;
+  padding: 12px 28px;
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
   cursor: pointer; text-decoration: none;
   transition: all 0.2s;
 }
 .btn-secondary:hover { background: var(--primary); color: #fff; }
 
-/* ── Generic card ── */
+/* â”€â”€ Generic card â”€â”€ */
 .card {
   background: var(--white);
-  border: 1px solid var(--border);
+  border: 0.5px solid var(--border);
   border-radius: var(--radius-md);
   padding: 24px 28px;
   box-shadow: var(--shadow-card);
 }
 .card-tint {
-  background: var(--primary-light);
+  background: var(--section-tint);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 32px;
 }
 
-/* ── Section background helpers ── */
+/* â”€â”€ Stat block (hot pink) â”€â”€ */
+.stat-block {
+  background: var(--accent);
+  border-radius: 14px;
+  padding: 20px 32px;
+  display: flex; align-items: center; gap: 20px;
+  color: #fff;
+}
+.stat-number {
+  font-family: var(--font-display);
+  font-weight: 800; font-size: 36px; line-height: 1;
+}
+.stat-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.4); }
+.stat-label { font-family: var(--font-body); font-size: 13px; font-weight: 600; line-height: 1.4; }
+
+/* â”€â”€ Banner block (cyan) â”€â”€ */
+.banner-block {
+  background: var(--primary);
+  border-radius: 20px;
+  padding: 40px 48px;
+  color: #fff;
+}
+.banner-block h2 {
+  font-family: var(--font-display);
+  font-weight: 900; font-size: 48px; color: #fff;
+}
+
+/* â”€â”€ Section background helpers â”€â”€ */
 .section-white { background: var(--white); }
 .section-tint  { background: var(--section-tint); }
 .section-dark  { background: var(--dark); color: #fff; }

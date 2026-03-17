@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    NAV + HAMBURGER + DRAWER
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 900;
@@ -14,8 +14,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--font-primary);
-  font-size: 1.1rem; font-weight: 800;
+  font-family: var(--font-body);
+  font-size: 1.1rem; font-weight: 700;
   color: var(--dark); text-decoration: none;
 }
 .nav-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
@@ -23,25 +23,25 @@
 .nav-logo img { display: block; }
 .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
 .nav-links a {
-  font-family: var(--font-primary);
-  color: #4A5568; text-decoration: none;
+  font-family: var(--font-body);
+  color: var(--dark); text-decoration: none;
   font-size: 0.875rem; font-weight: 600; transition: color 0.2s;
 }
 .nav-links a:hover { color: var(--primary); }
 
-/* ── Nav CTA pill ── */
+/* â”€â”€ Nav CTA pill â”€â”€ */
 .nav-cta {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--primary); color: #fff !important;
   border-radius: var(--radius-pill);
   padding: 9px 22px;
-  font-family: var(--font-primary); font-weight: 700; font-size: 14px;
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
   text-decoration: none; transition: background 0.2s;
   white-space: nowrap;
 }
 .nav-cta:hover { background: var(--primary-dark) !important; color: #fff !important; }
 
-/* ── INNER NAV ── */
+/* â”€â”€ INNER NAV â”€â”€ */
 .inner-nav {
   background: var(--white);
   padding: 0 40px;
@@ -53,16 +53,16 @@
 }
 .inner-nav-right { display: flex; align-items: center; gap: 24px; }
 .inner-nav-link {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.875rem; color: var(--text-light);
   text-decoration: none; font-weight: 600;
   transition: color 0.2s;
 }
 .inner-nav-link:hover { color: var(--primary); }
 .inner-nav-back {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.875rem; color: var(--dark);
-  text-decoration: none; font-weight: 700;
+  text-decoration: none; font-weight: 600;
   display: flex; align-items: center; gap: 6px;
   background: var(--primary-light);
   padding: 6px 16px; border-radius: var(--radius-pill);
@@ -71,7 +71,7 @@
 }
 .inner-nav-back:hover { background: var(--border); }
 
-/* ── HAMBURGER NAV ── */
+/* â”€â”€ HAMBURGER NAV â”€â”€ */
 .nav-hamburger {
   display: none;
   flex-direction: column; justify-content: center; align-items: center;
@@ -105,8 +105,8 @@
 @keyframes drawerSlideDown { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .nav-drawer-link {
   display: block; padding: 14px 24px;
-  font-family: var(--font-primary);
-  font-size: 1rem; font-weight: 700; color: var(--dark);
+  font-family: var(--font-body);
+  font-size: 1rem; font-weight: 600; color: var(--dark);
   text-decoration: none; border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }

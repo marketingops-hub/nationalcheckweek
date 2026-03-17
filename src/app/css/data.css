@@ -1,10 +1,10 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DATA SECTION
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1100px; margin: 0 auto; }
 .data-box { background: var(--white); border: 1px solid var(--border); padding: 28px; border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
-.data-box-title { font-family: var(--font-primary); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin-bottom: 14px; }
-.data-box p { font-family: var(--font-primary); font-size: 0.975rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 12px; }
+.data-box-title { font-family: var(--font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin-bottom: 14px; }
+.data-box p { font-family: var(--font-body); font-size: 0.975rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 12px; }
 .data-box p:last-child { margin-bottom: 0; }
 .data-box strong { color: var(--dark); }

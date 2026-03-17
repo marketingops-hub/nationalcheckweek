@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RESEARCH SECTION
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .research-grid {
   display: grid;
@@ -33,7 +33,7 @@
 .research-card.theme-blue       .research-card-title { color: #1D4ED8; }
 .research-card.theme-purple     .research-card-title { color: #6D28D9; }
 .research-icon { font-size: 1.4rem; flex-shrink: 0; }
-.research-card-title { font-family: var(--font-primary); font-size: 0.95rem; font-weight: 800; line-height: 1.3; }
+.research-card-title { font-family: var(--font-body); font-size: 0.95rem; font-weight: 800; line-height: 1.3; }
 .research-findings { padding: 4px 0; }
 .research-finding {
   display: flex; gap: 16px; align-items: flex-start;
@@ -42,17 +42,17 @@
 }
 .research-finding:last-child { border-bottom: none; }
 .research-finding-stat {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.2rem; font-weight: 900; color: var(--primary);
   min-width: 62px; line-height: 1.2; flex-shrink: 0;
 }
 .research-finding-body { flex: 1; min-width: 0; }
-.research-finding-detail { font-family: var(--font-primary); font-size: 0.925rem; color: var(--text-mid); line-height: 1.65; margin-bottom: 5px; }
-.research-finding-src { font-family: var(--font-primary); font-size: 0.8rem; color: var(--text-light); font-style: italic; }
+.research-finding-detail { font-family: var(--font-body); font-size: 0.925rem; color: var(--text-mid); line-height: 1.65; margin-bottom: 5px; }
+.research-finding-src { font-family: var(--font-body); font-size: 0.8rem; color: var(--text-light); font-style: italic; }
 .research-note {
   background: var(--primary-light); border: 1px solid var(--border);
   border-radius: var(--radius-md); padding: 18px 24px;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.9rem; color: var(--text-mid); line-height: 1.75;
 }
 .research-note strong { color: var(--dark); }

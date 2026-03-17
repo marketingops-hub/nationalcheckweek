@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    INTRO SECTION
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .intro-section {
   padding: 80px 80px;
@@ -15,26 +15,26 @@
   gap: 56px;
 }
 
-/* ── Block 1: primary intro ── */
+/* â”€â”€ Block 1: primary intro â”€â”€ */
 .intro-block {
   position: relative;
 }
 
 .intro-block-primary {
   padding: 48px 56px;
-  background: linear-gradient(135deg, #E8F7F3 0%, #FFFFFF 100%);
-  border: 1px solid rgba(39,174,142,0.20);
+  background: linear-gradient(135deg, #E6F7FD 0%, #FFFFFF 100%);
+  border: 1px solid rgba(41,184,232,0.20);
   border-left: 4px solid var(--primary);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 20px rgba(39,174,142,0.08);
+  box-shadow: 0 2px 20px rgba(41,184,232,0.08);
 }
 
 .intro-tag {
   display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--primary); background: rgba(39,174,142,0.10);
-  border: 1px solid rgba(39,174,142,0.25); padding: 5px 16px; border-radius: var(--radius-pill);
+  color: var(--primary); background: rgba(41,184,232,0.10);
+  border: 1px solid rgba(41,184,232,0.25); padding: 5px 16px; border-radius: var(--radius-pill);
   margin-bottom: 20px;
 }
 .intro-tag-dot {
@@ -43,13 +43,13 @@
 }
 
 .intro-lead {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.15rem; color: var(--dark); line-height: 1.8; font-weight: 600;
   margin-bottom: 20px; max-width: 860px;
 }
 
 .intro-body {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1rem; color: var(--text-mid); line-height: 1.85;
   margin-bottom: 16px; max-width: 860px;
 }
@@ -60,7 +60,7 @@
   border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px;
 }
 
-/* ── Block 2: what is NCIW ── */
+/* â”€â”€ Block 2: what is NCIW â”€â”€ */
 .intro-block-secondary {
   padding: 48px 56px;
   background: var(--section-tint);
@@ -69,13 +69,13 @@
 }
 
 .intro-h2 {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: clamp(1.5rem, 2.5vw, 2rem);
   font-weight: 800; color: var(--dark);
   margin-bottom: 20px; line-height: 1.2;
 }
 
-/* ── Pillars row ── */
+/* â”€â”€ Pillars row â”€â”€ */
 .intro-pillars {
   display: flex; flex-wrap: wrap; gap: 12px;
   margin-top: 28px;
@@ -85,10 +85,10 @@
   display: flex; align-items: center; gap: 10px;
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius-pill); padding: 10px 20px;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.875rem; font-weight: 700; color: var(--dark);
   box-shadow: var(--shadow-card);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.intro-pillar:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(39,174,142,0.14); }
+.intro-pillar:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(41,184,232,0.14); }
 .intro-pillar-icon { font-size: 1.1rem; }

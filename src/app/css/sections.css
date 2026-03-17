@@ -1,8 +1,8 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SECTIONS (shared section styles)
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-.section { padding: 80px 80px; background: var(--off-white); }
+.section { padding: 80px 80px; background: var(--white); }
 .section-alt { background: var(--section-tint); }
 .section-dark {
   background: var(--dark); color: #fff;
@@ -13,21 +13,21 @@
 
 .section-tag {
   display: inline-block;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.72rem; font-weight: 700; color: var(--primary);
   letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px;
-  background: rgba(39,174,142,0.10); padding: 5px 16px;
+  background: rgba(41,184,232,0.10); padding: 5px 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(39,174,142,0.25);
+  border: 1px solid rgba(41,184,232,0.25);
 }
-.section h2 { color: var(--dark); margin-bottom: 16px; }
+.section h2 { font-family: var(--font-display); color: var(--dark); margin-bottom: 16px; }
 .section-lead {
-  font-family: var(--font-primary);
-  font-size: 1.1rem; color: var(--text-mid);
+  font-family: var(--font-body);
+  font-size: 1.05rem; color: var(--text-mid);
   max-width: 680px; margin-bottom: 56px; line-height: 1.8; font-weight: 400;
 }
 
-/* ── Partners Carousel ── */
+/* â”€â”€ Partners Carousel â”€â”€ */
 .partners-carousel {
   background: var(--white); border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border); padding: 40px 0; overflow: hidden;
@@ -36,7 +36,7 @@
   max-width: var(--container-max); margin: 0 auto; padding: 0 48px;
 }
 .partners-carousel__label {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--primary); margin-bottom: 20px; text-align: center;
 }

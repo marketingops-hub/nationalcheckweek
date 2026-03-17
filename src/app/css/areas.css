@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    AREAS PAGE
-═══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .area-hero {
-  background: linear-gradient(150deg, #E8F7F3 0%, #F7FAF9 60%, #FFFFFF 100%);
+  background: linear-gradient(150deg, #E6F7FD 0%, #F8F4F7 60%, #FFFFFF 100%);
   padding: 80px 48px 56px;
   border-bottom: 2px solid var(--border);
 }
@@ -31,8 +31,8 @@
 }
 .area-tag {
   display: inline-block;
-  font-family: var(--font-primary);
-  background: rgba(39,174,142,0.10);
+  font-family: var(--font-body);
+  background: rgba(41,184,232,0.10);
   color: var(--primary);
   font-size: 0.72rem;
   font-weight: 700;
@@ -40,7 +40,7 @@
   text-transform: uppercase;
   padding: 5px 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(39,174,142,0.25);
+  border: 1px solid rgba(41,184,232,0.25);
   margin-bottom: 14px;
 }
 .area-stats-row {
@@ -58,7 +58,7 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .area-stat-num {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.6rem;
   font-weight: 900;
   color: var(--primary);
@@ -79,7 +79,7 @@
   margin-bottom: 40px;
 }
 .area-section h2 {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.4rem;
   color: var(--dark);
   font-weight: 800;
@@ -103,14 +103,14 @@
 .area-issue-card.high     { border-left-color: var(--amber); }
 .area-issue-card.notable  { border-left-color: var(--green); }
 .area-issue-title {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-weight: 800;
   color: var(--dark);
   margin-bottom: 4px;
   font-size: 0.95rem;
 }
 .area-issue-stat {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--primary);
@@ -121,7 +121,7 @@
   color: var(--text-mid);
   line-height: 1.6;
 }
-/* ── Area Severity Badge ── */
+/* â”€â”€ Area Severity Badge â”€â”€ */
 .area-sev-badge {
   display: inline-block; padding: 1px 8px; border-radius: 4px;
   font-size: 0.72rem; font-weight: 700; margin-right: 8px;
@@ -130,15 +130,15 @@
 .area-sev-badge--high     { background: #FEF3C7; color: #B45309; }
 .area-sev-badge--notable  { background: #DCFCE7; color: #15803D; }
 
-/* ── Area Prevention Callout ── */
+/* â”€â”€ Area Prevention Callout â”€â”€ */
 .area-prevention {
-  background: linear-gradient(135deg, #E8F7F3 0%, #F0FAF7 100%);
-  border: 1px solid rgba(39,174,142,0.20);
+  background: linear-gradient(135deg, #E6F7FD 0%, #F8F4F7 100%);
+  border: 1px solid rgba(41,184,232,0.20);
   border-left: 4px solid var(--primary);
   border-radius: var(--radius-lg); padding: 28px 32px;
 }
 .area-prevention__eyebrow {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.72rem; font-weight: 700; color: var(--primary);
   letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px;
 }
@@ -148,13 +148,13 @@
 .area-prevention__cta {
   display: inline-flex; align-items: center; gap: 6px; margin-top: 18px;
   background: var(--primary); color: #fff;
-  font-family: var(--font-primary); font-weight: 700; font-size: 0.85rem;
+  font-family: var(--font-body); font-weight: 700; font-size: 0.85rem;
   padding: 10px 22px; border-radius: var(--radius-pill); text-decoration: none;
   transition: background 0.15s;
 }
 .area-prevention__cta:hover { background: var(--primary-dark); }
 
-/* ── Related Areas Grid ── */
+/* â”€â”€ Related Areas Grid â”€â”€ */
 .area-related-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
 }
@@ -164,10 +164,10 @@
   transition: border-color 0.15s;
 }
 .area-related-card:hover { border-color: var(--primary); }
-.area-related-card__name { font-family: var(--font-primary); font-weight: 800; color: var(--dark); font-size: 0.9rem; }
+.area-related-card__name { font-family: var(--font-body); font-weight: 800; color: var(--dark); font-size: 0.9rem; }
 .area-related-card__meta { font-size: 0.75rem; color: var(--text-light); margin-top: 4px; }
 
-/* ── Back Nav Row ── */
+/* â”€â”€ Back Nav Row â”€â”€ */
 .area-back-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 
 .area-back-btn {
@@ -176,7 +176,7 @@
   gap: 6px;
   background: var(--primary-light);
   color: var(--dark);
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 700;
   padding: 10px 20px;

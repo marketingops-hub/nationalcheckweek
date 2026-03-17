@@ -1,8 +1,8 @@
-/* ═══════════════════════════════════════
-   EVENTS — public listing + detail page
-═══════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   EVENTS â€” public listing + detail page
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── Toolbar ── */
+/* â”€â”€ Toolbar â”€â”€ */
 .events-toolbar {
   display: flex;
   gap: 12px;
@@ -29,7 +29,7 @@
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   font-size: 0.9rem;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   color: var(--dark);
   background: var(--white);
   outline: none;
@@ -37,7 +37,7 @@
 }
 .events-toolbar__search-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(39,174,142,0.12);
+  box-shadow: 0 0 0 3px rgba(41,184,232,0.12);
 }
 
 .events-toolbar__filters,
@@ -68,7 +68,7 @@
 .events-view-btn--active {
   background: var(--white);
   color: var(--primary);
-  box-shadow: 0 1px 4px rgba(39,174,142,0.15);
+  box-shadow: 0 1px 4px rgba(41,184,232,0.15);
 }
 .events-filter-btn:hover:not(.events-filter-btn--active),
 .events-view-btn:hover:not(.events-view-btn--active) {
@@ -76,7 +76,7 @@
   background: rgba(255,255,255,0.6);
 }
 
-/* ── Event card (list item) ── */
+/* â”€â”€ Event card (list item) â”€â”€ */
 .event-card {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -90,7 +90,7 @@
   transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 .event-card:hover {
-  box-shadow: 0 8px 32px rgba(39,174,142,0.14);
+  box-shadow: 0 8px 32px rgba(41,184,232,0.14);
   transform: translateY(-3px);
   border-color: var(--primary);
 }
@@ -98,7 +98,7 @@
 /* Fix: explicit height so Next.js fill Image renders correctly */
 .event-card__image {
   position: relative;
-  background: linear-gradient(135deg, #E8F7F3 0%, #F0FAF7 100%);
+  background: linear-gradient(135deg, #E6F7FD 0%, #F8F4F7 100%);
   height: 180px;
 }
 .event-card__image-placeholder {
@@ -134,7 +134,7 @@
 }
 .event-card__badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .event-card__title {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.08rem;
   font-weight: 800;
   color: var(--dark);
@@ -166,7 +166,7 @@
   gap: 5px;
 }
 
-/* ── Lists ── */
+/* â”€â”€ Lists â”€â”€ */
 .events-list { display: flex; flex-direction: column; gap: 14px; }
 .events-month-group { margin-bottom: 52px; }
 .events-empty {
@@ -175,9 +175,9 @@
   color: var(--text-light);
 }
 .events-empty__icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
-.events-empty__title { font-family: var(--font-primary); font-size: 1.1rem; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
+.events-empty__title { font-family: var(--font-body); font-size: 1.1rem; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
 
-/* ── Hero meta bar (date/time/format strip in page hero) ── */
+/* â”€â”€ Hero meta bar (date/time/format strip in page hero) â”€â”€ */
 .event-hero-meta {
   display: flex;
   gap: 24px;
@@ -198,7 +198,7 @@
   font-size: 1rem;
 }
 
-/* ── Detail page 2-column grid ── */
+/* â”€â”€ Detail page 2-column grid â”€â”€ */
 .event-detail-grid {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -210,7 +210,7 @@
   top: 32px;
 }
 
-/* ── Feature image in detail ── */
+/* â”€â”€ Feature image in detail â”€â”€ */
 .event-feature-image {
   position: relative;
   width: 100%;
@@ -221,7 +221,7 @@
   background: linear-gradient(135deg, #EFF6FF, #F0FDF4);
 }
 
-/* ── Body content sections ── */
+/* â”€â”€ Body content sections â”€â”€ */
 .event-section {
   margin-bottom: 40px;
   padding-bottom: 40px;
@@ -231,10 +231,10 @@
   border-bottom: none;
 }
 
-/* ── Event body renderer ── */
+/* â”€â”€ Event body renderer â”€â”€ */
 .event-body { display: block; }
 .event-body__heading {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.05rem;
   font-weight: 800;
   color: var(--dark);
@@ -283,16 +283,16 @@
   margin-top: 2px;
 }
 
-/* ── Event body HTML prose (RTE output) ── */
+/* â”€â”€ Event body HTML prose (RTE output) â”€â”€ */
 .event-body--html { display: block; }
 .event-body--html h2 {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.15rem; font-weight: 800; color: var(--dark);
   margin: 28px 0 10px; line-height: 1.4;
 }
 .event-body--html h2:first-child { margin-top: 0; }
 .event-body--html h3 {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.02rem; font-weight: 700; color: var(--dark);
   margin: 22px 0 8px; line-height: 1.4;
 }
@@ -311,7 +311,7 @@
 .event-body--html em { font-style: italic; }
 .event-body--html a { color: var(--primary); text-decoration: underline; }
 
-/* ── Recording callout ── */
+/* â”€â”€ Recording callout â”€â”€ */
 .event-recording-callout {
   background: #F0FDF4;
   border: 1.5px solid #86EFAC;
@@ -359,7 +359,7 @@
 }
 .event-recording-callout__link:hover { text-decoration: underline; }
 
-/* ── Speakers ── */
+/* â”€â”€ Speakers â”€â”€ */
 .event-speakers { display: flex; flex-direction: column; gap: 32px; }
 .event-speaker {
   display: grid;
@@ -388,7 +388,7 @@
 }
 .event-speaker__info { min-width: 0; }
 .event-speaker__name {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 800;
   color: var(--dark);
@@ -396,7 +396,7 @@
   line-height: 1.3;
 }
 .event-speaker__role {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--primary);
@@ -410,7 +410,7 @@
   color: var(--text-body);
 }
 
-/* ── Register sidebar ── */
+/* â”€â”€ Register sidebar â”€â”€ */
 .event-register-card {
   border: 1.5px solid var(--border);
   border-radius: 16px;
@@ -419,12 +419,12 @@
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
 .event-register-card__header {
-  background: linear-gradient(135deg, #E8F7F3 0%, #F0FAF7 100%);
+  background: linear-gradient(135deg, #E6F7FD 0%, #F8F4F7 100%);
   padding: 20px 24px;
   border-bottom: 1px solid var(--border);
 }
 .event-register-card__price {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 1.5rem;
   font-weight: 900;
   color: var(--dark);
@@ -461,7 +461,7 @@
   color: #fff !important;
   padding: 14px 20px;
   border-radius: var(--radius-pill);
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.95rem;
   text-decoration: none;
@@ -512,7 +512,7 @@
   display: block;
   text-align: center;
   padding: 12px;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   font-size: 0.82rem;
   color: var(--primary);
   text-decoration: none;
@@ -522,7 +522,7 @@
 }
 .event-register-card__back:hover { color: var(--dark); }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 900px) {
   .event-detail-grid {
     grid-template-columns: 1fr 280px;
