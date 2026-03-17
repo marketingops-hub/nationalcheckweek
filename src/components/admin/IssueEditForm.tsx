@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SeoPanel from "@/components/admin/SeoPanel";
@@ -92,6 +92,157 @@ function TagList({ items, onAdd, onRemove, placeholder }: {
       </div>
       <input className={I} style={IS} value={input} onChange={e => setInput(e.target.value)}
         onKeyDown={handleKeyDown} placeholder={items.length === 0 ? placeholder : "Type and press Enter…"} />
+    </div>
+  );
+}
+
+interface ImpactsTabProps {
+  impacts: ImpactBox[];
+  groups: string[];
+  onAddImpact: () => void;
+  onUpdateImpact: (idx: number, field: keyof ImpactBox, val: string) => void;
+  onRemoveImpact: (idx: number) => void;
+  onAddGroup: (val: string) => void;
+  onRemoveGroup: (idx: number) => void;
+}
+
+function ImpactsTab({ impacts, groups, onAddImpact, onUpdateImpact, onRemoveImpact, onAddGroup, onRemoveGroup }: ImpactsTabProps) {
+  return (
+    <div className="space-y-6">
+      <div className="admin-card">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>Impact Areas</h2>
+            <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>How this issue affects students</p>
+          </div>
+          <button onClick={onAddImpact} className="admin-btn admin-btn-primary text-xs">+ Add Impact</button>
+        </div>
+        {impacts.length === 0 ? (
+          <div className="rounded-xl p-8 text-center" style={{ border: "2px dashed var(--admin-border)" }}>
+            <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>No impacts yet — click &quot;Add Impact&quot; to add one.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {impacts.map((impact, idx) => <ImpactCard key={idx} impact={impact} idx={idx} onChange={onUpdateImpact} onRemove={onRemoveImpact} />)}
+          </div>
+        )}
+      </div>
+
+      <div className="admin-card">
+        <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Groups at Risk</h2>
+        <p className="text-xs mb-4" style={{ color: "var(--admin-text-subtle)" }}>Type a group name and press Enter to add</p>
+        <TagList items={groups} onAdd={onAddGroup} onRemove={onRemoveGroup}
+          placeholder="e.g. Indigenous students, Rural students…" />
+      </div>
+    </div>
+  );
+}
+
+interface NewSourceState { title: string; url: string; publisher: string; year: string; }
+
+interface SourcesTabProps {
+  isNew: boolean;
+  dbSources: IssueSource[];
+  sources: string[];
+  addingSource: boolean;
+  newSource: NewSourceState;
+  onSetAddingSource: (v: boolean) => void;
+  onSetNewSource: (fn: (s: NewSourceState) => NewSourceState) => void;
+  onAddSource: () => void;
+  onDeleteSource: (id: string) => void;
+  inputClass: string;
+  inputStyle: React.CSSProperties;
+}
+
+function SourcesTab({ isNew, dbSources, sources, addingSource, newSource, onSetAddingSource, onSetNewSource, onAddSource, onDeleteSource, inputClass, inputStyle }: SourcesTabProps) {
+  return (
+    <div className="space-y-4">
+      <div className="admin-card">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>References &amp; Citations</h2>
+            <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>
+              Authoritative sources backing the data on this page. Use <strong>Verify</strong> in the Content tab to auto-discover sources.
+            </p>
+          </div>
+          {!isNew && (
+            <button onClick={() => onSetAddingSource(true)} className="admin-btn admin-btn-primary text-xs">+ Add Source</button>
+          )}
+        </div>
+
+        {addingSource && (
+          <div className="rounded-xl p-4 mb-4" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <Field label="Title *">
+                <input className={inputClass} style={inputStyle} value={newSource.title} onChange={e => onSetNewSource(s => ({ ...s, title: e.target.value }))} placeholder="e.g. AIHW Mental Health Report 2024" />
+              </Field>
+              <Field label="URL">
+                <input className={inputClass} style={inputStyle} value={newSource.url} onChange={e => onSetNewSource(s => ({ ...s, url: e.target.value }))} placeholder="https://..." />
+              </Field>
+              <Field label="Publisher">
+                <input className={inputClass} style={inputStyle} value={newSource.publisher} onChange={e => onSetNewSource(s => ({ ...s, publisher: e.target.value }))} placeholder="e.g. Australian Institute of Health and Welfare" />
+              </Field>
+              <Field label="Year">
+                <input className={inputClass} style={inputStyle} value={newSource.year} onChange={e => onSetNewSource(s => ({ ...s, year: e.target.value }))} placeholder="e.g. 2024" />
+              </Field>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={onAddSource} className="admin-btn admin-btn-primary admin-btn-sm">Add</button>
+              <button onClick={() => { onSetAddingSource(false); onSetNewSource(() => ({ title: "", url: "", publisher: "", year: "" })); }} className="admin-btn admin-btn-secondary admin-btn-sm">Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {dbSources.length === 0 ? (
+          <div className="rounded-xl p-8 text-center" style={{ border: "2px dashed var(--admin-border)" }}>
+            <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>
+              No sources yet. Use the <strong>Verify</strong> button in the Content tab to auto-discover sources, or add them manually.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {dbSources.sort((a, b) => a.num - b.num).map(src => (
+              <div key={src.id} className="flex items-start gap-3 rounded-xl p-3" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
+                <span className="text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ width: 28, height: 28, background: src.verified ? "#DCFCE7" : "var(--admin-border)", color: src.verified ? "#166534" : "var(--admin-text-subtle)" }}>
+                  {src.num}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>
+                    {src.title}
+                    {src.verified && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: "#DCFCE7", color: "#166534" }}>VERIFIED</span>}
+                  </div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-subtle)" }}>
+                    {src.publisher}{src.publisher && src.year && " · "}{src.year}
+                  </div>
+                  {src.url && (
+                    <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs mt-0.5 block truncate" style={{ color: "var(--admin-accent)" }}>
+                      {src.url}
+                    </a>
+                  )}
+                </div>
+                <button onClick={() => onDeleteSource(src.id)} className="admin-icon-btn flex-shrink-0" aria-label={`Delete source ${src.num}`}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {sources.length > 0 && (
+        <div className="admin-card">
+          <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Legacy Sources (from old format)</h2>
+          <p className="text-xs mb-3" style={{ color: "var(--admin-text-subtle)" }}>These are stored in the old JSONB format. Consider migrating them to the new structured sources above.</p>
+          <div className="space-y-1">
+            {sources.map((s, i) => (
+              <div key={i} className="text-xs py-1.5 px-2 rounded" style={{ background: "var(--admin-bg-elevated)", color: "var(--admin-text-secondary)" }}>
+                📄 {s}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -431,130 +582,32 @@ export default function IssueEditForm({ issue, initialSources = [] }: { issue: I
 
       {/* ── Tab: Impacts & Data ── */}
       {tab === "impacts" && (
-        <div className="space-y-6">
-          <div className="admin-card">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>Impact Areas</h2>
-                <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>How this issue affects students</p>
-              </div>
-              <button onClick={addImpact} className="admin-btn admin-btn-primary text-xs">+ Add Impact</button>
-            </div>
-            {impacts.length === 0 ? (
-              <div className="rounded-xl p-8 text-center" style={{ border: "2px dashed var(--admin-border)" }}>
-                <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>No impacts yet — click &quot;Add Impact&quot; to add one.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {impacts.map((impact, idx) => <ImpactCard key={idx} impact={impact} idx={idx} onChange={updateImpact} onRemove={removeImpact} />)}
-              </div>
-            )}
-          </div>
-
-          <div className="admin-card">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Groups at Risk</h2>
-            <p className="text-xs mb-4" style={{ color: "var(--admin-text-subtle)" }}>Type a group name and press Enter to add</p>
-            <TagList items={groups} onAdd={val => { setGroups(g => [...g, val]); setDirty(true); }}
-              onRemove={idx => { setGroups(g => g.filter((_, i) => i !== idx)); setDirty(true); }}
-              placeholder="e.g. Indigenous students, Rural students…" />
-          </div>
-
-        </div>
+        <ImpactsTab
+          impacts={impacts}
+          groups={groups}
+          onAddImpact={addImpact}
+          onUpdateImpact={updateImpact}
+          onRemoveImpact={removeImpact}
+          onAddGroup={val => { setGroups(g => [...g, val]); setDirty(true); }}
+          onRemoveGroup={idx => { setGroups(g => g.filter((_, i) => i !== idx)); setDirty(true); }}
+        />
       )}
 
       {/* ── Tab: Sources ── */}
       {tab === "sources" && (
-        <div className="space-y-4">
-          <div className="admin-card">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>References &amp; Citations</h2>
-                <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>
-                  Authoritative sources backing the data on this page. Use <strong>Verify</strong> in the Content tab to auto-discover sources.
-                </p>
-              </div>
-              {!isNew && (
-                <button onClick={() => setAddingSource(true)} className="admin-btn admin-btn-primary text-xs">+ Add Source</button>
-              )}
-            </div>
-
-            {/* Add source form */}
-            {addingSource && (
-              <div className="rounded-xl p-4 mb-4" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <Field label="Title *">
-                    <input className={I} style={IS} value={newSource.title} onChange={e => setNewSource(s => ({ ...s, title: e.target.value }))} placeholder="e.g. AIHW Mental Health Report 2024" />
-                  </Field>
-                  <Field label="URL">
-                    <input className={I} style={IS} value={newSource.url} onChange={e => setNewSource(s => ({ ...s, url: e.target.value }))} placeholder="https://..." />
-                  </Field>
-                  <Field label="Publisher">
-                    <input className={I} style={IS} value={newSource.publisher} onChange={e => setNewSource(s => ({ ...s, publisher: e.target.value }))} placeholder="e.g. Australian Institute of Health and Welfare" />
-                  </Field>
-                  <Field label="Year">
-                    <input className={I} style={IS} value={newSource.year} onChange={e => setNewSource(s => ({ ...s, year: e.target.value }))} placeholder="e.g. 2024" />
-                  </Field>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={handleAddSource} className="admin-btn admin-btn-primary admin-btn-sm">Add</button>
-                  <button onClick={() => { setAddingSource(false); setNewSource({ title: "", url: "", publisher: "", year: "" }); }} className="admin-btn admin-btn-secondary admin-btn-sm">Cancel</button>
-                </div>
-              </div>
-            )}
-
-            {/* Sources list */}
-            {dbSources.length === 0 ? (
-              <div className="rounded-xl p-8 text-center" style={{ border: "2px dashed var(--admin-border)" }}>
-                <p className="text-xs" style={{ color: "var(--admin-text-faint)" }}>
-                  No sources yet. Use the <strong>Verify</strong> button in the Content tab to auto-discover sources, or add them manually.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {dbSources.sort((a, b) => a.num - b.num).map(src => (
-                  <div key={src.id} className="flex items-start gap-3 rounded-xl p-3" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
-                    <span className="text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ width: 28, height: 28, background: src.verified ? "#DCFCE7" : "var(--admin-border)", color: src.verified ? "#166534" : "var(--admin-text-subtle)" }}>
-                      {src.num}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold" style={{ color: "var(--admin-text-primary)" }}>
-                        {src.title}
-                        {src.verified && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: "#DCFCE7", color: "#166534" }}>VERIFIED</span>}
-                      </div>
-                      <div className="text-xs mt-0.5" style={{ color: "var(--admin-text-subtle)" }}>
-                        {src.publisher}{src.publisher && src.year && " · "}{src.year}
-                      </div>
-                      {src.url && (
-                        <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs mt-0.5 block truncate" style={{ color: "var(--admin-accent)" }}>
-                          {src.url}
-                        </a>
-                      )}
-                    </div>
-                    <button onClick={() => handleDeleteSource(src.id)} className="admin-icon-btn flex-shrink-0" aria-label={`Delete source ${src.num}`}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Legacy sources (from JSONB — read-only migration hint) */}
-          {sources.length > 0 && (
-            <div className="admin-card">
-              <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--admin-text-primary)" }}>Legacy Sources (from old format)</h2>
-              <p className="text-xs mb-3" style={{ color: "var(--admin-text-subtle)" }}>These are stored in the old JSONB format. Consider migrating them to the new structured sources above.</p>
-              <div className="space-y-1">
-                {sources.map((s, i) => (
-                  <div key={i} className="text-xs py-1.5 px-2 rounded" style={{ background: "var(--admin-bg-elevated)", color: "var(--admin-text-secondary)" }}>
-                    📄 {s}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <SourcesTab
+          isNew={isNew}
+          dbSources={dbSources}
+          sources={sources}
+          addingSource={addingSource}
+          newSource={newSource}
+          onSetAddingSource={setAddingSource}
+          onSetNewSource={setNewSource}
+          onAddSource={handleAddSource}
+          onDeleteSource={handleDeleteSource}
+          inputClass={I}
+          inputStyle={IS}
+        />
       )}
 
       {/* ── Tab: SEO ── */}
