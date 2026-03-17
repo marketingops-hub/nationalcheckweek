@@ -150,7 +150,7 @@ export default async function IssuePage({ params }: Props) {
         <section className="inner-section">
           <h2 className="section-heading section-heading--md">Key Impact Areas</h2>
           <div className="impact-grid">
-            {(issue.impacts as { title: string; text: string }[]).map((imp) => (
+            {((issue.impacts ?? []) as { title: string; text: string }[]).map((imp) => (
               <div key={imp.title} className="impact-card">
                 <div className="impact-card__title" style={{ color: sev?.color }}>
                   {imp.title}
@@ -165,7 +165,7 @@ export default async function IssuePage({ params }: Props) {
         <section className="inner-section">
           <h2 className="section-heading section-heading--md">Groups Most at Risk</h2>
           <div className="risk-pills">
-            {(issue.groups as string[]).map((g) => (
+            {((issue.groups ?? []) as string[]).map((g) => (
               <span key={g} className="risk-pill">{g}</span>
             ))}
           </div>
