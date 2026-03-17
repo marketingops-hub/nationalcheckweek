@@ -24,71 +24,66 @@
 /* News ticker (scrolling alert bar) */
 .news-ticker {
   position: sticky;
-  top: 68px;
+  top: 60px;
   z-index: 800;
   background: var(--primary);
-  border-top: none;
-  border-bottom: 2px solid rgba(0,0,0,0.08);
-  height: 40px;
+  height: 34px;
   display: flex;
   align-items: center;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(41,184,232,0.3);
 }
 .news-ticker-label {
   flex-shrink: 0;
-  background: rgba(0,0,0,0.15);
-  color: #FFFFFF;
-  font-size: 0.65rem;
+  background: #1c1c2e;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  padding: 0 12px;
+  letter-spacing: 0.15em;
+  padding: 0 14px;
   height: 100%;
   display: flex;
   align-items: center;
   text-transform: uppercase;
-  border-right: 2px solid rgba(255,255,255,0.2);
+  z-index: 1;
 }
 .news-ticker-viewport {
   flex: 1;
   overflow: hidden;
   position: relative;
   height: 100%;
-  mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
 }
 .news-ticker-track {
   display: flex;
   align-items: center;
   white-space: nowrap;
   height: 100%;
+  animation: ticker-scroll 28s linear infinite;
   will-change: transform;
 }
 .news-ticker-item {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0 20px;
+  padding: 0 40px;
   height: 100%;
-}
-.news-ticker-stat {
   font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
 }
-.news-ticker-detail {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: rgba(255,255,255,0.9);
-  letter-spacing: 0.01em;
+.news-ticker-item::after {
+  content: '◆';
+  font-size: 6px;
+  opacity: 0.6;
+  margin-left: 8px;
 }
-.news-ticker-sep {
-  color: rgba(255,255,255,0.5);
-  font-size: 0.5rem;
-  margin: 0 8px;
-  opacity: 0.8;
+/* Keep old sub-elements for backward compat but hide stat bold */
+.news-ticker-stat { font-weight: 700; }
+.news-ticker-detail { font-weight: 500; }
+.news-ticker-sep { display: none; }
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
