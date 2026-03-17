@@ -222,7 +222,7 @@ export default function IssueEditForm({ issue, initialSources = [] }: { issue: I
     }
   }
 
-  function acceptVerification() {
+  async function acceptVerification() {
     if (!pendingVerify) return;
     const { section, result } = pendingVerify;
     // Apply annotated content
@@ -233,18 +233,21 @@ export default function IssueEditForm({ issue, initialSources = [] }: { issue: I
     // Add suggested sources to DB
     if (result.sources?.length && issue?.id) {
       const sb = createClient();
-      result.sources.forEach(async (s) => {
-        const { data } = await sb.from("issue_sources").insert({
-          issue_id: issue!.id,
-          num: s.num,
-          title: s.title,
-          url: s.url,
-          publisher: s.publisher ?? "",
-          year: s.year ?? "",
-          verified: true,
-        }).select().single();
-        if (data) setDbSources(prev => [...prev, data]);
-      });
+      const inserted = await Promise.all(
+        result.sources.map(s =>
+          sb.from("issue_sources").insert({
+            issue_id: issue!.id,
+            num: s.num,
+            title: s.title,
+            url: s.url,
+            publisher: s.publisher ?? "",
+            year: s.year ?? "",
+            verified: true,
+          }).select().single()
+        )
+      );
+      const newRows = inserted.flatMap(r => r.data ? [r.data] : []);
+      if (newRows.length) setDbSources(prev => [...prev, ...newRows]);
     }
     setPendingVerify(null);
     setVerifyError("");
