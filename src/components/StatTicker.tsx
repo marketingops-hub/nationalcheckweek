@@ -19,8 +19,8 @@ export default function StatTicker() {
       {TICKS.map((t) => (
         <div key={t.desc} className="ticker-item">
           <div className="ticker-num">{t.num}</div>
+          <div className="ticker-divider" aria-hidden="true" />
           <div className="ticker-desc">{t.desc}</div>
-          <div className="ticker-src">{t.src}</div>
         </div>
       ))}
     </div>

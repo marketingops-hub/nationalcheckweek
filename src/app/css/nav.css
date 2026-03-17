@@ -4,10 +4,11 @@
 
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 900;
-  background: #1c1c2e;
+  background: #fff;
   height: 60px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 40px;
+  box-shadow: 0 1px 0 #E8E8E8;
 }
 .nav-logo {
   display: flex;
@@ -28,7 +29,7 @@
 .nav-logo-text span:last-child {
   font-family: var(--font-display);
   font-weight: 700; font-size: 13px;
-  color: #fff;
+  color: #3D3D3D;
   letter-spacing: 0.01em;
 }
 .nav-logo img { display: block; }
@@ -36,10 +37,10 @@
 .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
 .nav-links a {
   font-family: var(--font-body);
-  color: #cccccc; text-decoration: none;
+  color: #3D3D3D; text-decoration: none;
   font-size: 14px; font-weight: 500; transition: color 0.2s;
 }
-.nav-links a:hover { color: #fff; }
+.nav-links a:hover { color: var(--primary); }
 
 /* ── Nav CTA pill ── */
 .nav-cta {
@@ -91,10 +92,10 @@
   background: transparent; border: none; cursor: pointer; padding: 4px;
   border-radius: var(--radius-sm); transition: background 0.2s;
 }
-.nav-hamburger:hover { background: rgba(255,255,255,0.1); }
+.nav-hamburger:hover { background: var(--primary-light); }
 .ham-line {
   display: block; width: 22px; height: 2px;
-  background: #ccc; border-radius: 2px;
+  background: #3D3D3D; border-radius: 2px;
   transition: transform 0.25s, opacity 0.25s;
 }
 
@@ -106,11 +107,11 @@
 }
 .nav-drawer-inner {
   position: absolute; top: 60px; left: 0; right: 0;
-  background: #1c1c2e;
+  background: #fff;
   border-bottom: 2px solid var(--primary);
   display: flex; flex-direction: column;
   padding: 12px 0;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   animation: drawerSlideDown 0.25s ease;
 }
 @keyframes drawerFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -118,12 +119,12 @@
 .nav-drawer-link {
   display: block; padding: 14px 24px;
   font-family: var(--font-body);
-  font-size: 1rem; font-weight: 500; color: #ccc;
-  text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 1rem; font-weight: 500; color: #3D3D3D;
+  text-decoration: none; border-bottom: 1px solid var(--border);
   transition: background 0.15s, color 0.15s;
 }
 .nav-drawer-link:last-child { border-bottom: none; }
-.nav-drawer-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.nav-drawer-link:hover { background: var(--primary-light); color: var(--primary); }
 
 @media (max-width: 768px) {
   .nav { padding: 0 20px; }

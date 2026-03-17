@@ -4,22 +4,42 @@
 
 /* Stat ticker */
 .ticker {
-  background: var(--white);
-  padding: 0 48px;
-  display: flex; overflow-x: auto;
-  border-bottom: 1px solid var(--border);
-  border-top: 1px solid var(--border);
+  background: var(--section-tint);
+  padding: 40px 48px;
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  flex-wrap: wrap;
 }
 .ticker::-webkit-scrollbar { height: 3px; }
-.ticker::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 2px; }
+.ticker::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
 .ticker-item {
-  flex: 0 0 auto; padding: 32px 48px 32px 0;
-  margin-right: 48px; border-right: 1px solid var(--border);
+  flex: 0 0 auto;
+  background: var(--accent);
+  border-radius: 14px;
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
 }
-.ticker-item:last-child { border-right: none; }
-.ticker-num { font-family: var(--font-body); font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1; }
-.ticker-desc { font-family: var(--font-body); font-size: 0.95rem; color: var(--text-mid); margin-top: 8px; max-width: 220px; line-height: 1.6; font-weight: 400; }
-.ticker-src  { font-family: var(--font-body); font-size: 0.82rem; color: var(--text-light); margin-top: 5px; font-style: italic; }
+.ticker-divider {
+  width: 1px; height: 40px;
+  background: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+}
+.ticker-num {
+  font-family: var(--font-display);
+  font-size: 2rem; font-weight: 800;
+  color: #fff; line-height: 1;
+}
+.ticker-desc {
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 600;
+  color: #fff; line-height: 1.4;
+  max-width: 180px;
+}
+.ticker-src { display: none; }
 
 /* News ticker (scrolling alert bar) */
 .news-ticker {
@@ -32,21 +52,7 @@
   align-items: center;
   overflow: hidden;
 }
-.news-ticker-label {
-  flex-shrink: 0;
-  background: #1c1c2e;
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  padding: 0 14px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  text-transform: uppercase;
-  z-index: 1;
-}
+.news-ticker-label { display: none; }
 .news-ticker-viewport {
   flex: 1;
   overflow: hidden;
