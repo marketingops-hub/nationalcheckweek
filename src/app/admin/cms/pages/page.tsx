@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+
+const PAGE_SIZE = 20;
 
 interface Page {
   id: string; slug: string; title: string; status: string;
@@ -12,6 +14,18 @@ export default function CmsPagesPage() {
   const [pages, setPages]   = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return !q ? pages : pages.filter(p =>
+      p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
+    );
+  }, [pages, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const fetchPages = useCallback(async () => {
     try {
@@ -49,6 +63,21 @@ export default function CmsPagesPage() {
 
       {error && <div className="swa-alert swa-alert--error" style={{ marginBottom: 20 }}>{error}</div>}
 
+      {/* Search */}
+      {!loading && pages.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 340 }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 17, color: '#9CA3AF', pointerEvents: 'none' }}>search</span>
+            <input type="search" placeholder="Search pages…" value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              className="swa-form-input" style={{ paddingLeft: 36 }} />
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--color-text-faint)', marginLeft: 'auto' }}>
+            {filtered.length} of {pages.length}
+          </span>
+        </div>
+      )}
+
       {!loading && pages.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 24px", color: "#9CA3AF" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 48, display: "block", marginBottom: 16 }}>article</span>
@@ -69,7 +98,10 @@ export default function CmsPagesPage() {
               </tr>
             </thead>
             <tbody>
-              {pages.map((page) => (
+              {paginated.length === 0 && search && (
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-faint)' }}>No pages match your search.</td></tr>
+              )}
+              {paginated.map((page) => (
                 <tr key={page.id}>
                   <td>
                     <div style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>{page.title}</div>
@@ -109,6 +141,21 @@ export default function CmsPagesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination footer */}
+      {!loading && totalPages > 1 && (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4 }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            className="swa-icon-btn" style={{ opacity: page === 1 ? 0.4 : 1 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_left</span>
+          </button>
+          <span style={{ fontSize: 12, color: 'var(--color-text-faint)', minWidth: 60, textAlign: 'center' }}>Page {page} of {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            className="swa-icon-btn" style={{ opacity: page === totalPages ? 0.4 : 1 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_right</span>
+          </button>
         </div>
       )}
     </div>

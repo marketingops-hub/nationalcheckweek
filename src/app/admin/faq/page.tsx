@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+
+const PAGE_SIZE = 15;
 
 interface Faq {
   id: string;
@@ -78,6 +80,23 @@ export default function AdminFaqPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [page, setPage] = useState(1);
+
+  const categories = useMemo(() =>
+    ['all', ...Array.from(new Set(faqs.map(f => f.category ?? 'General'))).sort()]
+  , [faqs]);
+
+  const filtered = useMemo(() => faqs.filter(f => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q);
+    const matchCat = categoryFilter === 'all' || (f.category ?? 'General') === categoryFilter;
+    return matchSearch && matchCat;
+  }), [faqs, search, categoryFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -152,6 +171,25 @@ export default function AdminFaqPage() {
         </div>
       )}
 
+      {/* Search + filter row */}
+      {!loading && faqs.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 17, color: '#9CA3AF', pointerEvents: 'none' }}>search</span>
+            <input type="search" placeholder="Search FAQs…" value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              className="swa-form-input" style={{ paddingLeft: 36 }} />
+          </div>
+          <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setPage(1); }}
+            className="swa-form-input" style={{ width: 'auto', minWidth: 160 }}>
+            {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All categories' : c}</option>)}
+          </select>
+          <span style={{ fontSize: 12, color: 'var(--color-text-faint)', marginLeft: 'auto' }}>
+            {filtered.length} of {faqs.length}
+          </span>
+        </div>
+      )}
+
       {showCreate && (
         <div className="swa-card" style={{ marginBottom: 20, borderColor: 'var(--color-primary-light)' }}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: 'var(--color-text-primary)' }}>New FAQ</div>
@@ -181,7 +219,10 @@ export default function AdminFaqPage() {
               </tr>
             </thead>
             <tbody>
-              {faqs.map(f => (
+              {paginated.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-faint)' }}>No FAQs match your search.</td></tr>
+              )}
+              {paginated.map(f => (
                 <React.Fragment key={f.id}>
                   <tr style={{ opacity: f.active ? 1 : 0.5 }}>
                     <td>
@@ -235,10 +276,25 @@ export default function AdminFaqPage() {
 
 
       {!loading && faqs.length > 0 && (
-        <div style={{ marginTop: 16, display: 'flex', gap: 16, fontSize: 12, color: 'var(--color-text-faint)' }}>
-          <span>{faqs.length} total</span>
-          <span>{faqs.filter(f => f.active).length} active</span>
-          <span>{faqs.filter(f => !f.active).length} hidden</span>
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ fontSize: 12, color: 'var(--color-text-faint)', display: 'flex', gap: 16 }}>
+            <span>{faqs.length} total</span>
+            <span>{faqs.filter(f => f.active).length} active</span>
+            <span>{faqs.filter(f => !f.active).length} hidden</span>
+          </div>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="swa-icon-btn" style={{ opacity: page === 1 ? 0.4 : 1 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_left</span>
+              </button>
+              <span style={{ fontSize: 12, color: 'var(--color-text-faint)', minWidth: 60, textAlign: 'center' }}>Page {page} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                className="swa-icon-btn" style={{ opacity: page === totalPages ? 0.4 : 1 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_right</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </>

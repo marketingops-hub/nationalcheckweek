@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   AdminField,
   DangerConfirm,
@@ -57,6 +57,12 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
   const [success, setSuccess]         = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [confirmDelete, setConfirmDelete] = useState<AdminUser | null>(null);
+  const [search, setSearch]           = useState("");
+
+  const filteredUsers = useMemo(() => {
+    const q = search.toLowerCase();
+    return !q ? users : users.filter(u => u.email.toLowerCase().includes(q));
+  }, [users, search]);
 
   // ── Helpers ──
 
@@ -279,11 +285,22 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
 
       {/* ── Toolbar ── */}
       {!showCreate && !editUser && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: "var(--admin-text-subtle)" }}>
-            {users.length} user{users.length !== 1 ? "s" : ""}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 17, color: '#9CA3AF', pointerEvents: 'none' }}>search</span>
+            <input
+              type="search"
+              placeholder="Search users…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className={INPUT_CLS}
+              style={{ paddingLeft: 34, ...INPUT_STYLE }}
+            />
+          </div>
+          <span className="text-sm" style={{ color: "var(--admin-text-subtle)", whiteSpace: 'nowrap' }}>
+            {filteredUsers.length}{search ? ` of ${users.length}` : ''} user{users.length !== 1 ? "s" : ""}
           </span>
-          <button onClick={() => { setShowCreate(true); clearMessages(); }} className="admin-btn admin-btn-primary">
+          <button onClick={() => { setShowCreate(true); clearMessages(); }} className="admin-btn admin-btn-primary" style={{ marginLeft: 'auto' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -311,7 +328,14 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
                 </td>
               </tr>
             )}
-            {users.map(user => (
+            {filteredUsers.length === 0 && search && (
+              <tr>
+                <td colSpan={4} className="text-center py-12 text-sm" style={{ color: "var(--admin-text-faint)" }}>
+                  No users match &ldquo;{search}&rdquo;.
+                </td>
+              </tr>
+            )}
+            {filteredUsers.map(user => (
               <tr key={user.id}>
                 <td>
                   <div className="text-[15px] font-semibold" style={{ color: "var(--admin-text-primary)" }}>{user.email}</div>

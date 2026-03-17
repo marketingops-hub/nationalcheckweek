@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { STATUS_BADGE, FORMAT_LABEL, formatDateShort } from "@/lib/events";
+
+const PAGE_SIZE = 20;
 
 interface Event {
   id: string;
@@ -26,6 +28,7 @@ export default function AdminEventsPage() {
   const [error, setError]     = useState("");
   const [search, setSearch]   = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetch("/api/admin/events")
@@ -34,7 +37,7 @@ export default function AdminEventsPage() {
       .catch((e) => { setError(e.message); setLoading(false); });
   }, []);
 
-  const filtered = events.filter((e) => {
+  const filtered = useMemo(() => events.filter((e) => {
     const matchSearch = !search ||
       e.title.toLowerCase().includes(search.toLowerCase()) ||
       e.slug.toLowerCase().includes(search.toLowerCase());
@@ -43,7 +46,13 @@ export default function AdminEventsPage() {
       (statusFilter === "draft" && !e.published) ||
       e.status === statusFilter;
     return matchSearch && matchStatus;
-  });
+  }), [events, search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
+  );
 
   const STATUS_TABS = [
     { id: "all",       label: "All",       count: events.length },
@@ -145,8 +154,9 @@ export default function AdminEventsPage() {
           <Link href="/admin/events/new" className="swa-btn swa-btn--primary">Create an event</Link>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filtered.map((ev) => {
+        <div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {paginated.map((ev) => {
             const badge = STATUS_BADGE[ev.status] ?? STATUS_BADGE.draft;
             return (
               <div key={ev.id} style={{
@@ -232,6 +242,23 @@ export default function AdminEventsPage() {
               </div>
             );
           })}
+          </div>
+          {/* Pagination footer */}
+          {totalPages > 1 && (
+            <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, color: "#9CA3AF" }}>{filtered.length} events · page {page} of {totalPages}</span>
+              <div style={{ display: "flex", gap: 4 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  className="swa-icon-btn" style={{ opacity: page === 1 ? 0.4 : 1 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_left</span>
+                </button>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="swa-icon-btn" style={{ opacity: page === totalPages ? 0.4 : 1 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_right</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

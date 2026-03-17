@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+
+const PAGE_SIZE = 50;
 
 interface Area {
   id: string; slug: string; name: string; state: string;
@@ -16,6 +18,7 @@ export default function AdminContentPage() {
   const [fetchError, setFetchError] = useState("");
   const [search, setSearch]   = useState("");
   const [stateFilter, setStateFilter] = useState("all");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const sb = createClient();
@@ -41,6 +44,14 @@ export default function AdminContentPage() {
     const matchState = stateFilter === "all" || a.state === stateFilter;
     return matchSearch && matchState;
   }), [areas, search, stateFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
+  );
+
+  const resetPage = useCallback(() => setPage(1), []);
 
   return (
     <div>
@@ -73,7 +84,7 @@ export default function AdminContentPage() {
             type="search"
             placeholder="Search areas…"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); resetPage(); }}
             className="swa-form-input"
             style={{ paddingLeft: 36 }}
           />
@@ -82,7 +93,7 @@ export default function AdminContentPage() {
         {/* State filter */}
         <select
           value={stateFilter}
-          onChange={e => setStateFilter(e.target.value)}
+          onChange={e => { setStateFilter(e.target.value); resetPage(); }}
           className="swa-form-input"
           style={{ width: "auto", minWidth: 180 }}
         >
@@ -127,7 +138,7 @@ export default function AdminContentPage() {
                 </td>
               </tr>
             )}
-            {filtered.map((area) => {
+            {paginated.map((area) => {
               const issueCount = Array.isArray(area.issues) ? area.issues.length : 0;
               const typeLabel = area.type === "city" ? "City" : area.type === "lga" ? "LGA" : "Region";
               const typeBadge = area.type === "city" ? "swa-badge--warning"
@@ -170,6 +181,23 @@ export default function AdminContentPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination footer */}
+      {!loading && totalPages > 1 && (
+        <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "var(--color-text-faint)" }}>{filtered.length} areas · page {page} of {totalPages}</span>
+          <div style={{ display: "flex", gap: 4 }}>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="swa-icon-btn" style={{ opacity: page === 1 ? 0.4 : 1 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_left</span>
+            </button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="swa-icon-btn" style={{ opacity: page === totalPages ? 0.4 : 1 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_right</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

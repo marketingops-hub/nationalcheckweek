@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+
+const PAGE_SIZE = 15;
 
 interface Partner {
   id: string;
@@ -106,6 +108,20 @@ export default function AdminPartnersPage() {
   const [creating, setCreating] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return !q ? partners : partners.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.slug.toLowerCase().includes(q) ||
+      (p.description ?? '').toLowerCase().includes(q)
+    );
+  }, [partners, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -187,6 +203,21 @@ export default function AdminPartnersPage() {
         </div>
       )}
 
+      {/* Search row */}
+      {!loading && partners.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 340 }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 17, color: '#9CA3AF', pointerEvents: 'none' }}>search</span>
+            <input type="search" placeholder="Search partners…" value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              className="swa-form-input" style={{ paddingLeft: 36 }} />
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--color-text-faint)', marginLeft: 'auto' }}>
+            {filtered.length} of {partners.length}
+          </span>
+        </div>
+      )}
+
       {loading && <div style={{ textAlign: 'center', padding: 48, color: 'var(--color-text-faint)' }}>Loading...</div>}
 
       {!loading && partners.length === 0 && !showCreate && (
@@ -210,7 +241,10 @@ export default function AdminPartnersPage() {
               </tr>
             </thead>
             <tbody>
-              {partners.map(p => (
+              {paginated.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--color-text-faint)' }}>No partners match your search.</td></tr>
+              )}
+              {paginated.map(p => (
                 <React.Fragment key={p.id}>
                   <tr style={{ opacity: p.active ? 1 : 0.5 }}>
                     <td>
@@ -276,10 +310,25 @@ export default function AdminPartnersPage() {
 
 
       {!loading && partners.length > 0 && (
-        <div style={{ marginTop: 16, display: 'flex', gap: 16, fontSize: 12, color: 'var(--color-text-faint)' }}>
-          <span>{partners.length} total</span>
-          <span>{partners.filter(p => p.active).length} active</span>
-          <span>{partners.filter(p => !p.active).length} hidden</span>
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ fontSize: 12, color: 'var(--color-text-faint)', display: 'flex', gap: 16 }}>
+            <span>{partners.length} total</span>
+            <span>{partners.filter(p => p.active).length} active</span>
+            <span>{partners.filter(p => !p.active).length} hidden</span>
+          </div>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="swa-icon-btn" style={{ opacity: page === 1 ? 0.4 : 1 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_left</span>
+              </button>
+              <span style={{ fontSize: 12, color: 'var(--color-text-faint)', minWidth: 60, textAlign: 'center' }}>Page {page} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                className="swa-icon-btn" style={{ opacity: page === totalPages ? 0.4 : 1 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_right</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </>
