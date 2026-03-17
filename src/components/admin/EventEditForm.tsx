@@ -51,14 +51,15 @@ export default function EventEditForm({ event }: Props) {
   const router = useRouter();
   const isNew = !event;
   const [form, setForm] = useState<EventForm>(event ? {
-    slug: event.slug, title: event.title, tagline: event.tagline,
-    description: event.description, body: event.body,
-    event_date: event.event_date ?? "", event_time: event.event_time,
-    event_end: event.event_end, format: event.format, location: event.location,
-    feature_image: event.feature_image, is_free: event.is_free, price: event.price,
-    register_url: event.register_url, recording_url: event.recording_url,
-    status: event.status, published: event.published,
-    seo_title: event.seo_title, seo_desc: event.seo_desc,
+    slug: event.slug ?? "", title: event.title ?? "", tagline: event.tagline ?? "",
+    description: event.description ?? "", body: event.body ?? "",
+    event_date: event.event_date ?? "", event_time: event.event_time ?? "",
+    event_end: event.event_end ?? "", format: event.format ?? "webinar",
+    location: event.location ?? "", feature_image: event.feature_image ?? "",
+    is_free: event.is_free ?? true, price: event.price ?? "",
+    register_url: event.register_url ?? "", recording_url: event.recording_url ?? "",
+    status: event.status ?? "upcoming", published: event.published ?? false,
+    seo_title: event.seo_title ?? "", seo_desc: event.seo_desc ?? "",
   } : { ...EMPTY });
 
   const [speakers, setSpeakers] = useState<Speaker[]>(
