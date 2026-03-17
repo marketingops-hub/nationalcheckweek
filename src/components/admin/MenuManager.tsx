@@ -121,7 +121,8 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
 
   async function handleToggle(item: MenuItem) {
     const sb = createClient();
-    await sb.from("menu_items").update({ is_active: !item.is_active }).eq("id", item.id);
+    const { error: err } = await sb.from("menu_items").update({ is_active: !item.is_active }).eq("id", item.id);
+    if (err) { setError(err.message); return; }
     setItems(its => its.map(i => i.id === item.id ? { ...i, is_active: !i.is_active } : i));
   }
 
@@ -138,7 +139,9 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
     ];
 
     const sb = createClient();
-    await Promise.all(newPositions.map(p => sb.from("menu_items").update({ position: p.position }).eq("id", p.id)));
+    const results = await Promise.all(newPositions.map(p => sb.from("menu_items").update({ position: p.position }).eq("id", p.id)));
+    const moveErr = results.find(r => r.error)?.error;
+    if (moveErr) { setError(moveErr.message); return; }
     setItems(its => its.map(i => {
       const np = newPositions.find(p => p.id === i.id);
       return np ? { ...i, position: np.position } : i;

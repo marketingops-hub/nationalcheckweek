@@ -159,7 +159,8 @@ export default function StateEditForm({ state }: { state: State | null }) {
   async function handleDelete() {
     if (!state) return;
     const sb = createClient();
-    await sb.from("states").delete().eq("id", state.id);
+    const { error: delErr } = await sb.from("states").delete().eq("id", state.id);
+    if (delErr) { setError(delErr.message); setShowDeleteModal(false); return; }
     router.push("/admin/states"); router.refresh();
   }
 
