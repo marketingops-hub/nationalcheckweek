@@ -22,12 +22,30 @@ const IS: React.CSSProperties = {
   background: '#fff',
   fontFamily: 'var(--font-body)',
   outline: 'none',
+  transition: 'border-color 0.15s',
 };
 
-function Field({ label, required, children, hint }: { label: string; required?: boolean; children: React.ReactNode; hint?: string }) {
+const IS_FOCUS: React.CSSProperties = { ...IS, borderColor: 'var(--primary)' };
+
+function FocusInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return <input {...props} style={focused ? IS_FOCUS : IS} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />;
+}
+
+function FocusSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  const [focused, setFocused] = useState(false);
+  return <select {...props} style={focused ? IS_FOCUS : IS} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />;
+}
+
+function FocusTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const [focused, setFocused] = useState(false);
+  return <textarea {...props} style={focused ? { ...IS_FOCUS, resize: 'vertical', lineHeight: 1.7 } : { ...IS, resize: 'vertical', lineHeight: 1.7 }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />;
+}
+
+function Field({ label, required, children, hint, htmlFor }: { label: string; required?: boolean; children: React.ReactNode; hint?: string; htmlFor?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-mid)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)' }}>
+      <label htmlFor={htmlFor} style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-mid)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)' }}>
         {label}{required && <span style={{ color: 'var(--accent)', marginLeft: 3 }}>*</span>}
       </label>
       {children}
@@ -93,39 +111,41 @@ export default function NominateForm({ categories }: { categories: Category[] })
       <div>
         <div className="section-heading section-heading--tight">About the Person You're Nominating</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
-          <Field label="First Name" required>
-            <input style={IS} value={form.nominee_first_name} onChange={e => set('nominee_first_name', e.target.value)} placeholder="John" required />
+          <Field label="First Name" required htmlFor="nominee_first_name">
+            <FocusInput id="nominee_first_name" value={form.nominee_first_name} onChange={e => set('nominee_first_name', e.target.value)} placeholder="John" required />
           </Field>
-          <Field label="Last Name" required>
-            <input style={IS} value={form.nominee_last_name} onChange={e => set('nominee_last_name', e.target.value)} placeholder="Doe" required />
+          <Field label="Last Name" required htmlFor="nominee_last_name">
+            <FocusInput id="nominee_last_name" value={form.nominee_last_name} onChange={e => set('nominee_last_name', e.target.value)} placeholder="Doe" required />
           </Field>
-          <Field label="Email Address" hint="Optional — if you know it">
-            <input style={IS} type="email" value={form.nominee_email} onChange={e => set('nominee_email', e.target.value)} placeholder="john@example.com" />
+          <Field label="Email Address" hint="Optional — if you know it" htmlFor="nominee_email">
+            <FocusInput id="nominee_email" type="email" value={form.nominee_email} onChange={e => set('nominee_email', e.target.value)} placeholder="john@example.com" />
           </Field>
-          <Field label="Phone Number" hint="Optional">
-            <input style={IS} type="tel" value={form.nominee_phone} onChange={e => set('nominee_phone', e.target.value)} placeholder="0400 000 000" />
+          <Field label="Phone Number" hint="Optional" htmlFor="nominee_phone">
+            <FocusInput id="nominee_phone" type="tel" value={form.nominee_phone} onChange={e => set('nominee_phone', e.target.value)} placeholder="0400 000 000" />
           </Field>
-          <Field label="Organisation / School">
-            <input style={IS} value={form.nominee_organisation} onChange={e => set('nominee_organisation', e.target.value)} placeholder="e.g. Westfield High School" />
+          <Field label="Organisation / School" htmlFor="nominee_organisation">
+            <FocusInput id="nominee_organisation" value={form.nominee_organisation} onChange={e => set('nominee_organisation', e.target.value)} placeholder="e.g. Westfield High School" />
           </Field>
-          <Field label="Job Title / Role">
-            <input style={IS} value={form.nominee_role_title} onChange={e => set('nominee_role_title', e.target.value)} placeholder="e.g. School Psychologist" />
+          <Field label="Job Title / Role" htmlFor="nominee_role_title">
+            <FocusInput id="nominee_role_title" value={form.nominee_role_title} onChange={e => set('nominee_role_title', e.target.value)} placeholder="e.g. School Psychologist" />
           </Field>
-          <Field label="State">
-            <select style={IS} value={form.nominee_state} onChange={e => set('nominee_state', e.target.value)}>
+          <Field label="State" htmlFor="nominee_state">
+            <FocusSelect id="nominee_state" value={form.nominee_state} onChange={e => set('nominee_state', e.target.value)}>
               <option value="">— Select state —</option>
               {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            </FocusSelect>
           </Field>
-          <Field label="Ambassador Category" hint="What type of ambassador are they?">
-            <select style={IS} value={form.category_id} onChange={e => set('category_id', e.target.value)}>
+          <Field label="Ambassador Category" hint="What type of ambassador are they?" htmlFor="category_id">
+            <FocusSelect id="category_id" value={form.category_id} onChange={e => set('category_id', e.target.value)}>
               <option value="">— Select category —</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            </FocusSelect>
           </Field>
-          <Field label="LinkedIn Profile" hint="Optional">
-            <input style={IS} type="url" value={form.nominee_linkedin} onChange={e => set('nominee_linkedin', e.target.value)} placeholder="https://linkedin.com/in/..." />
-          </Field>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Field label="LinkedIn Profile" hint="Optional" htmlFor="nominee_linkedin">
+              <FocusInput id="nominee_linkedin" type="url" value={form.nominee_linkedin} onChange={e => set('nominee_linkedin', e.target.value)} placeholder="https://linkedin.com/in/..." />
+            </Field>
+          </div>
         </div>
       </div>
 
@@ -133,9 +153,9 @@ export default function NominateForm({ categories }: { categories: Category[] })
       <div>
         <div className="section-heading section-heading--tight">Why Are You Nominating Them?</div>
         <div style={{ marginTop: 20 }}>
-          <Field label="Your Reason" required hint="Tell us why this person would make a great Ambassador (min. 100 characters)">
-            <textarea
-              style={{ ...IS, resize: 'vertical', lineHeight: 1.7 }}
+          <Field label="Your Reason" required hint="Tell us why this person would make a great Ambassador (min. 100 characters)" htmlFor="reason">
+            <FocusTextarea
+              id="reason"
               rows={5}
               value={form.reason}
               onChange={e => set('reason', e.target.value)}
@@ -151,17 +171,17 @@ export default function NominateForm({ categories }: { categories: Category[] })
       <div>
         <div className="section-heading section-heading--tight">Your Details</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
-          <Field label="Your Full Name" required>
-            <input style={IS} value={form.nominator_name} onChange={e => set('nominator_name', e.target.value)} placeholder="Your name" required />
+          <Field label="Your Full Name" required htmlFor="nominator_name">
+            <FocusInput id="nominator_name" value={form.nominator_name} onChange={e => set('nominator_name', e.target.value)} placeholder="Your name" required />
           </Field>
-          <Field label="Your Email" required>
-            <input style={IS} type="email" value={form.nominator_email} onChange={e => set('nominator_email', e.target.value)} placeholder="you@example.com" required />
+          <Field label="Your Email" required htmlFor="nominator_email">
+            <FocusInput id="nominator_email" type="email" value={form.nominator_email} onChange={e => set('nominator_email', e.target.value)} placeholder="you@example.com" required />
           </Field>
-          <Field label="Your Phone" hint="Optional">
-            <input style={IS} type="tel" value={form.nominator_phone} onChange={e => set('nominator_phone', e.target.value)} placeholder="0400 000 000" />
+          <Field label="Your Phone" hint="Optional" htmlFor="nominator_phone">
+            <FocusInput id="nominator_phone" type="tel" value={form.nominator_phone} onChange={e => set('nominator_phone', e.target.value)} placeholder="0400 000 000" />
           </Field>
-          <Field label="Your Relationship to Nominee" hint="e.g. colleague, friend, parent">
-            <input style={IS} value={form.nominator_relation} onChange={e => set('nominator_relation', e.target.value)} placeholder="e.g. Colleague" />
+          <Field label="Your Relationship to Nominee" hint="e.g. colleague, friend, parent" htmlFor="nominator_relation">
+            <FocusInput id="nominator_relation" value={form.nominator_relation} onChange={e => set('nominator_relation', e.target.value)} placeholder="e.g. Colleague" />
           </Field>
         </div>
       </div>

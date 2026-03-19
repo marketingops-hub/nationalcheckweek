@@ -12,31 +12,6 @@ interface Category {
 
 const STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'];
 
-const inputCls = `
-  width: 100%;
-  padding: 12px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  color: var(--dark);
-  background: #fff;
-  font-family: var(--font-body);
-  outline: none;
-  transition: border-color 0.15s;
-`;
-
-function Field({ label, required, children, hint }: { label: string; required?: boolean; children: React.ReactNode; hint?: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-mid)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)' }}>
-        {label}{required && <span style={{ color: 'var(--accent)', marginLeft: 3 }}>*</span>}
-      </label>
-      {children}
-      {hint && <span style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>{hint}</span>}
-    </div>
-  );
-}
-
 const IS: React.CSSProperties = {
   width: '100%',
   padding: '12px 16px',
@@ -47,7 +22,37 @@ const IS: React.CSSProperties = {
   background: '#fff',
   fontFamily: 'var(--font-body)',
   outline: 'none',
+  transition: 'border-color 0.15s',
 };
+
+const IS_FOCUS: React.CSSProperties = { ...IS, borderColor: 'var(--primary)' };
+
+function FocusInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return <input {...props} style={focused ? IS_FOCUS : IS} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />;
+}
+
+function FocusSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  const [focused, setFocused] = useState(false);
+  return <select {...props} style={focused ? IS_FOCUS : IS} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />;
+}
+
+function FocusTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const [focused, setFocused] = useState(false);
+  return <textarea {...props} style={focused ? { ...IS_FOCUS, resize: 'vertical', lineHeight: 1.7 } : { ...IS, resize: 'vertical', lineHeight: 1.7 }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />;
+}
+
+function Field({ label, required, children, hint, htmlFor }: { label: string; required?: boolean; children: React.ReactNode; hint?: string; htmlFor?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label htmlFor={htmlFor} style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-mid)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)' }}>
+        {label}{required && <span style={{ color: 'var(--accent)', marginLeft: 3 }}>*</span>}
+      </label>
+      {children}
+      {hint && <span style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>{hint}</span>}
+    </div>
+  );
+}
 
 export default function ApplyForm({ categories }: { categories: Category[] }) {
   const [form, setForm] = useState({
@@ -104,17 +109,17 @@ export default function ApplyForm({ categories }: { categories: Category[] }) {
       <div>
         <div className="section-heading section-heading--tight">Personal Details</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
-          <Field label="First Name" required>
-            <input style={IS} value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="Jane" required />
+          <Field label="First Name" required htmlFor="first_name">
+            <FocusInput id="first_name" value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="Jane" required />
           </Field>
-          <Field label="Last Name" required>
-            <input style={IS} value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Smith" required />
+          <Field label="Last Name" required htmlFor="last_name">
+            <FocusInput id="last_name" value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Smith" required />
           </Field>
-          <Field label="Email Address" required>
-            <input style={IS} type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jane@example.com" required />
+          <Field label="Email Address" required htmlFor="email">
+            <FocusInput id="email" type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jane@example.com" required />
           </Field>
-          <Field label="Phone Number">
-            <input style={IS} type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="0400 000 000" />
+          <Field label="Phone Number" htmlFor="phone">
+            <FocusInput id="phone" type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="0400 000 000" />
           </Field>
         </div>
       </div>
@@ -123,29 +128,29 @@ export default function ApplyForm({ categories }: { categories: Category[] }) {
       <div>
         <div className="section-heading section-heading--tight">Professional Background</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
-          <Field label="Organisation / School">
-            <input style={IS} value={form.organisation} onChange={e => set('organisation', e.target.value)} placeholder="e.g. Sunrise Primary School" />
+          <Field label="Organisation / School" htmlFor="organisation">
+            <FocusInput id="organisation" value={form.organisation} onChange={e => set('organisation', e.target.value)} placeholder="e.g. Sunrise Primary School" />
           </Field>
-          <Field label="Job Title / Role">
-            <input style={IS} value={form.role_title} onChange={e => set('role_title', e.target.value)} placeholder="e.g. Deputy Principal" />
+          <Field label="Job Title / Role" htmlFor="role_title">
+            <FocusInput id="role_title" value={form.role_title} onChange={e => set('role_title', e.target.value)} placeholder="e.g. Deputy Principal" />
           </Field>
-          <Field label="State">
-            <select style={IS} value={form.state} onChange={e => set('state', e.target.value)}>
+          <Field label="State" htmlFor="state">
+            <FocusSelect id="state" value={form.state} onChange={e => set('state', e.target.value)}>
               <option value="">— Select state —</option>
               {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            </FocusSelect>
           </Field>
-          <Field label="Ambassador Category" hint="What type of ambassador best describes you?">
-            <select style={IS} value={form.category_id} onChange={e => set('category_id', e.target.value)}>
+          <Field label="Ambassador Category" hint="What type of ambassador best describes you?" htmlFor="category_id">
+            <FocusSelect id="category_id" value={form.category_id} onChange={e => set('category_id', e.target.value)}>
               <option value="">— Select category —</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            </FocusSelect>
           </Field>
-          <Field label="LinkedIn Profile" hint="Optional">
-            <input style={IS} type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} placeholder="https://linkedin.com/in/..." />
+          <Field label="LinkedIn Profile" hint="Optional" htmlFor="linkedin_url">
+            <FocusInput id="linkedin_url" type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} placeholder="https://linkedin.com/in/..." />
           </Field>
-          <Field label="Website / Portfolio" hint="Optional">
-            <input style={IS} type="url" value={form.website_url} onChange={e => set('website_url', e.target.value)} placeholder="https://..." />
+          <Field label="Website / Portfolio" hint="Optional" htmlFor="website_url">
+            <FocusInput id="website_url" type="url" value={form.website_url} onChange={e => set('website_url', e.target.value)} placeholder="https://..." />
           </Field>
         </div>
       </div>
@@ -154,9 +159,9 @@ export default function ApplyForm({ categories }: { categories: Category[] }) {
       <div>
         <div className="section-heading section-heading--tight">Your Motivation</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
-          <Field label="Why do you want to be an Ambassador?" required hint="Tell us about your passion for student wellbeing (min. 100 characters)">
-            <textarea
-              style={{ ...IS, resize: 'vertical', lineHeight: 1.7 }}
+          <Field label="Why do you want to be an Ambassador?" required hint="Tell us about your passion for student wellbeing (min. 100 characters)" htmlFor="why_ambassador">
+            <FocusTextarea
+              id="why_ambassador"
               rows={5}
               value={form.why_ambassador}
               onChange={e => set('why_ambassador', e.target.value)}
@@ -165,9 +170,9 @@ export default function ApplyForm({ categories }: { categories: Category[] }) {
               minLength={100}
             />
           </Field>
-          <Field label="Relevant Experience" hint="Any experience with student wellbeing, mental health, education leadership, etc.">
-            <textarea
-              style={{ ...IS, resize: 'vertical', lineHeight: 1.7 }}
+          <Field label="Relevant Experience" hint="Any experience with student wellbeing, mental health, education leadership, etc." htmlFor="experience">
+            <FocusTextarea
+              id="experience"
               rows={4}
               value={form.experience}
               onChange={e => set('experience', e.target.value)}

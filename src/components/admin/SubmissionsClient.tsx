@@ -86,6 +86,8 @@ function ApplicationRow({ item, onUpdate, onDelete }: { item: Application; onUpd
   const [saving, setSaving] = useState(false);
   const cat = item.ambassador_categories;
 
+  useEffect(() => { setNotes(item.admin_notes ?? ''); }, [item.admin_notes]);
+
   async function saveNotes() {
     setSaving(true);
     const res = await fetch(`/api/admin/submissions/${item.id}?type=applications`, {
@@ -198,6 +200,8 @@ function NominationRow({ item, onUpdate, onDelete }: { item: Nomination; onUpdat
   const [notes, setNotes] = useState(item.admin_notes ?? '');
   const [saving, setSaving] = useState(false);
   const cat = item.ambassador_categories;
+
+  useEffect(() => { setNotes(item.admin_notes ?? ''); }, [item.admin_notes]);
 
   async function saveNotes() {
     setSaving(true);
@@ -392,7 +396,11 @@ export default function SubmissionsClient() {
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '2px solid var(--color-border)', marginBottom: 20 }}>
         {(['applications', 'nominations'] as const).map(t => (
-          <button key={t} onClick={() => { setTab(t); setFilterStatus(''); }}
+          <button key={t} onClick={() => {
+            setTab(t);
+            const validStatuses = t === 'applications' ? APP_STATUSES : NOM_STATUSES;
+            if (filterStatus && !validStatuses.includes(filterStatus)) setFilterStatus('');
+          }}
             style={{ padding: '10px 20px', fontSize: 13, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', borderBottom: tab === t ? '2px solid var(--color-primary)' : '2px solid transparent', marginBottom: -2, color: tab === t ? 'var(--color-primary)' : 'var(--color-text-muted)', textTransform: 'capitalize' }}>
             {t === 'applications' ? (
               <><span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 5 }}>person_add</span>
