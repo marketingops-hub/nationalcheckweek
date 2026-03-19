@@ -20,10 +20,11 @@ const SECTIONS = [
   {
     label: 'Public Pages',
     items: [
-      { label: 'Events',      href: '/admin/events',      ms: 'event' },
-      { label: 'Ambassadors', href: '/admin/ambassadors', ms: 'diversity_3' },
-      { label: 'Partners',    href: '/admin/partners',    ms: 'handshake' },
-      { label: 'FAQ',         href: '/admin/faq',         ms: 'help' },
+      { label: 'Events',       href: '/admin/events',       ms: 'event' },
+      { label: 'Ambassadors',  href: '/admin/ambassadors',  ms: 'diversity_3' },
+      { label: 'Submissions',  href: '/admin/submissions',  ms: 'inbox' },
+      { label: 'Partners',     href: '/admin/partners',     ms: 'handshake' },
+      { label: 'FAQ',          href: '/admin/faq',          ms: 'help' },
     ],
   },
   {
