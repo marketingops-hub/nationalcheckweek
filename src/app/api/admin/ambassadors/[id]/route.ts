@@ -60,6 +60,7 @@ export async function PATCH(
   if (typeof body.active === "boolean") patch.active = body.active;
   if (body.linkedinUrl !== undefined) patch.linkedinUrl = body.linkedinUrl || null;
   if (body.websiteUrl !== undefined) patch.websiteUrl = body.websiteUrl || null;
+  if (body.categoryId !== undefined) patch.categoryId = body.categoryId || null;
 
   const { data, error } = await sb
     .from("Ambassador")

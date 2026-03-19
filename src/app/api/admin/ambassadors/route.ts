@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (showAll) {
     const { data, error } = await sb
       .from("Ambassador")
-      .select("*")
+      .select("*, ambassador_categories(id, name, slug, color, icon)")
       .order("sortOrder", { ascending: true })
       .order("createdAt", { ascending: false });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await sb
     .from("Ambassador")
-    .select("id, name, title, bio, photoUrl, slug, linkedinUrl, websiteUrl")
+    .select("id, name, title, bio, photoUrl, slug, linkedinUrl, websiteUrl, categoryId, ambassador_categories(id, name, slug, color, icon)")
     .eq("active", true)
     .order("sortOrder", { ascending: true })
     .order("createdAt", { ascending: false });
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
       active: body.active ?? true,
       linkedinUrl: body.linkedinUrl || null,
       websiteUrl: body.websiteUrl || null,
+      categoryId: body.categoryId || null,
       updatedAt: new Date().toISOString(),
     })
     .select()
