@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient, createStaticClient } from "@/lib/supabase/server";
 import { SEVERITY } from "@/lib/colors";
 import type { SeverityLevel } from "@/lib/colors";
+import AreaSchoolStatsPanel from "@/components/AreaSchoolStatsPanel";
 
 interface AreaIssue { title: string; severity: string; stat: string; desc: string; }
 interface KeyStat { num: string; label: string; }
@@ -115,6 +116,9 @@ export default async function AreaPage({ params }: Props) {
             ))}
           </div>
         </div>
+
+        {/* SCHOOL DATA PANEL */}
+        <AreaSchoolStatsPanel areaSlug={slug} areaName={area.name} />
 
         {/* Prevention callout */}
         <div className="area-section">
