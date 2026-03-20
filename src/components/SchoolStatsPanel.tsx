@@ -188,7 +188,7 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
             value: avg_icsea != null ? String(avg_icsea) : "N/A",
             label: "Avg ICSEA",
             sub: icseaLabel ?? "socio-educational advantage",
-            icon: "trending_up",
+            icon: "equalizer",
             color: avg_icsea == null ? "#6b7280"
               : icseaVsNational! > 20  ? "#16a34a"
               : icseaVsNational! < -20 ? "#dc2626"
@@ -218,7 +218,7 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
         {/* Sector */}
         <div className="card">
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "#2563eb" }}>account_balance</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "#2563eb" }}>corporate_fare</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--dark)" }}>School Sector</span>
           </div>
           <ProportionBar counts={sectors} total={total_schools} colorMap={SECTOR_COLORS} />
@@ -227,7 +227,7 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
         {/* Geolocation */}
         <div className="card">
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "#16a34a" }}>location_on</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "#16a34a" }}>map</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--dark)" }}>Location Type</span>
           </div>
           <ProportionBar counts={geolocations} total={total_schools} colorMap={GEO_COLORS} />
@@ -247,14 +247,14 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
               value: pct(bottom_qtr_avg),
               label: "Lowest ICSEA quarter",
               desc: "Students in the most disadvantaged socio-educational quarter",
-              icon: "arrow_downward",
+              icon: "social_leaderboard",
               color: "#dc2626",
             },
             {
               value: pct(indigenous_avg),
               label: "Indigenous students",
               desc: "Schools with higher proportions may need additional wellbeing support",
-              icon: "person",
+              icon: "people",
               color: "#d97706",
             },
             {
