@@ -62,13 +62,21 @@ console.log(`  ${areas.length} areas loaded.`);
 const areaBySlug = Object.fromEntries(areas.map(a => [a.slug, a]));
 const areaSlugs  = areas.map(a => a.slug);
 
-// ── 2. Load postcode → sa3_name map ───────────────────────────────
+// ── 2. Load postcode → sa3_name map (paginated) ──────────────────
 console.log('Loading postcode → SA3 map...');
-const { data: postcodes, error: pcErr } = await supabase
-  .from('australian_postcodes')
-  .select('postcode, state, sa3_name, sa3_code, sa4_name, lga_region');
-
-if (pcErr) { console.error('Failed to load postcodes:', pcErr.message); process.exit(1); }
+let postcodes = [];
+let pcFrom = 0;
+while (true) {
+  const { data, error: pcErr } = await supabase
+    .from('australian_postcodes')
+    .select('postcode, state, sa3_name, sa4_name, lga_region')
+    .range(pcFrom, pcFrom + BATCH_SIZE - 1);
+  if (pcErr) { console.error('Failed to load postcodes:', pcErr.message); process.exit(1); }
+  if (!data || data.length === 0) break;
+  postcodes = postcodes.concat(data);
+  pcFrom += data.length;
+  if (data.length < BATCH_SIZE) break;
+}
 console.log(`  ${postcodes.length} postcode records loaded.`);
 
 // Build postcode → best SA3 name (use first/most common entry per postcode)
@@ -184,21 +192,18 @@ console.log('\nWriting area_slug to school_profiles...');
 let written = 0;
 let writeErrors = 0;
 
-for (let i = 0; i < updates.length; i += BATCH_SIZE) {
-  const batch = updates.slice(i, i + BATCH_SIZE);
-
-  // Supabase doesn't support bulk update by arbitrary IDs easily,
-  // so we use individual upserts on the primary key
+for (const u of updates) {
   const { error } = await supabase
     .from('school_profiles')
-    .upsert(batch, { onConflict: 'id' });
+    .update({ area_slug: u.area_slug })
+    .eq('id', u.id);
 
   if (error) {
-    console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, error.message);
     writeErrors++;
+    if (writeErrors <= 3) console.error(`  Update error for id ${u.id}:`, error.message);
   } else {
-    written += batch.length;
-    process.stdout.write(`\r  Written ${written}/${updates.length}...`);
+    written++;
+    if (written % 100 === 0) process.stdout.write(`\r  Written ${written}/${updates.length}...`);
   }
 }
 
