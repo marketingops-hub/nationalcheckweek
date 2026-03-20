@@ -34,6 +34,43 @@ export default async function AmbassadorsPage() {
       </div>
 
       <main className="inner-content inner-content--wide">
+
+        {/* ── CTAs ── */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 48,
+        }}>
+          <Link href="/ambassadors/apply" style={{
+            display: "flex", flexDirection: "column", gap: 10,
+            background: "var(--primary)", borderRadius: "var(--radius-md)",
+            padding: "28px 32px", textDecoration: "none",
+            transition: "opacity 0.15s",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#fff" }}>volunteer_activism</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>Become an Ambassador</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>
+              Apply to join our network and champion student wellbeing in your community.
+            </p>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginTop: 4 }}>Apply now →</span>
+          </Link>
+
+          <Link href="/ambassadors/nominate" style={{
+            display: "flex", flexDirection: "column", gap: 10,
+            background: "#fffbeb", border: "2px solid #fde68a",
+            borderRadius: "var(--radius-md)", padding: "28px 32px", textDecoration: "none",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#d97706" }}>star</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "var(--dark)" }}>Nominate Someone</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, color: "var(--text-mid)", lineHeight: 1.6 }}>
+              Know someone making a real difference? Put them forward — nominations are always open.
+            </p>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#d97706", marginTop: 4 }}>Nominate now →</span>
+          </Link>
+        </div>
+
         {ambassadors.length === 0 && (
           <div className="empty-state">
             <p>Ambassadors will appear here once added.</p>
