@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createBrowserClient } from "@supabase/supabase-js";
 import { SEVERITY } from "@/lib/colors";
+import SchoolStatsPanel from "@/components/SchoolStatsPanel";
 
 const BADGE_KEY: Record<string, keyof typeof SEVERITY> = {
   "badge-critical": "critical",
@@ -99,6 +100,9 @@ export default async function StatePage({ params }: Props) {
             );
           })}
         </div>
+
+        {/* SCHOOL DATA PANEL */}
+        <SchoolStatsPanel slug={slug} stateName={state.name} />
 
         {/* AREAS / CITIES */}
         {stateAreas.length > 0 && (
