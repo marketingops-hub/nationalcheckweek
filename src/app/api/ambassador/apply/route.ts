@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  submitAmbassadorApplication({
+  await submitAmbassadorApplication({
     first_name:     first_name.trim(),
     last_name:      last_name.trim(),
     email:          email.trim().toLowerCase(),

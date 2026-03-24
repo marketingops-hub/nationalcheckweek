@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  submitAmbassadorNomination({
+  await submitAmbassadorNomination({
     nominee_first_name:   nominee_first_name.trim(),
     nominee_last_name:    nominee_last_name.trim(),
     nominee_email:        body.nominee_email?.trim().toLowerCase() || null,

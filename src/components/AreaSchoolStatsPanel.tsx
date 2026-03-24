@@ -13,11 +13,10 @@ async function fetchAreaSchools(areaSlug: string): Promise<SchoolRow[] | null> {
   const { data, error } = await sb
     .from("school_profiles")
     .select(
-      "school_name, school_sector, school_type, geolocation, year_range, icsea, " +
+      "school_sector, school_type, geolocation, icsea, " +
       "total_enrolments, indigenous_enrolments_pct, lbote_yes_pct, bottom_sea_quarter_pct"
     )
     .eq("area_slug", areaSlug)
-    .order("school_name")
     .limit(MAX_SCHOOL_ROWS);
 
   if (error || !data || data.length === 0) return null;
@@ -158,66 +157,6 @@ export default async function AreaSchoolStatsPanel({ areaSlug, areaName }: { are
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* ── School list ── */}
-      <div style={{
-        background: "var(--white)", border: "1px solid var(--border)",
-        borderRadius: "var(--radius-md)", overflow: "hidden",
-      }}>
-        <div style={{
-          padding: "12px 16px", borderBottom: "1px solid var(--border)",
-          display: "flex", alignItems: "center", gap: 6,
-          background: "#f8fafc",
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 15, color: "#2563eb" }}>list</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--dark)" }}>
-            All {fmt(total)} Schools in {areaName}
-          </span>
-        </div>
-        <div style={{ maxHeight: 340, overflowY: "auto" }}>
-          {rows.map((school, i) => {
-            const color = SECTOR_COLORS[school.school_sector ?? ""] ?? "#9ca3af";
-            const key = school.school_name ? `${school.school_name}-${i}` : String(i);
-            return (
-              <div key={key} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "10px 16px",
-                borderBottom: i < rows.length - 1 ? "1px solid var(--border)" : "none",
-                gap: 12,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                  <span style={{
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: color, flexShrink: 0,
-                  }} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--dark)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {school.school_name ?? "Unknown"}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--text-light)" }}>
-                      {[school.school_sector, school.school_type, school.year_range].filter(Boolean).join(" · ")}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
-                  {school.icsea != null && (
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--dark)" }}>{school.icsea}</div>
-                      <div style={{ fontSize: 10, color: "var(--text-light)" }}>ICSEA</div>
-                    </div>
-                  )}
-                  {school.total_enrolments != null && (
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--dark)" }}>{fmt(school.total_enrolments)}</div>
-                      <div style={{ fontSize: 10, color: "var(--text-light)" }}>students</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
