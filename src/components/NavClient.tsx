@@ -49,8 +49,8 @@ export default function NavClient({ links }: { links: NavLink[] }) {
           <img
             src="/logo/nciw_no_background-1024x577.png"
             alt="National Check-in Week"
-            height="44"
-            width="78"
+            height="52"
+            width="92"
             style={{ objectFit: "contain" }}
           />
         </Link>
