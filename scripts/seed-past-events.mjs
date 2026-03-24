@@ -1,7 +1,15 @@
+/**
+ * Seed past events — May–June 2025 NCIW webinars
+ * Run: $env:SUPABASE_SERVICE_ROLE_KEY="<key>"; node scripts/seed-past-events.mjs
+ */
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://qxcdeyvfeipyfojpxosh.supabase.co";
-const SERVICE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4Y2RleXZmZWlweWZvanB4b3NoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc4MzgzNiwiZXhwIjoyMDg4MzU5ODM2fQ.VxPXMyifQv_0H0xTwWc6ouslB6eYPo5dgBfTbw35Y7k";
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SERVICE_KEY) {
+  console.error("❌  Set SUPABASE_SERVICE_ROLE_KEY env var first");
+  process.exit(1);
+}
 
 const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -264,6 +272,7 @@ const EVENTS = [
 
 async function run() {
   console.log(`Inserting ${EVENTS.length} past events...`);
+  let failed = 0;
 
   for (const event of EVENTS) {
     const { data, error } = await sb
@@ -274,12 +283,17 @@ async function run() {
 
     if (error) {
       console.error(`✗ ${event.slug}:`, error.message);
+      failed++;
     } else {
       console.log(`✓ ${data.slug} (${data.id})`);
     }
   }
 
-  console.log("Done.");
+  if (failed > 0) {
+    console.error(`\n❌ ${failed} event(s) failed to insert.`);
+    process.exit(1);
+  }
+  console.log("\n✅ All events seeded successfully.");
 }
 
 run();

@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Resources — National Check-in Week",
+  description:
+    "Free tools, lesson plans, courses and fact sheets from our partners — designed to support student wellbeing in Australian schools.",
+};
+
+export const revalidate = 3600;
+
 const PARTNERS = [
   {
     name: "Life Skills GO",
@@ -111,6 +121,7 @@ export default function ResourcesPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="resource-card__link"
+                    aria-label={`${s.linkLabel} — ${partner.name}`}
                   >
                     {s.linkLabel} →
                   </a>

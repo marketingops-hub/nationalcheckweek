@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface NavLink {
+export interface NavLink {
   id: string;
   href: string;
   label: string;
@@ -16,42 +17,36 @@ export default function NavClient({ links }: { links: NavLink[] }) {
 
   const close = useCallback(() => setOpen(false), []);
 
-  /* Close on Escape key */
+  /* Keyboard handling: Escape closes, Tab traps focus inside drawer */
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, close]);
-
-  /* Trap focus inside drawer when open */
-  useEffect(() => {
-    if (!open || !drawerRef.current) return;
     const drawer = drawerRef.current;
-    const focusable = drawer.querySelectorAll<HTMLElement>("a, button, [tabindex]");
-    if (focusable.length) focusable[0].focus();
+    const focusable = drawer?.querySelectorAll<HTMLElement>("a, button, [tabindex]");
+    if (focusable?.length) focusable[0].focus();
 
-    const onTab = (e: KeyboardEvent) => {
-      if (e.key !== "Tab" || !focusable.length) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { close(); return; }
+      if (e.key !== "Tab" || !focusable?.length) return;
       const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const last  = focusable[focusable.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
-    document.addEventListener("keydown", onTab);
-    return () => document.removeEventListener("keydown", onTab);
-  }, [open]);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, close]);
 
   return (
     <>
       <nav className="nav">
         <Link href="/" className="nav-logo" onClick={close}>
-          <img
+          <Image
             src="/logo/nciw_no_background-1024x577.png"
             alt="National Check-in Week"
-            height="52"
-            width="92"
+            height={52}
+            width={92}
             style={{ objectFit: "contain" }}
+            priority
           />
         </Link>
 

@@ -6,7 +6,6 @@ interface Faq {
   id: string;
   question: string;
   answer: string;
-  category?: string | null;
 }
 
 const STATIC_FAQS: Faq[] = [
@@ -77,6 +76,7 @@ export default function FaqPage() {
             return (
               <div key={f.id} className={`faq-item ${isOpen ? "faq-item--open" : ""}`}>
                 <button
+                  id={`faq-trigger-${f.id}`}
                   onClick={() => setOpenId(isOpen ? null : f.id)}
                   className="faq-item__trigger"
                   aria-expanded={isOpen}
@@ -90,6 +90,7 @@ export default function FaqPage() {
                     className="faq-item__body"
                     id={`faq-body-${f.id}`}
                     role="region"
+                    aria-labelledby={`faq-trigger-${f.id}`}
                   >
                     {f.answer}
                   </div>
