@@ -1,4 +1,15 @@
 import Nav from "@/components/Nav";
+import NewsTicker from "@/components/NewsTicker";
+import IntroSection from "@/components/IntroSection";
+import StatTicker from "@/components/StatTicker";
+import MapSection from "@/components/MapSection";
+import IssuesSection from "@/components/IssuesSection";
+import LifeSkillsSection from "@/components/LifeSkillsSection";
+import ResearchSection from "@/components/ResearchSection";
+import DataSection from "@/components/DataSection";
+import PartnersCarousel from "@/components/PartnersCarousel";
+import MovementSection from "@/components/MovementSection";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
 export const metadata = {
@@ -27,9 +38,10 @@ const ISSUES = [
 
 export default function Home2() {
   return (
-    <div style={{ background: "#fafafa", color: "#0a0a0a", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh" }}>
+    <>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <Nav />
+      <NewsTicker />
 
       {/* ── COVER HERO ── */}
       <section style={{ background: "#0a0a0a", color: "#fff", position: "relative", overflow: "hidden" }}>
@@ -325,9 +337,19 @@ export default function Home2() {
           ))}
         </section>
 
+        <IntroSection />
+        <StatTicker />
+        <MapSection />
+        <IssuesSection />
+        <LifeSkillsSection />
+        <ResearchSection />
+        <DataSection />
+        <PartnersCarousel />
+        <MovementSection />
+        <FinalCTA />
       </main>
 
       <Footer />
-    </div>
+    </>
   );
 }

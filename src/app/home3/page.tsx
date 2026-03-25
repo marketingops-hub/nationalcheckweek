@@ -1,4 +1,15 @@
 import Nav from "@/components/Nav";
+import NewsTicker from "@/components/NewsTicker";
+import IntroSection from "@/components/IntroSection";
+import StatTicker from "@/components/StatTicker";
+import MapSection from "@/components/MapSection";
+import IssuesSection from "@/components/IssuesSection";
+import LifeSkillsSection from "@/components/LifeSkillsSection";
+import ResearchSection from "@/components/ResearchSection";
+import DataSection from "@/components/DataSection";
+import PartnersCarousel from "@/components/PartnersCarousel";
+import MovementSection from "@/components/MovementSection";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
 export const metadata = {
@@ -35,18 +46,22 @@ const ISSUES = [
 
 export default function Home3() {
   return (
-    <div style={{ background: "#07060f", color: "#e8e6f0", fontFamily: "var(--font-body)", minHeight: "100vh", position: "relative", overflow: "hidden" }}>
+    <>
       <a href="#main-content" className="skip-link">Skip to main content</a>
+      <Nav />
+      <NewsTicker />
+
+      {/* ── Aurora hero wrapper ── */}
+      <div style={{ background: "#07060f", color: "#e8e6f0", fontFamily: "var(--font-body)", position: "relative", overflow: "hidden" }}>
 
       {/* ── Global aurora orbs ── */}
-      <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         <div style={{ position: "absolute", top: "-20%", left: "-10%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(41,184,232,0.18) 0%, transparent 65%)", filter: "blur(40px)" }} />
         <div style={{ position: "absolute", top: "10%", right: "-15%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(229,0,126,0.14) 0%, transparent 65%)", filter: "blur(40px)" }} />
         <div style={{ position: "absolute", bottom: "20%", left: "30%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(139,92,246,0.12) 0%, transparent 65%)", filter: "blur(50px)" }} />
       </div>
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        <Nav />
 
         {/* ── Hero ── */}
         <section style={{ maxWidth: 1100, margin: "0 auto", padding: "100px 48px 80px" }}>
@@ -340,9 +355,24 @@ export default function Home3() {
           </section>
 
         </main>
-
-        <Footer />
       </div>
-    </div>
+      </div>
+
+      {/* ── Full content — light bg ── */}
+      <main id="main-content">
+        <IntroSection />
+        <StatTicker />
+        <MapSection />
+        <IssuesSection />
+        <LifeSkillsSection />
+        <ResearchSection />
+        <DataSection />
+        <PartnersCarousel />
+        <MovementSection />
+        <FinalCTA />
+      </main>
+
+      <Footer />
+    </>
   );
 }

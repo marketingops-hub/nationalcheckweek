@@ -1,4 +1,15 @@
 import Nav from "@/components/Nav";
+import NewsTicker from "@/components/NewsTicker";
+import IntroSection from "@/components/IntroSection";
+import StatTicker from "@/components/StatTicker";
+import MapSection from "@/components/MapSection";
+import IssuesSection from "@/components/IssuesSection";
+import LifeSkillsSection from "@/components/LifeSkillsSection";
+import ResearchSection from "@/components/ResearchSection";
+import DataSection from "@/components/DataSection";
+import PartnersCarousel from "@/components/PartnersCarousel";
+import MovementSection from "@/components/MovementSection";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
 export const metadata = {
@@ -38,9 +49,10 @@ const ISSUES = [
 
 export default function Home4() {
   return (
-    <div style={{ background: "#fff", color: "#0f1117", fontFamily: "var(--font-body)" }}>
+    <>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <Nav />
+      <NewsTicker />
 
       {/* ── Hero — split gradient ── */}
       <section style={{
@@ -377,8 +389,18 @@ export default function Home4() {
           </div>
         </section>
 
+        <IntroSection />
+        <StatTicker />
+        <MapSection />
+        <IssuesSection />
+        <LifeSkillsSection />
+        <ResearchSection />
+        <DataSection />
+        <PartnersCarousel />
+        <MovementSection />
+        <FinalCTA />
       </main>
       <Footer />
-    </div>
+    </>
   );
 }

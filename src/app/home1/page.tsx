@@ -1,11 +1,16 @@
 import Nav from "@/components/Nav";
+import NewsTicker from "@/components/NewsTicker";
+import IntroSection from "@/components/IntroSection";
+import StatTicker from "@/components/StatTicker";
+import MapSection from "@/components/MapSection";
+import IssuesSection from "@/components/IssuesSection";
+import LifeSkillsSection from "@/components/LifeSkillsSection";
+import ResearchSection from "@/components/ResearchSection";
+import DataSection from "@/components/DataSection";
+import PartnersCarousel from "@/components/PartnersCarousel";
+import MovementSection from "@/components/MovementSection";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
-import {
-  Eyebrow,
-  Divider,
-  CtaButton,
-  ArrowIcon,
-} from "@/components/home-variants/Primitives";
 
 export const metadata = {
   title: "National Check-in Week 2026 — Minimal",
@@ -18,145 +23,144 @@ export const metadata = {
   },
 };
 
-const COMMITMENTS = [
-  { n: "01", title: "Elevate student voices", body: "Create safe spaces where students can identify and communicate their emotions without stigma." },
-  { n: "02", title: "Real-time wellbeing data", body: "Move from reactive assessments to proactive, data-informed decision-making in every school." },
-  { n: "03", title: "Expert-led free webinars", body: "Access professional learning from Australia's leading wellbeing researchers and practitioners." },
-  { n: "04", title: "Whole-school community", body: "Bring together educators, families, and students around a shared commitment to thriving together." },
+const STATS = [
+  { num: "Suicide", label: "leading cause of death, Australians aged 15–24" },
+  { num: "1 in 7",  label: "children has a diagnosable mental disorder — most go undetected" },
+  { num: "72%",     label: "of lifetime mental health conditions begin before age 25" },
+  { num: "8×",      label: "more cost-effective to intervene early than treat a crisis" },
 ];
 
 export default function Home1() {
   return (
-    <div style={{ background: "var(--white)", color: "var(--text)", fontFamily: "var(--font-body)" }}>
+    <>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <Nav />
+      <NewsTicker />
 
-      {/* ── Hero ── */}
-      <section style={{ padding: "120px 40px 100px", maxWidth: 820, margin: "0 auto" }}>
-        <Eyebrow style={{ marginBottom: 32 }}>National Check-in Week · Australia 2026</Eyebrow>
-        <h1 style={{
-          fontSize: "clamp(2.6rem, 6vw, 4.5rem)",
-          fontWeight: 900,
-          lineHeight: 1.1,
-          letterSpacing: "-0.02em",
-          color: "var(--dark)",
-          marginBottom: 32,
-          fontFamily: "var(--font-display)",
-        }}>
-          Every student<br />
-          deserves to be<br />
-          <span style={{ color: "var(--primary)" }}>checked in on.</span>
-        </h1>
-        <p style={{
-          fontSize: "1.15rem",
-          color: "var(--text-mid)",
-          lineHeight: 1.85,
-          maxWidth: 580,
-          marginBottom: 48,
-        }}>
-          A free initiative giving Australian school leaders the tools, data, and professional
-          learning they need to support every student — before challenges become crises.
-        </p>
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-          <CtaButton href="/events" background="var(--dark)" borderRadius={4} style={{ letterSpacing: "0.02em" }}>
-            Register for Free Webinars
-          </CtaButton>
-          <a href="/issues" style={{
+      {/* ── Hero: Minimal / Editorial ── */}
+      <section style={{
+        borderBottom: "1px solid #e8e8e8",
+        background: "#fff",
+      }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "96px 40px 80px" }}>
+
+          <div style={{
             display: "inline-block",
-            color: "var(--dark)",
-            padding: "15px 0",
-            fontWeight: 600,
-            fontSize: "0.95rem",
-            textDecoration: "none",
+            fontSize: "0.65rem",
+            fontWeight: 800,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "var(--primary)",
             borderBottom: "2px solid var(--primary)",
+            paddingBottom: 4,
+            marginBottom: 40,
           }}>
-            Explore the Issues →
-          </a>
+            National Check-in Week · Australia 2026
+          </div>
+
+          <h1 style={{
+            fontSize: "clamp(3rem, 7vw, 5.5rem)",
+            fontWeight: 900,
+            lineHeight: 1.05,
+            letterSpacing: "-0.03em",
+            color: "#0a0a0a",
+            marginBottom: 32,
+            fontFamily: "var(--font-display)",
+            maxWidth: 820,
+          }}>
+            Every student deserves<br />
+            to be{" "}
+            <span style={{
+              position: "relative",
+              display: "inline-block",
+              color: "var(--primary)",
+            }}>
+              checked in on.
+            </span>
+          </h1>
+
+          <p style={{
+            fontSize: "1.15rem",
+            color: "#555",
+            lineHeight: 1.85,
+            maxWidth: 600,
+            marginBottom: 48,
+          }}>
+            National Check-in Week is a <strong style={{ color: "#0a0a0a" }}>FREE</strong> initiative
+            giving Australian school leaders the tools, data, and professional learning they need to
+            support every student — before challenges become crises.
+          </p>
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <a href="/events" style={{
+              display: "inline-block",
+              background: "#0a0a0a",
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: "0.9rem",
+              letterSpacing: "0.04em",
+              padding: "16px 36px",
+              textDecoration: "none",
+            }}>
+              Register for Free Webinars →
+            </a>
+            <a href="/issues" style={{
+              display: "inline-block",
+              color: "#0a0a0a",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+              textDecoration: "none",
+              borderBottom: "2px solid var(--primary)",
+              paddingBottom: 2,
+            }}>
+              Explore the Issues
+            </a>
+          </div>
+        </div>
+
+        {/* Stats strip */}
+        <div style={{
+          borderTop: "1px solid #e8e8e8",
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+        }}>
+          {STATS.map((s, i) => (
+            <div key={s.label} style={{
+              padding: "32px 36px",
+              borderRight: i < 3 ? "1px solid #e8e8e8" : "none",
+            }}>
+              <div style={{
+                fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                fontWeight: 900,
+                color: "#0a0a0a",
+                fontFamily: "var(--font-display)",
+                lineHeight: 1,
+                marginBottom: 10,
+              }}>
+                {s.num}
+              </div>
+              <p style={{ fontSize: "0.8rem", color: "#777", lineHeight: 1.6, margin: 0 }}>
+                {s.label}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Thin divider ── */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 40px" }}>
-        <Divider />
-      </div>
-
       <main id="main-content">
-
-        {/* ── What is NCIW ── */}
-        <section style={{ padding: "80px 40px", maxWidth: 820, margin: "0 auto" }}>
-          <Eyebrow style={{ marginBottom: 24 }}>About the Initiative</Eyebrow>
-          <h2 style={{
-            fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
-            fontWeight: 800, color: "var(--dark)", marginBottom: 24,
-            lineHeight: 1.25, fontFamily: "var(--font-display)",
-          }}>
-            What is National Check-In Week?
-          </h2>
-          <p style={{ fontSize: "1.05rem", color: "var(--text-mid)", lineHeight: 1.85, marginBottom: 20 }}>
-            National Check-In Week (NCIW) was founded with a clear mission: to ensure that{" "}
-            <strong style={{ color: "var(--dark)" }}>no child falls through the gaps</strong> — regardless
-            of their background, identity, or location. Australian schools are at a critical crossroads,
-            yet many still lack the tools, data, and professional learning needed to act early.
-          </p>
-          <p style={{ fontSize: "1.05rem", color: "var(--text-mid)", lineHeight: 1.85 }}>
-            NCIW 2026 is more than a campaign — it&apos;s a national movement to elevate student voices,
-            challenge outdated wellbeing practices, and drive systemic, generational change.
-          </p>
-        </section>
-
-        <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 40px" }}>
-          <Divider />
-        </div>
-
-        {/* ── 4 principles as a numbered list ── */}
-        <section style={{ padding: "80px 40px", maxWidth: 820, margin: "0 auto" }}>
-          <Eyebrow style={{ marginBottom: 24 }}>Four Commitments</Eyebrow>
-          {COMMITMENTS.map((item) => (
-            <div key={item.n} style={{
-              display: "grid", gridTemplateColumns: "48px 1fr",
-              gap: 24, paddingBottom: 40, marginBottom: 40,
-              borderBottom: "1px solid var(--border)",
-            }}>
-              <div style={{
-                fontSize: "0.85rem", fontWeight: 700, color: "var(--border-strong)",
-                fontFamily: "var(--font-display)", paddingTop: 4,
-              }}>
-                {item.n}
-              </div>
-              <div>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--dark)", marginBottom: 10 }}>
-                  {item.title}
-                </h3>
-                <p style={{ fontSize: "0.95rem", color: "var(--text-mid)", lineHeight: 1.75 }}>
-                  {item.body}
-                </p>
-              </div>
-            </div>
-          ))}
-        </section>
-
-        {/* ── CTA ── */}
-        <section style={{ padding: "80px 40px 100px", maxWidth: 820, margin: "0 auto" }}>
-          <Divider style={{ marginBottom: 80 }} />
-          <Eyebrow style={{ marginBottom: 24 }}>Join the Movement</Eyebrow>
-          <h2 style={{
-            fontSize: "clamp(1.8rem, 4vw, 3rem)", fontWeight: 900,
-            color: "var(--dark)", marginBottom: 20, fontFamily: "var(--font-display)",
-            lineHeight: 1.15,
-          }}>
-            No child should fall<br />through the gaps.
-          </h2>
-          <p style={{ fontSize: "1.05rem", color: "var(--text-mid)", lineHeight: 1.8, maxWidth: 500, marginBottom: 40 }}>
-            Join thousands of Australian educators taking proactive steps to support student wellbeing
-            before challenges become crises. Free for every school.
-          </p>
-          <CtaButton href="/events" background="var(--dark)" borderRadius={4} style={{ fontSize: "1rem", letterSpacing: "0.02em" }}>
-            Register for Free Webinars <ArrowIcon />
-          </CtaButton>
-        </section>
-
+        <IntroSection />
+        <StatTicker />
+        <MapSection />
+        <IssuesSection />
+        <LifeSkillsSection />
+        <ResearchSection />
+        <DataSection />
+        <PartnersCarousel />
+        <MovementSection />
+        <FinalCTA />
       </main>
+
       <Footer />
-    </div>
+    </>
   );
 }
