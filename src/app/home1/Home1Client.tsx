@@ -8,7 +8,7 @@ import { CheckCircle, BarChart3, Lightbulb, ClipboardCheck, Users, Calendar, Mes
 const B6 = "#2563EB", B7 = "#1D4ED8", B9 = "#1E3A8A", B8 = "#1E40AF";
 const B50 = "#EFF6FF", B100 = "#DBEAFE", B200 = "#BFDBFE";
 const S9 = "#0F172A", S6 = "#475569", S5 = "#64748B", S4 = "#94A3B8";
-const S2 = "#E2E8F0", S1 = "#F1F5F9", S0 = "#F8FAFC";
+const S3 = "#CBD5E1", S2 = "#E2E8F0", S1 = "#F1F5F9", S0 = "#F8FAFC";
 const ff = "Inter, system-ui, sans-serif";
 
 /* ── Inline Countdown ───────────────────────────────────────── */
@@ -32,11 +32,11 @@ function Countdown() {
     </div>
   );
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
       {box(t.d, "Days")}
-      <span style={{ fontSize: "1.875rem", fontWeight: 300, color: S2, fontFamily: ff }}>:</span>
+      <span style={{ fontSize: "1.875rem", fontWeight: 300, color: S3, fontFamily: ff }}>:</span>
       {box(t.h, "Hours")}
-      <span style={{ fontSize: "1.875rem", fontWeight: 300, color: S2, fontFamily: ff }}>:</span>
+      <span style={{ fontSize: "1.875rem", fontWeight: 300, color: S3, fontFamily: ff }}>:</span>
       {box(t.m, "Minutes")}
     </div>
   );
@@ -94,7 +94,7 @@ function Hero() {
     <section style={{ background: "#fff", padding: "64px 0 96px", overflow: "hidden" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-          <h1 style={{ fontFamily: ff, fontSize: "clamp(2.5rem,5vw,3.75rem)", fontWeight: 800, color: S9, lineHeight: 1.1, marginBottom: 24 }}>
+          <h1 style={{ fontFamily: ff, fontSize: "3.75rem", fontWeight: 800, color: S9, lineHeight: 1.1, marginBottom: 24 }}>
             Student Wellbeing: <br />
             <span style={{ color: B6 }}>A National Priority.</span>
           </h1>
@@ -105,8 +105,10 @@ function Hero() {
           <a href="/events" style={{ display: "inline-block", fontFamily: ff, fontWeight: 700, fontSize: "1.125rem", color: "#fff", background: B6, padding: "16px 32px", borderRadius: 9999, textDecoration: "none", marginBottom: 48, boxShadow: "0 20px 40px rgba(37,99,235,0.3)" }}>
             Register Now
           </a>
-          <div style={{ marginBottom: 12 }}><Countdown /></div>
-          <p style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 500, color: S5, margin: 0 }}>Until National Check-In Week 2026</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Countdown />
+            <p style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 500, color: S5, margin: 0 }}>Until National Check-In Week 2026</p>
+          </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} style={{ position: "relative" }}>
