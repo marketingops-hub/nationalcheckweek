@@ -9,7 +9,7 @@ const B6 = "#2563EB", B7 = "#1D4ED8", B9 = "#1E3A8A", B8 = "#1E40AF";
 const B50 = "#EFF6FF", B100 = "#DBEAFE", B200 = "#BFDBFE";
 const S9 = "#0F172A", S6 = "#475569", S5 = "#64748B", S4 = "#94A3B8";
 const S3 = "#CBD5E1", S2 = "#E2E8F0", S1 = "#F1F5F9", S0 = "#F8FAFC";
-const ff = "Inter, system-ui, sans-serif";
+const ff = "var(--font-inter), Inter, system-ui, sans-serif";
 
 /* ── Inline Countdown ───────────────────────────────────────── */
 const TARGET = new Date("2026-05-25T00:00:00+10:00");
