@@ -30,7 +30,7 @@ function Countdown() {
   const box = (val: number, lbl: string) => (
     <div key={lbl} style={{ textAlign: "center" }}>
       <div style={{ fontSize: "2.25rem", fontWeight: 900, color: B9, fontFamily: ff, lineHeight: 1 }}>{String(val).padStart(2,"0")}</div>
-      <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: S4, fontFamily: ff, marginTop: 4 }}>{lbl}</div>
+      <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: S5, fontFamily: fb, marginTop: 4 }}>{lbl}</div>
     </div>
   );
   return (
@@ -57,8 +57,8 @@ function Header() {
           <Image
             src="/logo/nciw_no_background-1024x577.png"
             alt="National Check-in Week"
-            height={52}
-            width={92}
+            height={64}
+            width={114}
             style={{ objectFit: "contain" }}
             priority
           />
@@ -101,7 +101,7 @@ function Hero() {
             Student Wellbeing: <br />
             <span style={{ color: B6 }}>A National Priority.</span>
           </h1>
-          <p style={{ fontFamily: ff, fontSize: "1.125rem", color: S6, lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
+          <p style={{ fontFamily: fb, fontSize: "1.125rem", color: S9, lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
             Join Australia&rsquo;s leading student wellbeing event, National Check-In Week,
             bridging data, experts, and schools.
           </p>
@@ -110,7 +110,7 @@ function Hero() {
           </a>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Countdown />
-            <p style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 500, color: S5, margin: 0 }}>Until National Check-In Week 2026</p>
+            <p style={{ fontFamily: fb, fontSize: "0.875rem", fontWeight: 500, color: S9, margin: 0 }}>Until National Check-In Week 2026</p>
           </div>
         </motion.div>
 
@@ -138,13 +138,13 @@ function Impact() {
   return (
     <section style={{ background: S0, padding: "80px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
-        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.75rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: S4, marginBottom: 64 }}>Impact</p>
+        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Impact</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 48, textAlign: "center" }}>
           {stats.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
               <div style={{ fontFamily: ff, fontSize: "3rem", fontWeight: 900, color: B6, lineHeight: 1, marginBottom: 16 }}>{s.value}</div>
               <div style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, color: S9, marginBottom: 8 }}>{s.label}</div>
-              <p style={{ fontFamily: ff, fontSize: "0.875rem", color: S5, lineHeight: 1.6, margin: 0 }}>{s.sub}</p>
+              <p style={{ fontFamily: fb, fontSize: "1rem", color: S9, lineHeight: 1.6, margin: 0 }}>{s.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -164,7 +164,7 @@ function WhyMatters() {
   return (
     <section style={{ background: "#fff", padding: "96px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
-        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.75rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: S4, marginBottom: 64 }}>Why This Matters</p>
+        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Why This Matters</p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 64, rowGap: 48 }}>
           {items.map((item, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ display: "flex", gap: 24 }}>
@@ -173,7 +173,7 @@ function WhyMatters() {
               </div>
               <div>
                 <h3 style={{ fontFamily: ff, fontSize: "1.25rem", fontWeight: 700, color: S9, marginBottom: 12 }}>{item.title}</h3>
-                <p style={{ fontFamily: ff, fontSize: "1rem", color: S5, lineHeight: 1.7, margin: 0 }}>{item.desc}</p>
+                <p style={{ fontFamily: fb, fontSize: "1rem", color: S9, lineHeight: 1.7, margin: 0 }}>{item.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -194,7 +194,7 @@ function HowToParticipate() {
   return (
     <section style={{ background: B50, padding: "96px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
-        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.75rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: S4, marginBottom: 64 }}>How to Participate</p>
+        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>How to Participate</p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
             {steps.map((s, i) => (
@@ -204,7 +204,7 @@ function HowToParticipate() {
                 </div>
                 <div>
                   <h3 style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, color: S9, marginBottom: 4 }}>{s.title}</h3>
-                  <p style={{ fontFamily: ff, fontSize: "0.875rem", color: S5, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
+                  <p style={{ fontFamily: fb, fontSize: "1rem", color: S9, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -225,7 +225,7 @@ function HowToParticipate() {
                 {[["I agree to the terms of our ", "Privacy Policy", "/privacy"],["I agree with our ","Cookie Policy","/terms"]].map(([pre,lbl,href]) => (
                   <label key={lbl} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
                     <input type="checkbox" style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }} />
-                    <span style={{ fontFamily: ff, fontSize: "0.75rem", color: S5, lineHeight: 1.5 }}>{pre}<a href={href} style={{ color: B6 }}>{lbl}</a></span>
+                    <span style={{ fontFamily: ff, fontSize: "0.875rem", color: S9, lineHeight: 1.5 }}>{pre}<a href={href} style={{ color: B6 }}>{lbl}</a></span>
                   </label>
                 ))}
               </div>
@@ -255,7 +255,7 @@ function Speakers() {
   return (
     <section style={{ background: "#fff", padding: "96px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
-        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.75rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: S4, marginBottom: 64 }}>Featured Speakers</p>
+        <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Featured Speakers</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 32 }}>
           {list.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
@@ -265,8 +265,8 @@ function Speakers() {
                 <img src={s.img} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} referrerPolicy="no-referrer" />
               </div>
               <h3 style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, color: S9, marginBottom: 4 }}>{s.name}</h3>
-              <p style={{ fontFamily: ff, fontSize: "0.75rem", fontWeight: 700, color: B6, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>{s.role}</p>
-              <p style={{ fontFamily: ff, fontSize: "0.75rem", color: S5, lineHeight: 1.6, margin: 0, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.bio}</p>
+              <p style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 700, color: B6, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>{s.role}</p>
+              <p style={{ fontFamily: ff, fontSize: "0.875rem", color: S9, lineHeight: 1.6, margin: 0, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.bio}</p>
             </motion.div>
           ))}
         </div>
@@ -277,7 +277,7 @@ function Speakers() {
 
 /* ── Footer ──────────────────────────────────────────────────── */
 function Home1Footer() {
-  const fLink: React.CSSProperties = { fontFamily: ff, fontSize: "0.875rem", color: "rgba(219,234,254,0.7)", textDecoration: "none" };
+  const fLink: React.CSSProperties = { fontFamily: ff, fontSize: "0.875rem", color: "rgba(255,255,255,0.85)", textDecoration: "none" };
   return (
     <footer style={{ background: B9, color: "#fff", padding: "80px 0 40px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
@@ -285,7 +285,7 @@ function Home1Footer() {
           <div>
             <h4 style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, marginBottom: 24 }}>Contact Us</h4>
             {["+61 02 555 505","Fax: 100 888 992","events@nationalcheckinweek.com"].map(t => (
-              <p key={t} style={{ fontFamily: ff, fontSize: "0.875rem", color: "rgba(219,234,254,0.7)", marginBottom: 16 }}>{t}</p>
+              <p key={t} style={{ fontFamily: ff, fontSize: "0.875rem", color: "rgba(255,255,255,0.85)", marginBottom: 16 }}>{t}</p>
             ))}
           </div>
           <div>
@@ -312,16 +312,16 @@ function Home1Footer() {
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
             <Image
-              src="/nciw-logo.svg"
+              src="/logo/nciw_no_background-1024x577.png"
               alt="National Check-in Week"
-              width={80}
-              height={96}
+              width={160}
+              height={90}
               style={{ objectFit: "contain" }}
             />
           </div>
         </div>
         <div style={{ borderTop: `1px solid ${B8}`, paddingTop: 40, textAlign: "center" }}>
-          <p style={{ fontFamily: ff, fontSize: "0.75rem", color: "rgba(219,234,254,0.4)", margin: 0 }}>Copyright &copy; 2026 National Check-In Week. All rights reserved.</p>
+          <p style={{ fontFamily: ff, fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", margin: 0 }}>Copyright &copy; 2026 National Check-In Week. All rights reserved.</p>
         </div>
       </div>
     </footer>
