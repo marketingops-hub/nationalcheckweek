@@ -97,30 +97,40 @@ function Hero() {
     <section style={{ background: "#fff", padding: "64px 0 96px", overflow: "hidden" }}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-          <h1 style={{ fontFamily: ff, fontSize: "3.75rem", fontWeight: 800, color: S9, lineHeight: 1.1, marginBottom: 24 }}>
-            Student Wellbeing: <br />
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6" style={{ color: B6, background: B50 }}>
+            <span aria-hidden>📅</span> 25 May 2026 &middot; Australia
+          </div>
+          <h1 className="text-5xl lg:text-[3.75rem] font-black leading-[1.07] tracking-tight mb-5" style={{ color: S9 }}>
+            Student Wellbeing:<br />
             <span style={{ color: B6 }}>A National Priority.</span>
           </h1>
-          <p style={{ fontFamily: fb, fontSize: "1.125rem", color: S9, lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
-            Join Australia&rsquo;s leading student wellbeing event, National Check-In Week,
-            bridging data, experts, and schools.
+          <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: S6 }}>
+            Join Australia&rsquo;s leading student wellbeing event — bridging data, experts and schools to create lasting change.
           </p>
-          <a href="/events" className="hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200" style={{ display: "inline-block", fontFamily: ff, fontWeight: 700, fontSize: "1.125rem", color: "#fff", background: B6, padding: "16px 32px", borderRadius: 9999, textDecoration: "none", marginBottom: 48, boxShadow: "0 20px 40px rgba(41,184,232,0.3)" }}>
-            Register Now
-          </a>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Countdown />
-            <p style={{ fontFamily: fb, fontSize: "0.875rem", fontWeight: 500, color: S9, margin: 0 }}>Until National Check-In Week 2026</p>
+          <div className="flex flex-wrap gap-3 mb-10">
+            <a href="/events" className="inline-flex items-center gap-2 text-base font-bold text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200" style={{ background: B6, textDecoration: "none" }}>Register Now</a>
+            <a href="/about" className="inline-flex items-center text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 px-8 py-4 rounded-full transition-all duration-200" style={{ textDecoration: "none" }}>Learn More</a>
           </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Countdown to the event</p>
+          <Countdown />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative hidden lg:block">
-          <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.2)", position: "relative", zIndex: 1 }}>
+          <div className="rounded-3xl overflow-hidden shadow-2xl relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000" alt="Students collaborating" style={{ width: "100%", height: 480, objectFit: "cover", display: "block" }} referrerPolicy="no-referrer" />
+            <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000" alt="Students collaborating" className="w-full block object-cover" style={{ height: 520 }} referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           </div>
-          <div aria-hidden="true" style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, background: B100, borderRadius: "50%", filter: "blur(40px)", opacity: 0.7 }} />
-          <div aria-hidden="true" style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, background: "#FCEEF6", borderRadius: "50%", filter: "blur(40px)", opacity: 0.7 }} />
+          <div aria-hidden="true" className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-60" style={{ background: B100 }} />
+          <div aria-hidden="true" className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-3xl opacity-60" style={{ background: "#FCEEF6" }} />
+          <div className="absolute bottom-8 left-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: B50 }}><Users size={22} color={B6} /></div>
+            <div>
+              <div className="text-2xl font-black leading-none" style={{ color: S9 }}>15M+</div>
+              <div className="text-xs text-slate-500 mt-0.5">Students reached annually</div>
+            </div>
+          </div>
+          <div className="absolute top-8 right-8 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg px-3 py-2 text-xs font-bold" style={{ color: B6 }}>✓ 1,200+ Schools</div>
         </motion.div>
       </div>
     </section>
@@ -139,12 +149,13 @@ function Impact() {
     <section style={{ background: S0, padding: "80px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Impact</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-12 text-center">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
           {stats.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-              <div style={{ fontFamily: ff, fontSize: "3rem", fontWeight: 900, color: B6, lineHeight: 1, marginBottom: 16 }}>{s.value}</div>
-              <div style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, color: S9, marginBottom: 8 }}>{s.label}</div>
-              <p style={{ fontFamily: fb, fontSize: "1rem", color: S9, lineHeight: 1.6, margin: 0 }}>{s.sub}</p>
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              className="group bg-white rounded-3xl p-6 lg:p-8 text-center shadow-sm hover:shadow-xl border border-slate-100 hover:border-[#29B8E8]/30 transition-all duration-300 cursor-default">
+              <div className="text-4xl lg:text-5xl font-black leading-none mb-3 group-hover:scale-105 transition-transform duration-200" style={{ color: B6 }}>{s.value}</div>
+              <div className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: S9 }}>{s.label}</div>
+              <p className="text-sm leading-relaxed text-slate-500">{s.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -167,13 +178,14 @@ function WhyMatters() {
         <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Why This Matters</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-x-16 lg:gap-y-10">
           {items.map((item, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ display: "flex", gap: 24 }}>
-              <div style={{ flexShrink: 0, width: 56, height: 56, background: B50, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="flex gap-5 p-6 rounded-2xl hover:bg-slate-50 transition-colors duration-200 group -mx-6">
+              <div className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200" style={{ background: B50 }}>
                 <item.Icon size={24} color={B6} />
               </div>
               <div>
-                <h3 style={{ fontFamily: ff, fontSize: "1.25rem", fontWeight: 700, color: S9, marginBottom: 12 }}>{item.title}</h3>
-                <p style={{ fontFamily: fb, fontSize: "1rem", color: S9, lineHeight: 1.7, margin: 0 }}>{item.desc}</p>
+                <h3 className="text-lg font-bold mb-2" style={{ color: S9 }}>{item.title}</h3>
+                <p className="text-base leading-relaxed text-slate-500">{item.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -252,14 +264,14 @@ function HowToParticipate() {
 /* ── Speakers ────────────────────────────────────────────────── */
 function Speakers() {
   const list = [
-    { name: "Andrew Smith",    role: "Professor", img: "https://i.pravatar.cc/150?u=andrew1", bio: "Leading expert in student wellbeing and educational data analysis with over 20 years experience." },
-    { name: "Sally Webster",   role: "Professor", img: "https://i.pravatar.cc/150?u=sally2",  bio: "Specializes in psychological safety in schools and developing resilience programs for youth." },
-    { name: "Dianne Giblin",   role: "Professor", img: "https://i.pravatar.cc/150?u=dianne3", bio: "Advocate for parent engagement and community-driven wellbeing initiatives in regional areas." },
-    { name: "Dr Mark Williams",role: "Professor", img: "https://i.pravatar.cc/150?u=mark4",   bio: "Renowned researcher in cognitive development and the impact of digital environments on learning." },
-    { name: "Gemma McLean",    role: "Professor", img: "https://i.pravatar.cc/150?u=gemma5",  bio: "Focuses on early childhood development and the transition to primary education systems." },
-    { name: "Kate Xavier",     role: "Professor", img: "https://i.pravatar.cc/150?u=kate6",   bio: "Expert in trauma-informed practice and supporting vulnerable student populations." },
-    { name: "Nikki Bonus",     role: "Professor", img: "https://i.pravatar.cc/150?u=nikki7",  bio: "Founder of several wellbeing platforms used by thousands of schools across Australia." },
-    { name: "Corrie Ackland",  role: "Professor", img: "https://i.pravatar.cc/150?u=corrie8", bio: "Dedicated to improving mental health outcomes through peer-to-peer support networks." },
+    { name: "Andrew Smith",    role: "Wellbeing Researcher",    img: "https://i.pravatar.cc/150?u=andrew1", bio: "Leading expert in student wellbeing and educational data analysis with over 20 years experience." },
+    { name: "Sally Webster",   role: "Educational Psychologist", img: "https://i.pravatar.cc/150?u=sally2",  bio: "Specializes in psychological safety in schools and developing resilience programs for youth." },
+    { name: "Dianne Giblin",   role: "Community Advocate",       img: "https://i.pravatar.cc/150?u=dianne3", bio: "Advocate for parent engagement and community-driven wellbeing initiatives in regional areas." },
+    { name: "Dr Mark Williams",role: "Cognitive Researcher",     img: "https://i.pravatar.cc/150?u=mark4",   bio: "Renowned researcher in cognitive development and the impact of digital environments on learning." },
+    { name: "Gemma McLean",    role: "Early Childhood Lead",     img: "https://i.pravatar.cc/150?u=gemma5",  bio: "Focuses on early childhood development and the transition to primary education systems." },
+    { name: "Kate Xavier",     role: "Trauma Specialist",        img: "https://i.pravatar.cc/150?u=kate6",   bio: "Expert in trauma-informed practice and supporting vulnerable student populations." },
+    { name: "Nikki Bonus",     role: "Platform Founder",         img: "https://i.pravatar.cc/150?u=nikki7",  bio: "Founder of several wellbeing platforms used by thousands of schools across Australia." },
+    { name: "Corrie Ackland",  role: "Mental Health Lead",       img: "https://i.pravatar.cc/150?u=corrie8", bio: "Dedicated to improving mental health outcomes through peer-to-peer support networks." },
   ];
   return (
     <section style={{ background: "#fff", padding: "96px 0" }}>
@@ -268,14 +280,14 @@ function Speakers() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {list.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-              style={{ background: "#fff", padding: 24, borderRadius: 24, border: `1px solid ${S1}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", textAlign: "center" }}>
-              <div style={{ width: 96, height: 96, borderRadius: "50%", overflow: "hidden", margin: "0 auto 24px", outline: `4px solid ${B50}` }}>
+              className="group bg-white rounded-3xl p-6 text-center border border-slate-100 hover:border-[#29B8E8]/30 shadow-sm hover:shadow-xl transition-all duration-300">
+              <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 ring-4 ring-[#E6F7FD] group-hover:ring-[#29B8E8]/40 transition-all duration-300">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={s.img} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} referrerPolicy="no-referrer" />
+                <img src={s.img} alt={s.name} className="w-full h-full object-cover block" referrerPolicy="no-referrer" />
               </div>
-              <h3 style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, color: S9, marginBottom: 4 }}>{s.name}</h3>
-              <p style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 700, color: B6, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>{s.role}</p>
-              <p style={{ fontFamily: ff, fontSize: "0.875rem", color: S9, lineHeight: 1.6, margin: 0, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.bio}</p>
+              <h3 className="text-base font-bold mb-1" style={{ color: S9 }}>{s.name}</h3>
+              <span className="inline-block text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full mb-3" style={{ color: B6, background: B50 }}>{s.role}</span>
+              <p className="text-sm leading-relaxed text-slate-500 line-clamp-3">{s.bio}</p>
             </motion.div>
           ))}
         </div>
@@ -319,13 +331,13 @@ function Home1Footer() {
               </a>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
+          <div className="flex lg:justify-end">
             <Image
               src="/logo/nciw_no_background-1024x577.png"
               alt="National Check-in Week"
               width={160}
               height={90}
-              style={{ objectFit: "contain" }}
+              style={{ objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.8 }}
             />
           </div>
         </div>
