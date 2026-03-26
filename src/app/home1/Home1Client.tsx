@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { BarChart3, Lightbulb, ClipboardCheck, Users, Calendar, MessageSquare, Database, Menu, X } from "lucide-react";
+import { BarChart3, Lightbulb, ClipboardCheck, Users, Calendar, MessageSquare, Database, Menu, X, CheckCircle } from "lucide-react";
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const B6 = "#29B8E8", B7 = "#1A9DCA", B9 = "#3D3D3D", B8 = "#1A9DCA";
@@ -63,14 +63,14 @@ function Header() {
             priority
           />
         </a>
-        <nav style={{ display: "flex", alignItems: "center", gap: 32 }}>
+        <nav className="hidden md:flex items-center gap-8">
           {["Home","Products","Resources","Blog"].map(l => (
-            <a key={l} href="#" style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 500, color: S6, textDecoration: "none" }}>{l}</a>
+            <a key={l} href="#" className="text-sm font-medium text-slate-500 hover:text-[#29B8E8] transition-colors" style={{ textDecoration: "none" }}>{l}</a>
           ))}
           <a href="/login" style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 500, color: S6, textDecoration: "none" }}>Log In</a>
-          <a href="/events" style={{ fontFamily: ff, fontSize: "0.875rem", fontWeight: 600, color: "#fff", background: B6, padding: "10px 24px", borderRadius: 9999, textDecoration: "none", boxShadow: "0 4px 14px rgba(41,184,232,0.35)" }}>Register Now</a>
+          <a href="/events" className="text-sm font-semibold text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200" style={{ background: B6, textDecoration: "none" }}>Register Now</a>
         </nav>
-        <button onClick={() => setOpen(!open)} style={{ display: "none", background: "none", border: "none", cursor: "pointer", padding: 8 }} aria-label="menu">
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" style={{ background: "none", border: "none", cursor: "pointer" }} aria-label={open ? "Close menu" : "Open menu"}>
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -95,7 +95,7 @@ function Header() {
 function Hero() {
   return (
     <section style={{ background: "#fff", padding: "64px 0 96px", overflow: "hidden" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
           <h1 style={{ fontFamily: ff, fontSize: "3.75rem", fontWeight: 800, color: S9, lineHeight: 1.1, marginBottom: 24 }}>
             Student Wellbeing: <br />
@@ -105,7 +105,7 @@ function Hero() {
             Join Australia&rsquo;s leading student wellbeing event, National Check-In Week,
             bridging data, experts, and schools.
           </p>
-          <a href="/events" style={{ display: "inline-block", fontFamily: ff, fontWeight: 700, fontSize: "1.125rem", color: "#fff", background: B6, padding: "16px 32px", borderRadius: 9999, textDecoration: "none", marginBottom: 48, boxShadow: "0 20px 40px rgba(41,184,232,0.3)" }}>
+          <a href="/events" className="hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200" style={{ display: "inline-block", fontFamily: ff, fontWeight: 700, fontSize: "1.125rem", color: "#fff", background: B6, padding: "16px 32px", borderRadius: 9999, textDecoration: "none", marginBottom: 48, boxShadow: "0 20px 40px rgba(41,184,232,0.3)" }}>
             Register Now
           </a>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -114,7 +114,7 @@ function Hero() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} style={{ position: "relative" }}>
+        <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative hidden lg:block">
           <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.2)", position: "relative", zIndex: 1 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000" alt="Students collaborating" style={{ width: "100%", height: 480, objectFit: "cover", display: "block" }} referrerPolicy="no-referrer" />
@@ -139,7 +139,7 @@ function Impact() {
     <section style={{ background: S0, padding: "80px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Impact</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 48, textAlign: "center" }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-12 text-center">
           {stats.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
               <div style={{ fontFamily: ff, fontSize: "3rem", fontWeight: 900, color: B6, lineHeight: 1, marginBottom: 16 }}>{s.value}</div>
@@ -165,7 +165,7 @@ function WhyMatters() {
     <section style={{ background: "#fff", padding: "96px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Why This Matters</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 64, rowGap: 48 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-x-16 lg:gap-y-10">
           {items.map((item, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ display: "flex", gap: 24 }}>
               <div style={{ flexShrink: 0, width: 56, height: 56, background: B50, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -185,6 +185,7 @@ function WhyMatters() {
 
 /* ── How to Participate ──────────────────────────────────────── */
 function HowToParticipate() {
+  const [done, setDone] = useState(false);
   const steps = [
     { Icon: Calendar,      title: "Step 1. Online Challenge", desc: "Join the leading student wellbeing event, National Check-In Week." },
     { Icon: Users,         title: "Step 2. Check Positions",  desc: "Case study for schools on the insights from the data collected at National Check-In Week." },
@@ -195,7 +196,7 @@ function HowToParticipate() {
     <section style={{ background: B50, padding: "96px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>How to Participate</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
           <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
             {steps.map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 24 }}>
@@ -211,7 +212,14 @@ function HowToParticipate() {
           </div>
           <div style={{ background: "#fff", padding: 40, borderRadius: 24, boxShadow: "0 20px 40px rgba(0,0,0,0.08)", border: `1px solid ${S1}` }}>
             <h3 style={{ fontFamily: ff, fontSize: "1.5rem", fontWeight: 700, color: S9, marginBottom: 32 }}>Register Form</h3>
-            <form style={{ display: "flex", flexDirection: "column", gap: 20 }} onSubmit={e => e.preventDefault()}>
+            {done ? (
+              <div className="text-center py-8">
+                <CheckCircle size={52} className="mx-auto mb-4" color={B6} />
+                <h3 style={{ fontFamily: ff, fontSize: "1.5rem", fontWeight: 800, color: S9, marginBottom: 8 }}>You&rsquo;re registered!</h3>
+                <p style={{ fontFamily: fb, color: S5 }}>We&rsquo;ll be in touch with details before May 2026.</p>
+              </div>
+            ) : (
+            <form style={{ display: "flex", flexDirection: "column", gap: 20 }} onSubmit={e => { e.preventDefault(); setDone(true); }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <input type="text" placeholder="First Name" style={inp} />
                 <input type="text" placeholder="Last Name"  style={inp} />
@@ -229,10 +237,11 @@ function HowToParticipate() {
                   </label>
                 ))}
               </div>
-              <button type="submit" style={{ fontFamily: ff, fontWeight: 700, fontSize: "1rem", color: "#fff", background: B6, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: "0 8px 20px rgba(41,184,232,0.3)" }}>
+              <button type="submit" className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200" style={{ fontFamily: ff, fontWeight: 700, fontSize: "1rem", color: "#fff", background: B6, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: "0 8px 20px rgba(41,184,232,0.3)" }}>
                 Register
               </button>
             </form>
+            )}
           </div>
         </div>
       </div>
@@ -256,7 +265,7 @@ function Speakers() {
     <section style={{ background: "#fff", padding: "96px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
         <p style={{ fontFamily: ff, textAlign: "center", fontSize: "0.85rem", fontWeight: 900, letterSpacing: "0.2em", textTransform: "uppercase", color: "#475569", marginBottom: 64 }}>Featured Speakers</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 32 }}>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {list.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
               style={{ background: "#fff", padding: 24, borderRadius: 24, border: `1px solid ${S1}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", textAlign: "center" }}>
@@ -281,7 +290,7 @@ function Home1Footer() {
   return (
     <footer style={{ background: B9, color: "#fff", padding: "80px 0 40px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 48, marginBottom: 80 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-20">
           <div>
             <h4 style={{ fontFamily: ff, fontSize: "1.125rem", fontWeight: 700, marginBottom: 24 }}>Contact Us</h4>
             {["+61 02 555 505","Fax: 100 888 992","events@nationalcheckinweek.com"].map(t => (

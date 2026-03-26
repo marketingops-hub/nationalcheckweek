@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
   Heart, Users, BarChart3, Smile, TrendingUp, ShieldCheck, Database,
-  MessageSquare, UserCircle,
+  MessageSquare, UserCircle, Menu, X, CheckCircle,
 } from "lucide-react";
 
 /* ── Tokens ──────────────────────────────────────────────────── */
@@ -63,27 +63,35 @@ const inp: React.CSSProperties = {
 
 /* ── Navbar ──────────────────────────────────────────────────── */
 function Navbar() {
+  const [open, setOpen] = useState(false);
   return (
-    <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", maxWidth: 1280, margin: "0 auto", width: "100%" }}>
-      <a href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-        <Image
-          src="/logo/nciw_no_background-1024x577.png"
-          alt="National Check-in Week"
-          height={64}
-          width={114}
-          style={{ objectFit: "contain" }}
-          priority
-        />
-      </a>
-      <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-        {["Home", "Products", "Resources", "Blog", "Log In"].map(l => (
-          <a key={l} href="#" style={{ fontFamily: fi, fontSize: "0.875rem", fontWeight: 500, color: G6, textDecoration: "none" }}>{l}</a>
-        ))}
-        <a href="/events" style={{ fontFamily: fi, fontWeight: 600, fontSize: "0.875rem", color: "#fff", background: BLUE, padding: "8px 20px", borderRadius: 9999, textDecoration: "none" }}>
-          Register Now
-        </a>
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+        <a href="/"><Image src="/logo/nciw_no_background-1024x577.png" alt="National Check-in Week" height={60} width={107} style={{ objectFit: "contain" }} priority /></a>
+        <nav className="hidden md:flex items-center gap-8">
+          {["Home","About","Resources","Blog"].map(l => (
+            <a key={l} href="#" className="text-sm font-medium text-slate-500 hover:text-[#29B8E8] transition-colors" style={{ textDecoration: "none" }}>{l}</a>
+          ))}
+          <a href="/login" className="text-sm font-medium text-slate-500 hover:text-[#29B8E8] transition-colors" style={{ textDecoration: "none" }}>Log In</a>
+          <a href="/events" className="text-sm font-semibold text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200" style={{ background: BLUE, textDecoration: "none" }}>Register Now</a>
+        </nav>
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" style={{ background: "none", border: "none", cursor: "pointer", color: DARK }} aria-label={open ? "Close menu" : "Open menu"}>
+          {open ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
-    </nav>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden border-t border-gray-100 bg-white overflow-hidden">
+            <div className="px-4 py-4 flex flex-col gap-3">
+              {["Home","About","Resources","Blog","Log In"].map(l => (
+                <a key={l} href="#" className="py-2 text-base font-medium text-slate-600 hover:text-[#29B8E8] transition-colors" style={{ textDecoration: "none" }}>{l}</a>
+              ))}
+              <a href="/events" className="mt-2 text-center text-base font-bold text-white py-3 rounded-full transition-colors" style={{ background: BLUE, textDecoration: "none" }}>Register Now</a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }
 
@@ -91,7 +99,7 @@ function Navbar() {
 function Hero() {
   return (
     <section style={{ position: "relative", overflow: "hidden", padding: "48px 24px 80px" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 1.5rem" }}>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
           <h1 style={{ fontFamily: fs, fontSize: "3.75rem", fontWeight: 700, lineHeight: 1.2, color: DARK, marginBottom: 24 }}>
             Empathy &amp; Connection:<br />
@@ -113,7 +121,7 @@ function Hero() {
           </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} style={{ position: "relative" }}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative hidden lg:block">
           <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.15)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://picsum.photos/seed/students-group/800/600" alt="Diverse group of students" style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }} referrerPolicy="no-referrer" />
@@ -138,7 +146,7 @@ function Impact() {
     <section style={{ padding: "80px 0", background: "#fff" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
         <p style={{ fontFamily: fi, fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em", color: G6, marginBottom: 48 }}>Impact</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 32 }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
           {stats.map((s, i) => (
             <motion.div key={i} whileHover={{ y: -5 }}
               style={{ background: s.bg, padding: 32, borderRadius: 24, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -168,7 +176,7 @@ function WhyMatters() {
     <section style={{ padding: "80px 24px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <p style={{ fontFamily: fi, textAlign: "center", fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em", color: G6, marginBottom: 64 }}>Why This Matters</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 64, rowGap: 48 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-x-16 lg:gap-y-10">
           {items.map((item, i) => (
             <div key={i} style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
               <div style={{ background: "#fff", padding: 16, borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexShrink: 0 }}>
@@ -188,6 +196,7 @@ function WhyMatters() {
 
 /* ── How to Participate ──────────────────────────────────────── */
 function HowToParticipate() {
+  const [done, setDone] = useState(false);
   const steps = [
     { step: "1", title: "Connect",          desc: "Join our leading student wellbeing event, National Check-In Week.",               Icon: Users },
     { step: "2", title: "Check Routines",   desc: "Create space for students on the regular items and routines at school.",           Icon: UserCircle },
@@ -198,7 +207,7 @@ function HowToParticipate() {
     <section style={{ padding: "80px 24px", background: SAGE }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <p style={{ fontFamily: fi, textAlign: "center", fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em", color: G6, marginBottom: 64 }}>How to Participate</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
           <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
             {steps.map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
@@ -215,7 +224,14 @@ function HowToParticipate() {
 
           <div style={{ background: WARM, padding: 40, borderRadius: 40, boxShadow: "0 20px 40px rgba(0,0,0,0.08)" }}>
             <h3 style={{ fontFamily: fi, fontSize: "1.5rem", fontWeight: 700, color: DARK, marginBottom: 32 }}>Register Form</h3>
-            <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={e => e.preventDefault()}>
+            {done ? (
+              <div className="text-center py-8">
+                <CheckCircle size={52} className="mx-auto mb-4" color={BLUE} />
+                <h3 style={{ fontFamily: fi, fontSize: "1.5rem", fontWeight: 800, color: DARK, marginBottom: 8 }}>You&rsquo;re registered!</h3>
+                <p style={{ fontFamily: fi, color: G5 }}>We&rsquo;ll be in touch with details before May 2026.</p>
+              </div>
+            ) : (
+            <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={e => { e.preventDefault(); setDone(true); }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <input type="text" placeholder="First Name" style={inp} />
                 <input type="text" placeholder="Last Name"  style={inp} />
@@ -233,10 +249,11 @@ function HowToParticipate() {
                   </label>
                 ))}
               </div>
-              <button type="submit" style={{ fontFamily: fi, fontWeight: 700, fontSize: "1rem", color: "#fff", background: BLUE, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: "0 8px 20px rgba(41,184,232,0.25)", marginTop: 8 }}>
+              <button type="submit" className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200" style={{ fontFamily: fi, fontWeight: 700, fontSize: "1rem", color: "#fff", background: BLUE, padding: "16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: "0 8px 20px rgba(41,184,232,0.25)", marginTop: 8 }}>
                 Register
               </button>
             </form>
+            )}
           </div>
         </div>
       </div>
@@ -260,7 +277,7 @@ function FeaturedSpeakers() {
     <section style={{ padding: "80px 24px", background: "#fff" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <p style={{ fontFamily: fi, textAlign: "center", fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em", color: G6, marginBottom: 64 }}>Featured Speakers</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 32 }}>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {speakers.map((s, i) => (
             <motion.div key={i} whileHover={{ y: -5 }}
               style={{ background: WARM, padding: 24, borderRadius: 24, textAlign: "center" }}>
@@ -284,7 +301,7 @@ function Footer() {
   const lnk: React.CSSProperties = { fontFamily: fi, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", textDecoration: "none" };
   return (
     <footer style={{ background: NAVY, color: "#fff", padding: "64px 24px" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 48 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 1.5rem" }}>
         <div>
           <h4 style={{ fontFamily: fi, fontSize: "0.875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.9, marginBottom: 24 }}>Contact Us</h4>
           {["1800 123 456", "info@checkinweek.com", "123 Education Way, Sydney"].map(t => (
