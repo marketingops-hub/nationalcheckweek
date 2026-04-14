@@ -28,7 +28,7 @@ const TABS = [
  * 
  * Provides a tabbed interface for editing:
  * - Hero section (logo, headings, CTAs, colors)
- * - Trusted organization logos
+ * - Trusted organisation logos
  * - CTA banner settings
  * - Footer content and styling
  * 
@@ -278,9 +278,9 @@ export default function HomePageManager() {
       {/* Dialogs */}
       <InputDialog
         isOpen={showAddLogoDialog}
-        title="Add Organization Logo"
-        message="Enter the organization name:"
-        placeholder="Organization name"
+        title="Add Organisation Logo"
+        message="Enter the organisation name:"
+        placeholder="Organisation name"
         confirmText="Add Logo"
         cancelText="Cancel"
         onConfirm={handleAddLogo}

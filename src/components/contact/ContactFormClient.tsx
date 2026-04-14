@@ -1,36 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import HubSpotForm from '@/components/shared/HubSpotForm';
 
 export default function ContactFormClient() {
-  useEffect(() => {
-    // Load HubSpot v2 embed script
-    const script = document.createElement('script');
-    script.src = '//js-ap1.hsforms.net/forms/embed/v2.js';
-    script.charset = 'utf-8';
-    script.type = 'text/javascript';
-    script.async = true;
-    
-    script.onload = () => {
-      if (window.hbspt) {
-        window.hbspt.forms.create({
-          region: 'ap1',
-          portalId: '4596264',
-          formId: '24feba89-1af4-479a-a43c-56e97bb67520',
-          target: '#hubspot-contact-form'
-        });
-      }
-    };
-    
-    document.body.appendChild(script);
-    
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
-
   return (
     <div style={{
       marginBottom: '4rem',
@@ -56,9 +28,13 @@ export default function ContactFormClient() {
         marginBottom: '2rem',
         fontSize: '0.9375rem'
       }}>
-        Fill out the form below and we'll get back to you as soon as possible
+        Fill out the form below and we&apos;ll get back to you as soon as possible
       </p>
-      <div id="hubspot-contact-form"></div>
+      <HubSpotForm
+        portalId="4596264"
+        formId="24feba89-1af4-479a-a43c-56e97bb67520"
+        containerId="hubspot-contact-form"
+      />
     </div>
   );
 }

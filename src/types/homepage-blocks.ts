@@ -22,7 +22,7 @@ export interface HomepageBlock {
 /**
  * Supported block types
  */
-export type BlockType = 'hero' | 'stats' | 'features' | 'logos' | 'cta' | 'testimonials' | 'faq' | 'contact' | 'welcome' | 'what_is_it' | 'why_matters' | 'what_makes_different' | 'what_and_who' | 'be_part_cta' | 'how_to_participate' | 'ambassadors' | 'how_lifeskills_go' | 'ambassador_voices' | 'partners_slideshow' | 'if_not_now_when' | 'your_voice';
+export type BlockType = 'hero' | 'stats' | 'features' | 'logos' | 'cta' | 'testimonials' | 'faq' | 'contact' | 'welcome' | 'what_is_it' | 'why_matters' | 'what_makes_different' | 'what_and_who' | 'be_part_cta' | 'how_to_participate' | 'ambassadors' | 'how_lifeskills_go' | 'ambassador_voices' | 'partners_slideshow' | 'if_not_now_when' | 'your_voice' | 'schools_navigating_data' | 'wellbeing_across_australia';
 
 /**
  * Union type for all block content types

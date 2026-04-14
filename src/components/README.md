@@ -29,7 +29,7 @@ The navigation menu had a critical bug where `.slice(0, 4)` was used in `HeaderC
 
 ---
 
-## Component Organization
+## Component Organisation
 
 - `Header.tsx` / `HeaderClient.tsx` - Main site navigation
 - `Nav.tsx` / `NavClient.tsx` - Alternative navigation

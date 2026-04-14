@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
+import HubSpotForm from '@/components/shared/HubSpotForm';
 
 interface RegisterPageData {
   id: string;
@@ -22,99 +23,65 @@ interface RegisterPageClientProps {
   pageData: RegisterPageData;
 }
 
-export default function RegisterPageClient({ pageData }: RegisterPageClientProps) {
-  useEffect(() => {
-    // Load HubSpot form script if form IDs are provided
-    if (pageData.hubspot_form_id && pageData.hubspot_portal_id) {
-      const script = document.createElement('script');
-      script.src = '//js-ap1.hsforms.net/forms/embed/v2.js';
-      script.charset = 'utf-8';
-      script.type = 'text/javascript';
-      script.async = true;
-      
-      script.onload = () => {
-        if (window.hbspt && pageData.hubspot_portal_id && pageData.hubspot_form_id) {
-          const formConfig: any = {
-            region: 'ap1',
-            portalId: pageData.hubspot_portal_id,
-            formId: pageData.hubspot_form_id,
-            target: '#hubspot-form-container',
-            onFormSubmit: async function($form: any, data: any) {
-              // Get form data from HubSpot's data parameter
-              const fields: any = {};
-              
-              // HubSpot passes form data in the data parameter
-              if (data && Array.isArray(data)) {
-                data.forEach((field: any) => {
-                  fields[field.name] = field.value;
-                });
-              }
+/**
+ * Extract Zoom webinar IDs from HubSpot submission data and register the user.
+ */
+async function handleZoomRegistration(
+  hubspotFormId: string,
+  data: Record<string, unknown>,
+) {
+  const fields: Record<string, string> = {};
+  if (data && Array.isArray(data)) {
+    (data as Array<{ name: string; value: string }>).forEach((field) => {
+      fields[field.name] = field.value;
+    });
+  }
 
-              console.log('[Registration] Form submitted with fields:', fields);
-
-              // Extract Zoom webinar IDs from bulk_zoom_registration field
-              const webinarIds: string[] = [];
-              
-              // Check for bulk_zoom_registration field (HubSpot checkbox field)
-              if (fields.bulk_zoom_registration) {
-                const value = fields.bulk_zoom_registration;
-                
-                // Handle different formats: string, array, or semicolon-separated
-                if (typeof value === 'string') {
-                  // Split by semicolon (HubSpot checkbox format) or comma
-                  const ids = value.split(/[;,]/).map((id: string) => id.trim()).filter(Boolean);
-                  webinarIds.push(...ids);
-                } else if (Array.isArray(value)) {
-                  webinarIds.push(...value);
-                }
-              }
-
-              console.log('[Registration] Extracted Zoom webinar IDs:', webinarIds);
-
-              // Only call Zoom API if we have webinar IDs
-              if (webinarIds.length > 0) {
-                try {
-                  const response = await fetch('/api/hubspot-zoom-register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      hubspot_form_id: pageData.hubspot_form_id,
-                      zoom_webinar_ids: webinarIds,
-                      fields: fields,
-                      context: {
-                        pageUri: window.location.href,
-                        pageName: document.title,
-                      },
-                    }),
-                  });
-                  
-                  const result = await response.json();
-                  console.log('[Registration] Zoom registration response:', result);
-                  
-                  if (result.success) {
-                    console.log('[Registration] ✅ Successfully registered for', webinarIds.length, 'webinar(s)');
-                  } else {
-                    console.error('[Registration] ❌ Zoom registration failed:', result);
-                  }
-                } catch (error) {
-                  console.error('[Registration] ❌ Zoom registration error:', error);
-                }
-              } else {
-                console.log('[Registration] No webinar IDs found in bulk_zoom_registration field');
-              }
-            }
-          };
-          window.hbspt.forms.create(formConfig);
-        }
-      };
-      
-      document.body.appendChild(script);
-      
-      return () => {
-        document.body.removeChild(script);
-      };
+  const webinarIds: string[] = [];
+  if (fields.bulk_zoom_registration) {
+    // HubSpot checkbox values are semicolon-separated strings
+    const value: unknown = fields.bulk_zoom_registration;
+    if (typeof value === 'string') {
+      webinarIds.push(...value.split(/[;,]/).map((id) => id.trim()).filter(Boolean));
+    } else if (Array.isArray(value)) {
+      webinarIds.push(...(value as string[]));
     }
-  }, [pageData.hubspot_form_id, pageData.hubspot_portal_id]);
+  }
+
+  if (webinarIds.length === 0) return;
+
+  try {
+    const response = await fetch('/api/hubspot-zoom-register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        hubspot_form_id: hubspotFormId,
+        zoom_webinar_ids: webinarIds,
+        fields,
+        context: {
+          pageUri: window.location.href,
+          pageName: document.title,
+        },
+      }),
+    });
+    const result = await response.json();
+    if (!result.success) {
+      console.error('[Registration] Zoom registration failed:', result);
+    }
+  } catch (error) {
+    console.error('[Registration] Zoom registration error:', error);
+  }
+}
+
+export default function RegisterPageClient({ pageData }: RegisterPageClientProps) {
+  const handleFormSubmit = useCallback(
+    (_$form: HTMLFormElement, data: Record<string, unknown>) => {
+      if (pageData.hubspot_form_id) {
+        handleZoomRegistration(pageData.hubspot_form_id, data);
+      }
+    },
+    [pageData.hubspot_form_id],
+  );
 
   return (
     <>
@@ -180,22 +147,23 @@ export default function RegisterPageClient({ pageData }: RegisterPageClientProps
               border: '1px solid var(--color-border)'
             }}
           >
-            <div id="hubspot-form-container">
-              {!pageData.hubspot_form_id || !pageData.hubspot_portal_id ? (
-                <div style={{ padding: '40px', textAlign: 'center', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#29B8E8', marginBottom: 16, display: 'block' }}>
-                    description
-                  </span>
-                  <p style={{ color: '#7b78a0', fontSize: '0.9375rem' }}>
-                    HubSpot form will appear here once configured in the admin panel.
-                  </p>
-                </div>
-              ) : (
-                <div style={{ minHeight: '400px' }}>
-                  {/* HubSpot form loads here */}
-                </div>
-              )}
-            </div>
+            {pageData.hubspot_form_id && pageData.hubspot_portal_id ? (
+              <HubSpotForm
+                portalId={pageData.hubspot_portal_id}
+                formId={pageData.hubspot_form_id}
+                containerId="hubspot-form-container"
+                onFormSubmit={handleFormSubmit}
+              />
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center', background: '#f8f9fa', borderRadius: '8px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#29B8E8', marginBottom: 16, display: 'block' }}>
+                  description
+                </span>
+                <p style={{ color: '#7b78a0', fontSize: '0.9375rem' }}>
+                  HubSpot form will appear here once configured in the admin panel.
+                </p>
+              </div>
+            )}
           </motion.div>
 
           {/* Right Column: Content */}

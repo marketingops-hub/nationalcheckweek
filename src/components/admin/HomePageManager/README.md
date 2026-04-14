@@ -4,7 +4,7 @@ Admin interface for managing homepage content with a tabbed interface.
 
 ## Overview
 
-The HomePageManager provides a comprehensive admin panel for editing all homepage content including hero sections, organization logos, CTA banners, and footer settings.
+The HomePageManager provides a comprehensive admin panel for editing all homepage content including hero sections, organisation logos, CTA banners, and footer settings.
 
 ## Features
 
@@ -70,7 +70,7 @@ Edit hero section including:
 
 ### LogosTab
 
-Manage trusted organization logos:
+Manage trusted organisation logos:
 - Add new logos
 - Update logo images and links
 - Toggle visibility

@@ -1,38 +1,57 @@
 'use client';
 
+import { type ComponentType } from 'react';
 import dynamic from 'next/dynamic';
+import type { BlockType, BlockContent } from '@/types/homepage-blocks';
 
 // HeroBlock is above-the-fold — keep it in the initial bundle for fastest LCP
 import HeroBlock from './HeroBlock';
 
-// All other blocks are below-the-fold — lazy load each as its own JS chunk.
-// Next.js automatically prefetches these, so they're available before scroll.
-const StatsBlock = dynamic(() => import('./StatsBlock'));
-const FeaturesBlock = dynamic(() => import('./FeaturesBlock'));
-const LogosBlock = dynamic(() => import('./LogosBlock'));
-const CTABlock = dynamic(() => import('./CTABlock'));
-const TestimonialsBlock = dynamic(() => import('./TestimonialsBlock'));
-const SchoolsNavigatingDataBlock = dynamic(() => import('./SchoolsNavigatingDataBlock'));
-const WellbeingAcrossAustraliaBlock = dynamic(() => import('./WellbeingAcrossAustraliaBlock'));
-const WelcomeBlock = dynamic(() => import('./WelcomeBlock'));
-const WhatIsItBlock = dynamic(() => import('./WhatIsItBlock'));
-const WhyMattersBlock = dynamic(() => import('./WhyMattersBlock'));
-const WhatMakesDifferentBlock = dynamic(() => import('./WhatMakesDifferentBlock'));
-const WhatAndWhoBlock = dynamic(() => import('./WhatAndWhoBlock'));
-const BePartCTABlock = dynamic(() => import('./BePartCTABlock'));
-const HowToParticipateBlock = dynamic(() => import('./HowToParticipateBlock'));
-const AmbassadorsBlock = dynamic(() => import('./AmbassadorsBlock'));
-const HowLifeSkillsGOBlock = dynamic(() => import('./HowLifeSkillsGOBlock'));
-const AmbassadorVoicesBlock = dynamic(() => import('./AmbassadorVoicesBlock'));
-const PartnersSlideshowBlock = dynamic(() => import('./PartnersSlideshowBlock'));
-const IfNotNowWhenBlock = dynamic(() => import('./IfNotNowWhenBlock'));
-const YourVoiceBlock = dynamic(() => import('./YourVoiceBlock'));
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type AnyBlockComponent = ComponentType<any>;
+
+/**
+ * Registry mapping block_type → lazy-loaded component.
+ * To add a new block: add one line here + create the component file.
+ */
+const BLOCK_REGISTRY: Partial<Record<BlockType, AnyBlockComponent>> = {
+  hero:                       HeroBlock,
+  stats:                      dynamic(() => import('./StatsBlock')),
+  features:                   dynamic(() => import('./FeaturesBlock')),
+  logos:                      dynamic(() => import('./LogosBlock')),
+  cta:                        dynamic(() => import('./CTABlock')),
+  testimonials:               dynamic(() => import('./TestimonialsBlock')),
+  schools_navigating_data:    dynamic(() => import('./SchoolsNavigatingDataBlock')),
+  wellbeing_across_australia: dynamic(() => import('./WellbeingAcrossAustraliaBlock')),
+  welcome:                    dynamic(() => import('./WelcomeBlock')),
+  what_is_it:                 dynamic(() => import('./WhatIsItBlock')),
+  why_matters:                dynamic(() => import('./WhyMattersBlock')),
+  what_makes_different:       dynamic(() => import('./WhatMakesDifferentBlock')),
+  what_and_who:               dynamic(() => import('./WhatAndWhoBlock')),
+  be_part_cta:                dynamic(() => import('./BePartCTABlock')),
+  how_to_participate:         dynamic(() => import('./HowToParticipateBlock')),
+  ambassadors:                dynamic(() => import('./AmbassadorsBlock')),
+  how_lifeskills_go:          dynamic(() => import('./HowLifeSkillsGOBlock')),
+  ambassador_voices:          dynamic(() => import('./AmbassadorVoicesBlock')),
+  partners_slideshow:         dynamic(() => import('./PartnersSlideshowBlock')),
+  if_not_now_when:            dynamic(() => import('./IfNotNowWhenBlock')),
+  your_voice:                 dynamic(() => import('./YourVoiceBlock')),
+};
+
+/** Block types that receive globalColors instead of accentColor */
+const GLOBAL_COLOR_BLOCKS = new Set<BlockType>(['hero', 'cta']);
+
+/** Block types that receive extra data props */
+const EXTRA_PROPS: Partial<Record<BlockType, string>> = {
+  ambassador_voices:  'initialAmbassadors',
+  partners_slideshow: 'initialPartners',
+};
 
 interface HomepageBlock {
   id: string;
-  block_type: string;
+  block_type: BlockType;
   title: string;
-  content: any;
+  content: BlockContent;
   display_order: number;
   is_visible: boolean;
 }
@@ -67,77 +86,34 @@ export default function BlockRenderer({ blocks, globalColors, partners, ambassad
     );
   }
 
+  const extraData: Record<string, Record<string, unknown>[] | undefined> = {
+    initialAmbassadors: ambassadors,
+    initialPartners: partners,
+  };
+
   return (
     <>
       {blocks.map((block) => {
-        switch (block.block_type) {
-          case 'hero':
-            return <HeroBlock key={block.id} content={block.content} globalColors={globalColors} />;
-          
-          case 'stats':
-            return <StatsBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'features':
-            return <FeaturesBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'logos':
-            return <LogosBlock key={block.id} content={block.content} />;
-          
-          case 'cta':
-            return <CTABlock key={block.id} content={block.content} globalColors={globalColors} />;
-          
-          case 'testimonials':
-            return <TestimonialsBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'schools_navigating_data':
-            return <SchoolsNavigatingDataBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'wellbeing_across_australia':
-            return <WellbeingAcrossAustraliaBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'welcome':
-            return <WelcomeBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'what_is_it':
-            return <WhatIsItBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'why_matters':
-            return <WhyMattersBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'what_makes_different':
-            return <WhatMakesDifferentBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'what_and_who':
-            return <WhatAndWhoBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'be_part_cta':
-            return <BePartCTABlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'how_to_participate':
-            return <HowToParticipateBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'ambassadors':
-            return <AmbassadorsBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'how_lifeskills_go':
-            return <HowLifeSkillsGOBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          case 'ambassador_voices':
-            return <AmbassadorVoicesBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} initialAmbassadors={ambassadors} />;
-
-          case 'partners_slideshow':
-            return <PartnersSlideshowBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} initialPartners={partners} />;
-
-          case 'if_not_now_when':
-            return <IfNotNowWhenBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-
-          case 'your_voice':
-            return <YourVoiceBlock key={block.id} content={block.content} accentColor={globalColors.primaryButton} />;
-          
-          default:
-            console.warn(`Unknown block type: ${block.block_type}`);
-            return null;
+        const Component = BLOCK_REGISTRY[block.block_type];
+        if (!Component) {
+          console.warn(`Unknown block type: ${block.block_type}`);
+          return null;
         }
+
+        const props: Record<string, unknown> = { content: block.content };
+
+        if (GLOBAL_COLOR_BLOCKS.has(block.block_type)) {
+          props.globalColors = globalColors;
+        } else {
+          props.accentColor = globalColors.primaryButton;
+        }
+
+        const extraPropKey = EXTRA_PROPS[block.block_type];
+        if (extraPropKey) {
+          props[extraPropKey] = extraData[extraPropKey];
+        }
+
+        return <Component key={block.id} {...props} />;
       })}
     </>
   );

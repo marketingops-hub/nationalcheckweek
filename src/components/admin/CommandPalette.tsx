@@ -110,10 +110,10 @@ export function CommandPalette() {
     {
       id: 'partners',
       label: 'Manage Partners',
-      description: 'Edit partner organizations',
+      description: 'Edit partner organisations',
       icon: 'handshake',
       action: () => router.push('/admin/partners'),
-      keywords: ['organizations', 'sponsors'],
+      keywords: ['organisations', 'sponsors'],
     },
     {
       id: 'home-page',

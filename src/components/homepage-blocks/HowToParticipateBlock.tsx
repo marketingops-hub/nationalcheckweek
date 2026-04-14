@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import HubSpotForm from '@/components/shared/HubSpotForm';
 import type { HowToParticipateBlockContent } from '@/types/homepage-blocks';
 
 interface HowToParticipateBlockProps {
@@ -15,52 +15,7 @@ export default function HowToParticipateBlock({ content, accentColor: globalAcce
   const accentColor = useGlobal ? (globalAccent || '#29B8E8') : (colors?.accentColor || '#29B8E8');
   const headingColor = useGlobal ? '#0f0e1a' : (colors?.heading || '#0f0e1a');
   const textColor = useGlobal ? '#4a4768' : (colors?.textColor || '#4a4768');
-  const bgColor = (content as any).backgroundColor || '#E30982';
-
-  const formContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Defer HubSpot form loading until form is visible in viewport
-    if (!content.hubspotPortalId || !content.hubspotFormId || !formContainerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Form is visible, load HubSpot script
-            const script = document.createElement('script');
-            script.src = '//js-ap1.hsforms.net/forms/embed/v2.js';
-            script.charset = 'utf-8';
-            script.type = 'text/javascript';
-            script.async = true;
-
-            script.onload = () => {
-              if (window.hbspt && formContainerRef.current && content.hubspotPortalId && content.hubspotFormId) {
-                window.hbspt.forms.create({
-                  portalId: content.hubspotPortalId,
-                  formId: content.hubspotFormId,
-                  target: `#hubspot-form-${content.hubspotFormId}`,
-                  region: content.hubspotRegion || 'ap1'
-                });
-              }
-            };
-
-            document.body.appendChild(script);
-            observer.disconnect(); // Stop observing once loaded
-          }
-        });
-      },
-      { rootMargin: '100px' } // Load 100px before form enters viewport
-    );
-
-    if (formContainerRef.current) {
-      observer.observe(formContainerRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [content.hubspotPortalId, content.hubspotFormId, content.hubspotRegion]);
+  const bgColor = (content as HowToParticipateBlockContent & { backgroundColor?: string }).backgroundColor || '#E30982';
 
   return (
     <section style={{ padding: '80px 20px 0', background: bgColor }}>
@@ -149,10 +104,15 @@ export default function HowToParticipateBlock({ content, accentColor: globalAcce
               )}
               
               {/* HubSpot Form Container */}
-              <div 
-                ref={formContainerRef}
-                id={`hubspot-form-${content.hubspotFormId}`}
-              />
+              {content.hubspotPortalId && content.hubspotFormId && (
+                <HubSpotForm
+                  portalId={content.hubspotPortalId}
+                  formId={content.hubspotFormId}
+                  region={content.hubspotRegion || 'ap1'}
+                  lazy
+                  lazyMargin="100px"
+                />
+              )}
             </div>
           </motion.div>
         </div>

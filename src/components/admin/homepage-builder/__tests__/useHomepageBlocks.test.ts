@@ -8,6 +8,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useHomepageBlocks } from '../hooks/useHomepageBlocks';
 import { adminFetch } from '@/lib/adminFetch';
+import type { HomepageBlock } from '@/types/homepage-blocks';
 
 // Mock adminFetch
 vi.mock('@/lib/adminFetch');
@@ -89,7 +90,7 @@ describe('useHomepageBlocks', () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      const reorderedBlocks = [mockBlocks[1], mockBlocks[0]].map((b, i) => ({ ...b, display_order: i + 1 }));
+      const reorderedBlocks = ([mockBlocks[1], mockBlocks[0]] as HomepageBlock[]).map((b, i) => ({ ...b, display_order: i + 1 }));
 
       await act(async () => {
         await result.current.updateBlockOrder(reorderedBlocks);
@@ -113,7 +114,7 @@ describe('useHomepageBlocks', () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       const originalBlocks = [...result.current.blocks];
-      const updatedBlocks = [{ ...mockBlocks[0], display_order: 2 }];
+      const updatedBlocks = [{ ...mockBlocks[0], display_order: 2 }] as HomepageBlock[];
 
       await act(async () => {
         await result.current.updateBlockOrder(updatedBlocks);

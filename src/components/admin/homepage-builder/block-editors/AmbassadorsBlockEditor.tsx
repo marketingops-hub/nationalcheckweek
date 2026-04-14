@@ -92,10 +92,10 @@ export const AmbassadorsBlockEditor: React.FC<AmbassadorsBlockEditorProps> = ({ 
             />
 
             <TextInput
-              label="Title/Organization"
+              label="Title/Organisation"
               value={ambassador.title || ""}
               onChange={(value) => handleAmbassadorChange(index, "title", value)}
-              placeholder="Role or Organization"
+              placeholder="Role or Organisation"
             />
 
             <div className="swa-form-group">

@@ -23,9 +23,9 @@ interface InputDialogProps {
  * ```tsx
  * <InputDialog
  *   isOpen={showAddDialog}
- *   title="Add Organization"
- *   message="Enter the organization name:"
- *   placeholder="Organization name"
+ *   title="Add Organisation"
+ *   message="Enter the organisation name:"
+ *   placeholder="Organisation name"
  *   confirmText="Add"
  *   cancelText="Cancel"
  *   onConfirm={handleAdd}

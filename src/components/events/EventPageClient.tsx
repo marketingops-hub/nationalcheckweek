@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import BadgePill from './BadgePill';
 import EventBodyRenderer from './EventBodyRenderer';
+import HubSpotForm from '@/components/shared/HubSpotForm';
 import {
   FORMAT_LABEL, FORMAT_BADGE, STATUS_BADGE,
   formatDateLong, formatDateShort,
@@ -30,53 +31,8 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
   const stsBadge = STATUS_BADGE[event.status ?? 'upcoming'] ?? { bg: "#F9FAFB", color: "#374151" };
   const hasHubSpotForm = Boolean(!isPast && event.hubspot_form_id && event.hubspot_portal_id);
 
-  const [formLoading, setFormLoading] = useState(hasHubSpotForm);
-  const [formError,   setFormError]   = useState("");
-
-  useEffect(() => {
-    if (!hasHubSpotForm) return;
-
-    setFormLoading(true);
-    setFormError("");
-
-    const initForm = () => {
-      if (window.hbspt && event.hubspot_portal_id && event.hubspot_form_id) {
-        window.hbspt.forms.create({
-          region: 'ap1',
-          portalId: event.hubspot_portal_id,
-          formId: event.hubspot_form_id,
-          target: '#event-hubspot-form-container',
-          onFormReady: () => setFormLoading(false),
-        });
-      } else {
-        setFormLoading(false);
-        setFormError("Registration form could not be initialised.");
-      }
-    };
-
-    // Script already loaded (cached or re-mount) — init immediately, no new tag needed
-    if (window.hbspt) {
-      initForm();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = '//js-ap1.hsforms.net/forms/embed/v2.js';
-    script.charset = 'utf-8';
-    script.type = 'text/javascript';
-    script.async = true;
-    script.onload  = initForm;
-    script.onerror = () => {
-      setFormLoading(false);
-      setFormError("Registration form failed to load. Please refresh or contact us directly.");
-    };
-
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) document.body.removeChild(script);
-    };
-  }, [hasHubSpotForm, event.hubspot_form_id, event.hubspot_portal_id]);
+  const [formReady, setFormReady] = useState(false);
+  const handleFormReady = useCallback(() => setFormReady(true), []);
 
   return (
     <>
@@ -233,10 +189,7 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                 transition={{ duration: 0.6 }}
               >
                 <div className="eyebrow-tag" style={{ marginBottom: 16 }}>Register Here</div>
-                {formError && (
-                  <div className="event-form-error">{formError}</div>
-                )}
-                {formLoading && (
+                {!formReady && (
                   <div className="event-form-skeleton">
                     <span className="skel" style={{ height: 18, marginBottom: 20, display: 'block' }} />
                     <span className="skel" style={{ height: 42, marginBottom: 12, display: 'block' }} />
@@ -246,7 +199,12 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                     <span className="skel" style={{ height: 50, display: 'block' }} />
                   </div>
                 )}
-                <div id="event-hubspot-form-container" />
+                <HubSpotForm
+                  portalId={event.hubspot_portal_id!}
+                  formId={event.hubspot_form_id!}
+                  containerId="event-hubspot-form-container"
+                  onFormReady={handleFormReady}
+                />
               </motion.div>
             )}
 

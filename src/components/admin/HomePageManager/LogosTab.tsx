@@ -15,9 +15,9 @@ interface LogosTabProps {
 }
 
 /**
- * LogosTab - Manage trusted organization logos.
+ * LogosTab - Manage trusted organisation logos.
  * 
- * Displays a list of organization logos with controls to:
+ * Displays a list of organisation logos with controls to:
  * - Add new logos
  * - Update logo images and links
  * - Toggle logo visibility
@@ -58,13 +58,13 @@ export default function LogosTab({ logos, onAdd, onUpdate, onDelete }: LogosTabP
             >
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: 12 }}>
-                  <label className="swa-form-label">Organization Name</label>
+                  <label className="swa-form-label">Organisation Name</label>
                   <input
                     type="text"
                     value={logo.name}
                     onChange={(e) => onUpdate(logo.id, { name: e.target.value })}
                     className="swa-form-input"
-                    placeholder="Organization name"
+                    placeholder="Organisation name"
                   />
                 </div>
                 <div style={{ marginBottom: 12 }}>
