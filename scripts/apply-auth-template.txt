@@ -1,0 +1,38 @@
+// Template for applying requireAdmin to admin endpoints
+
+// BEFORE:
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "edge";
+
+function adminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
+
+export async function GET() {
+  // ... handler code
+}
+
+export async function POST(req: NextRequest) {
+  // ... handler code
+}
+
+// AFTER:
+import { NextRequest, NextResponse } from "next/server";
+import { adminClient } from "@/lib/adminClient";
+import { requireAdmin } from "@/lib/auth";
+
+export const runtime = "edge";
+
+export const GET = requireAdmin(async () => {
+  // ... handler code
+});
+
+export const POST = requireAdmin(async (req: NextRequest) => {
+  // ... handler code
+});

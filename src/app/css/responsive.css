@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════ */
+
+@media (max-width: 1200px) {
+  .research-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .lsg-layout { grid-template-columns: 1fr; gap: 40px; }
+  .lsg-visual { max-height: 420px; overflow: hidden; }
+  .lsg-flow-step:nth-child(n+4) { display: none; }
+  .map-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  /* Nav */
+  .nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex; }
+  .inner-nav { padding: 0 16px; }
+  .inner-nav-link { display: none; }
+  .inner-nav-right { gap: 12px; }
+
+  /* Hero */
+  .hero { padding: 88px 20px 56px; }
+  .hero-inner { max-width: 100%; }
+  .hero h1 { font-size: clamp(2rem, 8vw, 3rem); }
+  .hero-sub { font-size: 1rem; margin-bottom: 40px; }
+  .hero-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; padding-top: 32px; border-top: 1px solid var(--border);
+  }
+  .hero-stat {
+    padding: 20px 16px; margin: 0;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-stat:nth-child(even) { border-right: none; }
+  .hero-stat:nth-last-child(-n+2) { border-bottom: none; }
+  .hero-stat-num { font-size: 2.2rem; }
+  .hero-stat-label { max-width: 100%; }
+
+  /* Ticker */
+  .ticker { padding: 0 16px; }
+  .ticker-item { padding: 24px 36px 24px 0; margin-right: 36px; }
+  .ticker-num { font-size: 1.7rem; }
+
+  /* Sections */
+  .section { padding: 56px 20px; }
+  .lsg-section { padding: 56px 20px; }
+
+  /* Map */
+  .map-layout { grid-template-columns: 1fr; gap: 20px; }
+  .map-wrapper { padding: 16px; }
+  .region-panel { min-height: auto; }
+  .panel-empty { min-height: 200px; padding: 32px 20px; }
+  .panel-body { max-height: none; }
+
+  /* Issues grid */
+  .issues-grid { grid-template-columns: 1fr; gap: 14px; }
+  .card-body { padding: 18px; }
+  .card-footer { padding: 10px 18px; }
+
+  /* State Grid bar chart */
+  .sg-barchart { padding: 20px 16px; }
+  .sg-barchart__abbr { width: 32px; font-size: 0.68rem; }
+  .sg-barchart__fill-label { font-size: 0.6rem; }
+  .sg-barchart__val { width: 28px; font-size: 0.68rem; }
+  .sg-barchart__row { gap: 8px; }
+  .sg-barchart__track { height: 24px; }
+
+  /* State Grid cards */
+  .sg-grid { grid-template-columns: 1fr; }
+
+  /* Modal */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    border-radius: 16px 16px 0 0; max-width: 100%;
+    max-height: 92vh; overflow-y: auto;
+  }
+  .modal-header { padding: 24px 20px 20px; }
+  .modal-header h2 { font-size: 1.4rem; }
+  .modal-body { padding: 24px 20px; }
+  .impact-grid { grid-template-columns: 1fr; }
+
+  /* Life Skills section */
+  .lsg-layout { grid-template-columns: 1fr; gap: 32px; }
+  .lsg-visual { display: none; }
+  .lsg-stats { grid-template-columns: 1fr 1fr; }
+  .lsg-headline { font-size: 1.6rem; }
+
+  /* Research */
+  .research-grid { grid-template-columns: 1fr; gap: 20px; }
+  .research-finding-stat { min-width: 48px; font-size: 1rem; }
+
+  /* Intro section */
+  .intro-section { padding: 48px 20px; }
+  .intro-block-primary, .intro-block-secondary { padding: 28px 24px; }
+  .intro-pillars { gap: 10px; }
+
+  /* Data section */
+  .data-grid { grid-template-columns: 1fr; gap: 16px; }
+
+  /* Footer */
+  footer { padding: 48px 20px 32px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+
+  /* Section tags inline on small screens */
+  .section-tag { display: inline-block; }
+}
+
+@media (max-width: 640px) {
+  .news-ticker-label { font-size: 0.6rem; padding: 0 8px; }
+  .area-hero { padding: 72px 20px 40px; }
+  .area-stats-row { gap: 12px; }
+  .area-stat-box { min-width: 130px; padding: 12px 16px; }
+}
+
+@media (max-width: 480px) {
+  .hero-stats { grid-template-columns: 1fr; }
+  .hero-stat { border-right: none !important; }
+  .hero-stat:last-child { border-bottom: none; }
+  .lsg-stats { grid-template-columns: 1fr; }
+  .nav-logo { font-size: 0.95rem; }
+}

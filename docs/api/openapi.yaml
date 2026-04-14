@@ -1,0 +1,1111 @@
+openapi: 3.0.3
+info:
+  title: 2026 Schools / National Check-in Week API
+  description: |
+    API documentation for the 2026 Schools platform - National Check-in Week student wellbeing initiative.
+    
+    ## Authentication
+    All `/api/admin/*` endpoints require authentication using Bearer token in the Authorization header.
+    
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+    
+    ## Rate Limiting
+    Currently not implemented. Recommended limits:
+    - Public endpoints: 100 requests/minute
+    - Admin endpoints: 1000 requests/minute
+    
+    ## Error Responses
+    All endpoints return consistent error responses:
+    ```json
+    {
+      "error": "Error message description",
+      "code": "ERROR_CODE"
+    }
+    ```
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://schoolswellbeing.com.au
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://schoolswellbeing.com.au/api
+    description: Production server
+  - url: http://localhost:3000/api
+    description: Development server
+
+tags:
+  - name: Public
+    description: Public API endpoints (no authentication required)
+  - name: Homepage Blocks
+    description: Modular homepage content blocks management
+  - name: Admin - Pages
+    description: CMS page management
+  - name: Admin - Events
+    description: Event management
+  - name: Admin - Ambassadors
+    description: Ambassador program management
+  - name: Admin - Settings
+    description: Site settings and configuration
+  - name: Admin - Users
+    description: User management
+  - name: Admin - Upload
+    description: File upload management
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Supabase authentication
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code for programmatic handling
+
+    HomepageBlock:
+      type: object
+      required:
+        - id
+        - block_type
+        - content
+        - display_order
+        - is_visible
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique block identifier
+        block_type:
+          type: string
+          enum:
+            - hero
+            - welcome
+            - stats
+            - cta
+            - what_is_it
+            - why_matters
+            - what_makes_different
+            - what_and_who
+            - how_to_participate
+            - ambassadors
+            - how_lifeskills_go
+            - be_part_cta
+          description: Type of content block
+        content:
+          type: object
+          description: Block-specific content (varies by block_type)
+        display_order:
+          type: integer
+          description: Order in which block appears on page
+        is_visible:
+          type: boolean
+          description: Whether block is currently visible
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Page:
+      type: object
+      required:
+        - id
+        - title
+        - slug
+        - content
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          description: URL-friendly identifier
+        content:
+          type: string
+          description: Page content (HTML or Markdown)
+        meta_title:
+          type: string
+          maxLength: 60
+        meta_description:
+          type: string
+          maxLength: 160
+        is_published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Event:
+      type: object
+      required:
+        - id
+        - title
+        - start_date
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        location:
+          type: string
+        is_virtual:
+          type: boolean
+        registration_url:
+          type: string
+          format: uri
+        is_published:
+          type: boolean
+
+    Ambassador:
+      type: object
+      required:
+        - id
+        - name
+        - role
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        role:
+          type: string
+          maxLength: 100
+        bio:
+          type: string
+        image_url:
+          type: string
+          format: uri
+        category_id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        display_order:
+          type: integer
+
+paths:
+  # ============================================================================
+  # PUBLIC ENDPOINTS
+  # ============================================================================
+  
+  /home-page:
+    get:
+      tags:
+        - Public
+      summary: Get homepage data
+      description: Returns all homepage settings including hero, logos, CTA, footer
+      operationId: getHomePage
+      responses:
+        '200':
+          description: Homepage data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hero:
+                    type: object
+                    description: Hero section settings
+                  logos:
+                    type: array
+                    items:
+                      type: object
+                    description: Trusted organization logos
+                  cta:
+                    type: object
+                    description: Call-to-action banner settings
+                  footer:
+                    type: object
+                    properties:
+                      settings:
+                        type: object
+                      links:
+                        type: array
+                        items:
+                          type: object
+                      social:
+                        type: array
+                        items:
+                          type: object
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contact:
+    post:
+      tags:
+        - Public
+      summary: Submit contact form
+      description: Submit a contact form inquiry
+      operationId: submitContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - message
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                message:
+                  type: string
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Contact form submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================================
+  # ADMIN - HOMEPAGE BLOCKS
+  # ============================================================================
+  
+  /admin/homepage-blocks:
+    get:
+      tags:
+        - Homepage Blocks
+      summary: List all homepage blocks
+      description: Returns all homepage blocks ordered by display_order
+      operationId: listHomepageBlocks
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of homepage blocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HomepageBlock'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Homepage Blocks
+      summary: Create new homepage block
+      description: Creates a new homepage block
+      operationId: createHomepageBlock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - block_type
+                - content
+                - display_order
+              properties:
+                block_type:
+                  type: string
+                  enum:
+                    - hero
+                    - welcome
+                    - stats
+                    - cta
+                    - what_is_it
+                    - why_matters
+                    - what_makes_different
+                    - what_and_who
+                    - how_to_participate
+                    - ambassadors
+                    - how_lifeskills_go
+                    - be_part_cta
+                content:
+                  type: object
+                display_order:
+                  type: integer
+                is_visible:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: Block created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomepageBlock'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/homepage-blocks/{id}:
+    get:
+      tags:
+        - Homepage Blocks
+      summary: Get homepage block by ID
+      description: Returns a single homepage block
+      operationId: getHomepageBlock
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Homepage block details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomepageBlock'
+        '404':
+          description: Block not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Homepage Blocks
+      summary: Update homepage block
+      description: Updates an existing homepage block
+      operationId: updateHomepageBlock
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: object
+                display_order:
+                  type: integer
+                is_visible:
+                  type: boolean
+      responses:
+        '200':
+          description: Block updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomepageBlock'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Block not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Homepage Blocks
+      summary: Delete homepage block
+      description: Deletes a homepage block
+      operationId: deleteHomepageBlock
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Block deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Block not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================================
+  # ADMIN - PAGES
+  # ============================================================================
+  
+  /admin/cms/pages:
+    get:
+      tags:
+        - Admin - Pages
+      summary: List all pages
+      description: Returns all CMS pages
+      operationId: listPages
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of pages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Page'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Admin - Pages
+      summary: Create new page
+      description: Creates a new CMS page
+      operationId: createPage
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - slug
+                - content
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                slug:
+                  type: string
+                  pattern: '^[a-z0-9-]+$'
+                content:
+                  type: string
+                meta_title:
+                  type: string
+                  maxLength: 60
+                meta_description:
+                  type: string
+                  maxLength: 160
+                is_published:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Page created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/cms/pages/{id}:
+    get:
+      tags:
+        - Admin - Pages
+      summary: Get page by ID
+      operationId: getPage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Page details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '404':
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Admin - Pages
+      summary: Update page
+      operationId: updatePage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                slug:
+                  type: string
+                content:
+                  type: string
+                meta_title:
+                  type: string
+                meta_description:
+                  type: string
+                is_published:
+                  type: boolean
+      responses:
+        '200':
+          description: Page updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '400':
+          description: Invalid input
+        '404':
+          description: Page not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Admin - Pages
+      summary: Delete page
+      operationId: deletePage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Page deleted successfully
+        '404':
+          description: Page not found
+        '401':
+          description: Unauthorized
+
+  # ============================================================================
+  # ADMIN - EVENTS
+  # ============================================================================
+  
+  /admin/events:
+    get:
+      tags:
+        - Admin - Events
+      summary: List all events
+      operationId: listEvents
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+
+    post:
+      tags:
+        - Admin - Events
+      summary: Create new event
+      operationId: createEvent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - start_date
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                start_date:
+                  type: string
+                  format: date-time
+                end_date:
+                  type: string
+                  format: date-time
+                location:
+                  type: string
+                is_virtual:
+                  type: boolean
+                registration_url:
+                  type: string
+                is_published:
+                  type: boolean
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+  /admin/events/{id}:
+    get:
+      tags:
+        - Admin - Events
+      summary: Get event by ID
+      operationId: getEvent
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+    patch:
+      tags:
+        - Admin - Events
+      summary: Update event
+      operationId: updateEvent
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                start_date:
+                  type: string
+                  format: date-time
+                end_date:
+                  type: string
+                  format: date-time
+                location:
+                  type: string
+                is_virtual:
+                  type: boolean
+                registration_url:
+                  type: string
+                is_published:
+                  type: boolean
+      responses:
+        '200':
+          description: Event updated successfully
+
+    delete:
+      tags:
+        - Admin - Events
+      summary: Delete event
+      operationId: deleteEvent
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event deleted successfully
+
+  # ============================================================================
+  # ADMIN - AMBASSADORS
+  # ============================================================================
+  
+  /admin/ambassadors:
+    get:
+      tags:
+        - Admin - Ambassadors
+      summary: List all ambassadors
+      operationId: listAmbassadors
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of ambassadors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ambassador'
+
+    post:
+      tags:
+        - Admin - Ambassadors
+      summary: Create new ambassador
+      operationId: createAmbassador
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - role
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                bio:
+                  type: string
+                image_url:
+                  type: string
+                category_id:
+                  type: string
+                  format: uuid
+                is_active:
+                  type: boolean
+                display_order:
+                  type: integer
+      responses:
+        '201':
+          description: Ambassador created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ambassador'
+
+  /admin/ambassadors/{id}:
+    get:
+      tags:
+        - Admin - Ambassadors
+      summary: Get ambassador by ID
+      operationId: getAmbassador
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ambassador details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ambassador'
+
+    patch:
+      tags:
+        - Admin - Ambassadors
+      summary: Update ambassador
+      operationId: updateAmbassador
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                bio:
+                  type: string
+                image_url:
+                  type: string
+                category_id:
+                  type: string
+                is_active:
+                  type: boolean
+                display_order:
+                  type: integer
+      responses:
+        '200':
+          description: Ambassador updated successfully
+
+    delete:
+      tags:
+        - Admin - Ambassadors
+      summary: Delete ambassador
+      operationId: deleteAmbassador
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ambassador deleted successfully
+
+  # ============================================================================
+  # ADMIN - SETTINGS
+  # ============================================================================
+  
+  /admin/homepage-global-settings:
+    get:
+      tags:
+        - Admin - Settings
+      summary: Get global homepage settings
+      operationId: getGlobalSettings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Global settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  global_colors:
+                    type: object
+                    properties:
+                      primaryButton:
+                        type: string
+                      primaryButtonText:
+                        type: string
+                      secondaryButton:
+                        type: string
+                      secondaryButtonText:
+                        type: string
+                      heading:
+                        type: string
+                      subheading:
+                        type: string
+                      ctaBackground:
+                        type: string
+                      ctaText:
+                        type: string
+                      ctaPrimaryButton:
+                        type: string
+
+    patch:
+      tags:
+        - Admin - Settings
+      summary: Update global homepage settings
+      operationId: updateGlobalSettings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                global_colors:
+                  type: object
+      responses:
+        '200':
+          description: Settings updated successfully
+
+  /admin/upload:
+    post:
+      tags:
+        - Admin - Upload
+      summary: Upload file
+      description: Upload an image or file to storage
+      operationId: uploadFile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                folder:
+                  type: string
+                  description: Optional folder path
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Public URL of uploaded file
+        '400':
+          description: Invalid file
+        '401':
+          description: Unauthorized

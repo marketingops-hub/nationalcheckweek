@@ -1,0 +1,255 @@
+{
+  "New South Wales": {
+    "subtitle": "Australia's most populous state ┬╖ 5.1M enrolled students",
+    "issues": [
+      {
+        "name": "Cyberbullying & Online Harm",
+        "badge": "badge-critical",
+        "stat": "53% experienced it",
+        "desc": "NSW accounts for the largest absolute number of cyberbullying victims. eSafety data shows over half of 10ΓÇô17 year olds have experienced cyberbullying at some point."
+      },
+      {
+        "name": "Anxiety Disorders",
+        "badge": "badge-critical",
+        "stat": "Most common disorder",
+        "desc": "Anxiety disorders are the most common mental health condition among NSW school-aged children, with urban social pressure compounding exposure."
+      },
+      {
+        "name": "School Refusal",
+        "badge": "badge-high",
+        "stat": "Γåæ Post-COVID surge",
+        "desc": "Parliamentary Library research highlights a significant post-pandemic spike in school refusal driven by anxiety and social disconnection, with NSW schools reporting elevated chronic absence."
+      },
+      {
+        "name": "Sleep Deprivation",
+        "badge": "badge-high",
+        "stat": "50% of 16ΓÇô17 yr olds",
+        "desc": "Half of older teens statewide do not meet sleep guidelines on school nights, impairing concentration and emotional regulation."
+      },
+      {
+        "name": "School Belonging Deficits",
+        "badge": "badge-notable",
+        "stat": "NSW CESE data",
+        "desc": "NSW CESE finds strong links between belonging and lower bullying. Scores declined post-COVID across many NSW schools."
+      }
+    ]
+  },
+  "Victoria": {
+    "subtitle": "Highest youth mental health service demand nationally",
+    "sources": [
+      {
+        "title": "National Check-In Week - Victoria",
+        "url": "https://nationalcheckinweek.com/states/victoria",
+        "publisher": "National Check-In Week",
+        "year": "2024",
+        "type": "web"
+      }
+    ],
+    "issues": [
+      {
+        "name": "Depression & Psychological Distress",
+        "badge": "badge-critical",
+        "stat": "1 in 5 teens",
+        "desc": "Mission Australia Youth Survey 2024 identifies one in five Victorian teens with high psychological distress. Victoria has the highest demand on youth mental health services nationally."
+      },
+      {
+        "name": "School Belonging",
+        "badge": "badge-critical",
+        "stat": "Γåô Declining since 2020",
+        "desc": "Belonging and connectedness scores have declined significantly in Victorian secondary schools since COVID, linked to hybrid learning disruption and social withdrawal."
+      },
+      {
+        "name": "Loneliness",
+        "badge": "badge-high",
+        "stat": "20%+ of teens",
+        "desc": "Over one in five young Victorians report feeling lonely most or all of the time ΓÇö a key predictor of depression and disengagement from school."
+      },
+      {
+        "name": "Online Hate & Harmful Content",
+        "badge": "badge-notable",
+        "stat": "eSafety documented",
+        "desc": "eSafety research documents high rates of exposure to hate and harmful content among Victorian teens active on social platforms."
+      }
+    ]
+  },
+  "Queensland": {
+    "subtitle": "State with most documented school bullying incidents nationally",
+    "issues": [
+      {
+        "name": "Bullying in Schools",
+        "badge": "badge-critical",
+        "stat": "46,000+ incidents (2023)",
+        "desc": "The Queensland Auditor-General (Report 6, 2024ΓÇô25) recorded over 46,000 bullying and harassment incidents in Queensland state schools in 2023 ΓÇö the most documented in any Australian jurisdiction."
+      },
+      {
+        "name": "Attendance Decline",
+        "badge": "badge-critical",
+        "stat": "Steep remote gradient",
+        "desc": "Attendance drops sharply in Queensland's outer regional and remote zones per RoGS 2026, with significant equity implications for students away from the south-east."
+      },
+      {
+        "name": "Cyberbullying",
+        "badge": "badge-high",
+        "stat": "38% in past 12 months",
+        "desc": "Cyberbullying crosses between school and digital spaces. Queensland schools are adapting policies, but online harm remains a critical ongoing challenge."
+      },
+      {
+        "name": "Racism & Discrimination",
+        "badge": "badge-high",
+        "stat": "Mission AU 2024 top concern",
+        "desc": "Discrimination is a top concern among Queensland youth, particularly in outer suburban and regional schools per Mission Australia 2024."
+      },
+      {
+        "name": "Stress & Academic Pressure",
+        "badge": "badge-notable",
+        "stat": "PISA 2022 correlated",
+        "desc": "ATAR pressure intensifies in Years 11ΓÇô12. Queensland students show elevated stress-related learning barriers in PISA 2022 Australia data."
+      }
+    ]
+  },
+  "South Australia": {
+    "subtitle": "Significant health equity and mental health access gaps",
+    "issues": [
+      {
+        "name": "Psychological Distress & Loneliness",
+        "badge": "badge-critical",
+        "stat": "1 in 5 teens",
+        "desc": "South Australian teens mirror the national Mission Australia finding ΓÇö one in five report high distress. Rural SA has notably fewer support services available."
+      },
+      {
+        "name": "Anxiety & Depression",
+        "badge": "badge-high",
+        "stat": "AIHW atlas mapped",
+        "desc": "AIHW Youth Self-Harm Atlas maps elevated depression/anxiety risk in several SA PHN regions, particularly Eyre-Far North and Country SA."
+      },
+      {
+        "name": "Sleep Deprivation",
+        "badge": "badge-high",
+        "stat": "25ΓÇô50% of teens",
+        "desc": "Between one quarter (younger teens) and half (older teens) of SA students fail to meet sleep guidelines, with direct impacts on learning capacity."
+      },
+      {
+        "name": "School Disengagement",
+        "badge": "badge-notable",
+        "stat": "RoGS 2026 trend",
+        "desc": "SA secondary school attendance and engagement rates show consistent decline particularly in Years 9ΓÇô10, mirroring national patterns."
+      }
+    ]
+  },
+  "Western Australia": {
+    "subtitle": "Vast geography creates Australia's most extreme wellbeing inequities",
+    "issues": [
+      {
+        "name": "Remote Attendance Crisis",
+        "badge": "badge-critical",
+        "stat": "~57% remote attendance",
+        "desc": "RoGS 2026 data shows attendance in very remote WA schools can fall below 60%, compared to 93% in major cities ΓÇö the steepest gradient nationally."
+      },
+      {
+        "name": "Indigenous Self-Harm & Suicidality",
+        "badge": "badge-critical",
+        "stat": "AIHW: highest percentile band",
+        "desc": "AIHW Youth Self-Harm Atlas shows WA regional areas consistently in the highest national percentile bands for youth self-harm, with Aboriginal communities most affected."
+      },
+      {
+        "name": "Racism & Cultural Exclusion",
+        "badge": "badge-high",
+        "stat": "Documented & systemic",
+        "desc": "Discrimination is a documented barrier to school engagement for Aboriginal and culturally diverse students in WA, per Mission Australia 2024."
+      },
+      {
+        "name": "Motivation & Disengagement",
+        "badge": "badge-high",
+        "stat": "Structural barrier",
+        "desc": "Low motivation is structurally linked to geographic isolation, limited extracurriculars, and teacher shortages in regional and remote WA."
+      }
+    ]
+  },
+  "Tasmania": {
+    "subtitle": "High disadvantage linked to multiple overlapping wellbeing vulnerabilities",
+    "issues": [
+      {
+        "name": "Socioeconomic Disadvantage & Distress",
+        "badge": "badge-critical",
+        "stat": "SEIFA lowest nationally",
+        "desc": "Tasmania consistently records Australia's lowest socioeconomic indicators (SEIFA), directly correlating with elevated mental health challenges, stress, and family instability."
+      },
+      {
+        "name": "Sleep Deprivation",
+        "badge": "badge-high",
+        "stat": "Above national average",
+        "desc": "Tasmanian adolescents show elevated rates of poor sleep, with cold winters, screen use, and disadvantage all contributing factors."
+      },
+      {
+        "name": "School Belonging",
+        "badge": "badge-high",
+        "stat": "Below national benchmark",
+        "desc": "Tasmanian students score below the national average on belonging measures, with small-school isolation as a significant contributing factor."
+      },
+      {
+        "name": "Stress & Academic Pressure",
+        "badge": "badge-notable",
+        "stat": "TCE pressure Yr 11ΓÇô12",
+        "desc": "The Tasmanian Certificate of Education creates significant stress in Years 11ΓÇô12, with limited academic support outside Hobart and Launceston."
+      }
+    ]
+  },
+  "Northern Territory": {
+    "subtitle": "Deepest attendance and self-harm crisis in Australia",
+    "issues": [
+      {
+        "name": "Attendance Crisis",
+        "badge": "badge-critical",
+        "stat": "~50ΓÇô60% remote",
+        "desc": "The NT has the lowest school attendance rates in Australia. RoGS 2026 documents remote NT schools averaging well below 60% attendance ΓÇö denying children their fundamental right to education."
+      },
+      {
+        "name": "Indigenous Self-Harm & Suicidality",
+        "badge": "badge-critical",
+        "stat": "AIHW: highest nationally",
+        "desc": "AIHW Youth Self-Harm Atlas data shows NT regional areas consistently in the highest national percentile bands for youth self-harm and suicidality, with Aboriginal communities most affected."
+      },
+      {
+        "name": "Psychological Distress",
+        "badge": "badge-critical",
+        "stat": "Compounded risk factors",
+        "desc": "Poverty, housing instability, family disruption, and limited mental health services create compounding distress for NT children, particularly in remote communities."
+      },
+      {
+        "name": "Racism & Cultural Disconnect",
+        "badge": "badge-high",
+        "stat": "Systemic barrier",
+        "desc": "The disconnect between Western schooling frameworks and Aboriginal cultural contexts remains a significant barrier to engagement, belonging, and mental safety for NT students."
+      }
+    ]
+  },
+  "Australian Capital Territory": {
+    "subtitle": "High-achieving culture masks significant hidden anxiety burden",
+    "issues": [
+      {
+        "name": "Anxiety & Academic Stress",
+        "badge": "badge-critical",
+        "stat": "Highest self-reported in Aus.",
+        "desc": "ACT students, attending Australia's highest-performing school system by PISA measures, report some of the highest stress and anxiety around academic expectations, particularly Years 9ΓÇô12."
+      },
+      {
+        "name": "Workload & Burnout",
+        "badge": "badge-high",
+        "stat": "PISA 2022 correlated",
+        "desc": "ACT students face elevated exposure to academic workload stressors, with high-income, high-expectation environments intensifying the pressure placed on young people."
+      },
+      {
+        "name": "Cyberbullying",
+        "badge": "badge-high",
+        "stat": "Urban national average",
+        "desc": "Despite smaller population, ACT records cyberbullying prevalence consistent with national urban averages ΓÇö amplified by tight social networks where incidents have concentrated impacts."
+      },
+      {
+        "name": "Sleep Deprivation",
+        "badge": "badge-notable",
+        "stat": "Screen + study driven",
+        "desc": "Screen time and academic pressure combine to create sleep debt in ACT teens, consistent with national AIHW data showing half of 16ΓÇô17 year olds miss sleep guidelines."
+      }
+    ]
+  }
+}

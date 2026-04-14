@@ -1,0 +1,34 @@
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   LIFE SKILLS GO SECTION
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+.lsg-section { padding: 80px 80px; background: var(--section-tint); border-top: 1px solid var(--border); }
+.lsg-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; max-width: 1200px; margin: 0 auto; }
+.lsg-eyebrow { font-family: var(--font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.lsg-eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--primary); }
+.lsg-headline { font-family: var(--font-body); font-size: clamp(1.6rem, 2.5vw, 2.2rem); font-weight: 800; color: var(--dark); line-height: 1.2; margin-bottom: 20px; }
+.lsg-headline em { font-style: normal; color: var(--primary); }
+.lsg-body { font-family: var(--font-body); font-size: 1rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 32px; }
+.lsg-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 36px; }
+.lsg-stat-box { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-card); }
+.lsg-stat-num { font-family: var(--font-body); font-size: 1.8rem; font-weight: 900; color: var(--primary); line-height: 1; }
+.lsg-stat-label { font-family: var(--font-body); font-size: 0.875rem; color: var(--text-light); margin-top: 4px; line-height: 1.4; }
+.lsg-cta { display: inline-flex; align-items: center; gap: 10px; background: var(--primary); color: #fff; font-family: var(--font-body); font-weight: 700; font-size: 1rem; padding: 15px 32px; border-radius: var(--radius-pill); text-decoration: none; transition: background 0.2s, transform 0.15s; box-shadow: 0 4px 20px rgba(41,184,232,0.3); }
+.lsg-cta:hover { background: var(--primary-dark); transform: translateY(-2px); }
+.lsg-cta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.lsg-cta-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--primary); font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; padding: 13px 22px; border-radius: var(--radius-pill); text-decoration: none; border: 2px solid var(--primary); transition: background 0.2s; }
+.lsg-cta-ghost:hover { background: var(--primary-light); }
+.lsg-visual { position: relative; }
+.lsg-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-card); }
+.lsg-card-title { font-family: var(--font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); margin-bottom: 20px; }
+.lsg-flow { display: flex; flex-direction: column; gap: 4px; }
+.lsg-flow-step { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-md); }
+.lsg-flow-step.active { background: rgba(41,184,232,0.08); border: 1px solid rgba(41,184,232,0.20); }
+.lsg-flow-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.lsg-flow-icon.blue { background: var(--primary-light); }
+.lsg-flow-icon.amber { background: var(--amber-bg); }
+.lsg-flow-icon.green { background: var(--green-bg); }
+.lsg-flow-text-title { font-family: var(--font-body); font-size: 0.95rem; font-weight: 700; color: var(--dark); }
+.lsg-flow-text-sub { font-family: var(--font-body); font-size: 0.875rem; color: var(--text-light); margin-top: 2px; }
+.lsg-flow-arrow { text-align: center; color: var(--border-strong); font-size: 1rem; padding: 2px 0; }
+.lsg-disclaimer { font-family: var(--font-body); font-size: 0.85rem; color: var(--text-light); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); line-height: 1.65; }
