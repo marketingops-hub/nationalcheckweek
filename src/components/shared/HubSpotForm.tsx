@@ -65,6 +65,31 @@ export default function HubSpotForm({
     });
   }, [portalId, formId, region, targetId, onFormReady, onFormSubmit]);
 
+  // Fallback: watch for HubSpot injecting content into the target div
+  // in case onFormReady doesn't fire (observed in production).
+  const markReady = useCallback(() => {
+    setLoading(false);
+    if (window.lsgoACinit) {
+      setTimeout(window.lsgoACinit, 300);
+    }
+  }, []);
+
+  useEffect(() => {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const mo = new MutationObserver(() => {
+      if (target.querySelector('iframe, form, .hs-form')) {
+        mo.disconnect();
+        markReady();
+        onFormReady?.(target.querySelector('form') as HTMLFormElement);
+      }
+    });
+    mo.observe(target, { childList: true, subtree: true });
+
+    return () => mo.disconnect();
+  }, [targetId, markReady, onFormReady]);
+
   useEffect(() => {
     initialised.current = false;
     setLoading(true);
