@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/adminAuth';
+import { requireAdmin } from '@/lib/auth';
 import type { 
   GetBlocksResponse, 
   CreateBlockRequest, 
@@ -31,9 +31,7 @@ import type {
  * const { blocks } = await response.json();
  * ```
  */
-export const GET = async (req: NextRequest) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
 
   try {
@@ -65,7 +63,7 @@ export const GET = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-};
+});
 
 /**
  * POST /api/admin/homepage-blocks
@@ -90,9 +88,7 @@ export const GET = async (req: NextRequest) => {
  * });
  * ```
  */
-export const POST = async (req: NextRequest) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const POST = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
   
   try {
@@ -183,7 +179,7 @@ export const POST = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-};
+});
 
 /**
  * PATCH /api/admin/homepage-blocks
@@ -208,9 +204,7 @@ export const POST = async (req: NextRequest) => {
  * });
  * ```
  */
-export const PATCH = async (req: NextRequest) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const PATCH = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
   
   try {
@@ -302,4 +296,4 @@ export const PATCH = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-};
+});

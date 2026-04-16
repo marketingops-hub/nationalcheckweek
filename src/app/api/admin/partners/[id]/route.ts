@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin } from "@/lib/auth";
 import { PartnerPatchSchema, parseBody } from "@/lib/adminSchemas";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
 // GET /api/admin/partners/[id] — by id or slug
-export const GET = async (_req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -25,12 +23,10 @@ export const GET = async (_req: NextRequest, ctx?: RouteCtx) => {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Partner not found" }, { status: 404 });
   return NextResponse.json({ partner: data });
-};
+});
 
 // PATCH /api/admin/partners/[id]
-export const PATCH = async (req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const raw = await req.json().catch(() => null);
@@ -58,15 +54,13 @@ export const PATCH = async (req: NextRequest, ctx?: RouteCtx) => {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ partner: data });
-};
+});
 
 // DELETE /api/admin/partners/[id]
-export const DELETE = async (_req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.from("Partner").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
-};
+});

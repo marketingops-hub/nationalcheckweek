@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin, verifyAdminAuth } from "@/lib/auth";
 
 /**
  * POST /api/admin/audit-log
  * Create an audit log entry
  */
-export const POST = async (req: NextRequest) => {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = requireAdmin(async (req: NextRequest) => {
+  const adminUser = await verifyAdminAuth(req);
   const sb = adminClient();
 
   try {
@@ -22,8 +20,8 @@ export const POST = async (req: NextRequest) => {
 
     // Create audit log entry
     const { data, error } = await sb.rpc('create_audit_log', {
-      p_user_id: user?.id || null,
-      p_user_email: user?.email || 'unknown',
+      p_user_id: adminUser?.id || null,
+      p_user_email: adminUser?.email || 'unknown',
       p_action: action,
       p_resource_type: resourceType,
       p_resource_id: resourceId || null,
@@ -42,15 +40,13 @@ export const POST = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-};
+});
 
 /**
  * GET /api/admin/audit-log
  * Retrieve audit logs
  */
-export const GET = async (req: NextRequest) => {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = requireAdmin(async (req: NextRequest) => {
 
   const sb = adminClient();
 
@@ -74,4 +70,4 @@ export const GET = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-};
+});

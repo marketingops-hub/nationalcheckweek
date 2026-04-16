@@ -1,26 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/adminAuth";
-
-export const runtime = "edge";
+import { adminClient } from "@/lib/adminClient";
+import { requireAdmin } from "@/lib/auth";
 
 /**
  * GET /api/admin/homepage-global-settings
  * Fetch global homepage settings (colors, theme, etc.)
  * Requires: Admin role
  */
-export async function GET(req: NextRequest) {
+export const GET = requireAdmin(async (req: NextRequest) => {
   try {
-    // Verify admin access
-    const admin = await requireAdmin();
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
-
-    const sb = await createClient();
+    const sb = adminClient();
 
     // Fetch global settings
     const { data, error } = await sb
@@ -50,25 +39,16 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PATCH /api/admin/homepage-global-settings
  * Update global homepage settings
  * Requires: Admin role
  */
-export async function PATCH(req: NextRequest) {
+export const PATCH = requireAdmin(async (req: NextRequest) => {
   try {
-    // Verify admin access
-    const admin = await requireAdmin();
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
-
-    const sb = await createClient();
+    const sb = adminClient();
     const body = await req.json();
     const { settings } = body;
 
@@ -129,4 +109,4 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

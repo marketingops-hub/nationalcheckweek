@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: 'admin' | 'super_admin';
+}
+
 /**
  * Verify admin authentication from request headers.
  * Checks the Bearer token AND verifies user_profiles.role = admin|super_admin.

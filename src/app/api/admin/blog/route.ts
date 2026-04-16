@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/adminAuth';
+import { requireAdmin } from '@/lib/auth';
 import { blogPostCreateSchema, safeValidate } from '@/lib/adminSchemas';
 
 /**
@@ -11,9 +11,7 @@ import { blogPostCreateSchema, safeValidate } from '@/lib/adminSchemas';
  * - all: Include drafts (default: published only)
  */
 
-export const GET = async (req: NextRequest) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
   const { searchParams } = new URL(req.url);
   const all = searchParams.get('all') === 'true';
@@ -34,7 +32,7 @@ export const GET = async (req: NextRequest) => {
   }
 
   return NextResponse.json({ posts: data ?? [] });
-};
+});
 
 /**
  * POST /api/admin/blog
@@ -42,9 +40,7 @@ export const GET = async (req: NextRequest) => {
  * 
  * Request body: See blogPostCreateSchema
  */
-export const POST = async (req: NextRequest) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const POST = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
   
   // Parse and validate request body
@@ -98,4 +94,4 @@ export const POST = async (req: NextRequest) => {
   }
 
   return NextResponse.json({ post: data });
-};
+});

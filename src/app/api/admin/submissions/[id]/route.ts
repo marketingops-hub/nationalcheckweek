@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/adminAuth';
+import { requireAdmin } from '@/lib/auth';
 import { SubmissionPatchSchema, parseBody } from '@/lib/adminSchemas';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
-export const PATCH = async (req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const { searchParams } = new URL(req.url);
   const type = searchParams.get('type') ?? 'applications';
@@ -33,11 +31,9 @@ export const PATCH = async (req: NextRequest, ctx?: RouteCtx) => {
   const { data, error } = await sb.from(table).update(patch).eq('id', id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data });
-};
+});
 
-export const DELETE = async (_req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const { searchParams } = new URL(_req.url);
   const type = searchParams.get('type') ?? 'applications';
@@ -53,4 +49,4 @@ export const DELETE = async (_req: NextRequest, ctx?: RouteCtx) => {
   const { error } = await sb.from(table).delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
-};
+});

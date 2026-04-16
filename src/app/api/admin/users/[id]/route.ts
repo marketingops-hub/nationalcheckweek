@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin } from "@/lib/auth";
 import { UserPatchSchema, parseBody } from "@/lib/adminSchemas";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
-export const PATCH = async (req: NextRequest, ctx: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 401 });
-  const { id } = await ctx.params;
+export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
+  const { id } = await ctx!.params;
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 
@@ -31,14 +29,12 @@ export const PATCH = async (req: NextRequest, ctx: RouteCtx) => {
   const { error } = await sb.auth.admin.updateUserById(id, updates);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
-};
+});
 
-export const DELETE = async (_req: NextRequest, ctx: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 401 });
-  const { id } = await ctx.params;
+export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+  const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.auth.admin.deleteUser(id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
-};
+});

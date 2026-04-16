@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin } from "@/lib/auth";
 import { EventPutSchema, parseBody } from "@/lib/adminSchemas";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
-export const GET = async (_req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { data, error } = await sb
@@ -17,11 +15,9 @@ export const GET = async (_req: NextRequest, ctx?: RouteCtx) => {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: error.code === 'PGRST116' ? 404 : 500 });
   return NextResponse.json(data);
-};
+});
 
-export const PUT = async (req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const PUT = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -53,14 +49,12 @@ export const PUT = async (req: NextRequest, ctx?: RouteCtx) => {
   }
 
   return NextResponse.json(data);
-};
+});
 
-export const DELETE = async (_req: NextRequest, ctx?: RouteCtx) => {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.from("events").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
-};
+});
