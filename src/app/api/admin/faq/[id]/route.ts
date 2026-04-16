@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
 import { requireAdmin } from "@/lib/auth";
 import { FaqPatchSchema, parseBody } from "@/lib/adminSchemas";
+import { revalidateEntity } from "@/lib/revalidate";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -23,6 +24,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateEntity('faq');
   return NextResponse.json({ faq: data });
 });
 
@@ -32,5 +34,6 @@ export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => 
   const sb = adminClient();
   const { error } = await sb.from("Faq").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateEntity('faq');
   return NextResponse.json({ ok: true });
 });

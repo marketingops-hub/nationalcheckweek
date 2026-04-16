@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
 import { requireAdmin } from "@/lib/auth";
+import { revalidateEntity } from "@/lib/revalidate";
 
 /**
  * GET /api/admin/homepage-global-settings
@@ -96,6 +97,7 @@ export const PATCH = requireAdmin(async (req: NextRequest) => {
       );
     }
 
+    revalidateEntity('homepage');
     return NextResponse.json({
       success: true,
       settings: data.setting_value,

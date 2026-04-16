@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import { requireAdmin } from '@/lib/auth';
 import { blogPostCreateSchema, safeValidate } from '@/lib/adminSchemas';
+import { revalidateEntity } from '@/lib/revalidate';
 
 /**
  * GET /api/admin/blog
@@ -93,5 +94,6 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidateEntity('blog', data.slug);
   return NextResponse.json({ post: data });
 });

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
 import { requireAdmin } from "@/lib/auth";
-
-export const runtime = "edge";
+import { revalidateEntity } from "@/lib/revalidate";
 
 // GET /api/admin/faq
 export const GET = requireAdmin(async (req: NextRequest) => {
@@ -52,5 +51,6 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateEntity('faq');
   return NextResponse.json({ faq: data });
 });

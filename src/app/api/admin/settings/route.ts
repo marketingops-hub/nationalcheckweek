@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
 import { requireAdmin } from "@/lib/auth";
 import { SettingsPatchSchema, parseBody } from "@/lib/adminSchemas";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export const GET = requireAdmin(async () => {
   const sb = adminClient();
@@ -27,5 +28,6 @@ export const PATCH = requireAdmin(async (req: NextRequest) => {
   const results = await Promise.all(updates);
   const err = results.find(r => r.error);
   if (err?.error) return NextResponse.json({ error: err.error.message }, { status: 500 });
+  revalidateEntity('settings');
   return NextResponse.json({ ok: true });
 });

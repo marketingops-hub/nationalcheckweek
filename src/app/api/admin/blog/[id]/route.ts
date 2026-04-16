@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import { requireAdmin } from '@/lib/auth';
 import { BlogPatchSchema, parseBody } from '@/lib/adminSchemas';
+import { revalidateEntity } from '@/lib/revalidate';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -29,6 +30,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   const sb = adminClient();
   const { data, error } = await sb.from('blog_posts').update(patch).eq('id', id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateEntity('blog', data.slug);
   return NextResponse.json({ post: data });
 });
 
@@ -37,5 +39,6 @@ export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => 
   const sb = adminClient();
   const { error } = await sb.from('blog_posts').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateEntity('blog');
   return NextResponse.json({ success: true });
 });

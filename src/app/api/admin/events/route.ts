@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
 import { requireAdmin } from "@/lib/auth";
 import { EventPutSchema, parseBody } from "@/lib/adminSchemas";
-
-export const runtime = "edge";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export const GET = requireAdmin(async () => {
   const sb = adminClient();
@@ -40,5 +39,6 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     );
   }
 
+  revalidateEntity('event', data.slug);
   return NextResponse.json(data);
 });
