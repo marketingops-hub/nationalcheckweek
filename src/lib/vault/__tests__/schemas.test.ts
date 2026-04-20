@@ -106,7 +106,7 @@ describe('FileUploadMetaSchema', () => {
 
 describe('UPLOAD_LIMITS + MIME_TO_KIND', () => {
   it('limits are sane', () => {
-    expect(UPLOAD_LIMITS.MAX_FILE_BYTES).toBe(25 * 1024 * 1024);
+    expect(UPLOAD_LIMITS.MAX_FILE_BYTES).toBe(100 * 1024 * 1024);
     expect(UPLOAD_LIMITS.MAX_FILES_PER_REQ).toBe(10);
   });
 

@@ -30,7 +30,10 @@ import {
 
 const ACCEPT_MIME = ".pdf,.docx,.txt,.md";
 const MAX_FILES   = 10;
-const MAX_BYTES   = 25 * 1024 * 1024;
+// 100 MB — matches UPLOAD_LIMITS.MAX_FILE_BYTES and the Storage bucket
+// file_size_limit. Browser uploads go direct to Supabase Storage (signed
+// URL), so Vercel's body-size limit doesn't apply.
+const MAX_BYTES   = 100 * 1024 * 1024;
 
 type InputMode = 'files' | 'paste' | 'url';
 
@@ -53,7 +56,7 @@ export default function VaultUploadPage() {
     setGlobalError("");
     for (const file of arr) {
       if (file.size > MAX_BYTES) {
-        setGlobalError(`"${file.name}" is larger than 25 MB and was skipped.`);
+        setGlobalError(`"${file.name}" is larger than ${Math.floor(MAX_BYTES / 1024 / 1024)} MB and was skipped.`);
         continue;
       }
       try {
@@ -227,7 +230,7 @@ export default function VaultUploadPage() {
                 Drop files here or click to select
               </div>
               <div style={{ fontSize: 13, color: '#6B7280' }}>
-                PDF · DOCX · TXT · MD · max 25 MB · up to {MAX_FILES} at once
+                PDF · DOCX · TXT · MD · max {Math.floor(MAX_BYTES / 1024 / 1024)} MB · up to {MAX_FILES} at once
               </div>
 
               <input

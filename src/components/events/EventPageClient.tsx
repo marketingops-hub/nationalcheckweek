@@ -109,7 +109,7 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
             {/* Feature image */}
             {event.feature_image && event.feature_image.trim() !== '' && (
               <div className="event-feature-image">
-                <Image src={event.feature_image} alt={event.title} fill style={{ objectFit: "cover" }} />
+                <Image src={event.feature_image} alt={event.title} fill style={{ objectFit: "contain" }} />
               </div>
             )}
 

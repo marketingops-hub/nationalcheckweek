@@ -6,6 +6,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { adminFetch } from '@/lib/adminFetch';
+import { createClient as createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { VaultDocument, VaultDocumentDetail, DocumentStatus, DocumentKind } from './types';
 
 const BASE = '/api/admin/vault/documents';
@@ -74,23 +75,63 @@ export async function createDocument(input: PasteInput | UrlInput): Promise<Vaul
 }
 
 export interface FileUploadInput {
-  file:     File;
-  title?:   string;
-  category: string;
-  tags?:    string[];
+  file:       File;
+  title?:     string;
+  category:   string;
+  tags?:      string[];
+  onProgress?: (pct: number) => void;   // 0..1, optional
 }
 
-/** Multipart variant: PDF / DOCX / TXT file. */
+/**
+ * Three-step upload that bypasses Vercel's ~4.5 MB serverless body limit:
+ *
+ *   1. POST /upload-url   → get signed token + pre-insert document row
+ *   2. PUT the file bytes direct to Supabase Storage (no Vercel hop)
+ *   3. POST /[id]/start   → trigger the indexer
+ *
+ * If step 2 or 3 fails we attempt to clean up the orphan row so the library
+ * doesn't fill with broken 'pending' entries.
+ */
 export async function uploadFile(input: FileUploadInput): Promise<VaultDocument> {
-  const fd = new FormData();
-  fd.append('file', input.file);
-  if (input.title)    fd.append('title', input.title);
-  fd.append('category', input.category);
-  if (input.tags?.length) fd.append('tags', input.tags.join(','));
+  // ── Step 1: signed URL + document row ────────────────────────────────
+  const signRes = await adminFetch(`${BASE}/upload-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename: input.file.name,
+      mime:     input.file.type || 'application/octet-stream',
+      size:     input.file.size,
+      title:    input.title,
+      category: input.category,
+      tags:     input.tags ?? [],
+    }),
+  });
+  const { document, upload } = await asJson<{
+    document: VaultDocument;
+    upload:   { path: string; token: string; signed_url: string; bucket: string };
+  }>(signRes);
 
-  const res = await adminFetch(BASE, { method: 'POST', body: fd });
-  const { document } = await asJson<{ document: VaultDocument }>(res);
-  return document;
+  // ── Step 2: direct upload to Supabase Storage ────────────────────────
+  try {
+    const sb = createSupabaseBrowserClient();
+    const { error } = await sb.storage
+      .from(upload.bucket)
+      .uploadToSignedUrl(upload.path, upload.token, input.file, {
+        contentType: input.file.type || undefined,
+        upsert: false,
+      });
+    if (error) throw new Error(`Storage upload failed: ${error.message}`);
+  } catch (err) {
+    // Clean up the orphan row so the library isn't polluted with pending
+    // rows for uploads that never arrived. Best-effort; swallow errors.
+    await adminFetch(`${BASE}/${document.id}`, { method: 'DELETE' }).catch(() => {});
+    throw err;
+  }
+
+  // ── Step 3: tell the indexer to start ────────────────────────────────
+  const startRes = await adminFetch(`${BASE}/${document.id}/start`, { method: 'POST' });
+  const { document: ready } = await asJson<{ document: VaultDocument }>(startRes);
+  return ready;
 }
 
 export async function patchDocument(

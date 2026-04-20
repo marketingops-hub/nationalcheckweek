@@ -204,14 +204,18 @@ WHERE is_approved IS NOT FALSE;
 
 -- ─── Storage bucket for uploaded PDFs / DOCX / TXT files ─────────────────
 --
--- Private bucket with a 25 MB file-size ceiling (matches UPLOAD_LIMITS in
+-- Private bucket with a 100 MB file-size ceiling (matches UPLOAD_LIMITS in
 -- src/lib/vault/schemas.ts). Only the service-role key (used by the Next.js
 -- API routes + the vault-indexer edge function) can read/write — there's no
 -- need for public or authenticated access.
+--
+-- 100 MB covers the biggest research PDFs (World Happiness Report, OECD
+-- reports, long UN/AIHW dossiers). If you later need bigger, bump both
+-- this value and UPLOAD_LIMITS.MAX_FILE_BYTES together.
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit)
-VALUES ('vault', 'vault', FALSE, 26214400)
-ON CONFLICT (id) DO NOTHING;
+VALUES ('vault', 'vault', FALSE, 104857600)
+ON CONFLICT (id) DO UPDATE SET file_size_limit = EXCLUDED.file_size_limit;
 
 -- ─── Note on vault_sources ────────────────────────────────────────────────
 --
