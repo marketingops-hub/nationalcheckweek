@@ -89,7 +89,7 @@ serve(async (req) => {
 
     // Call Anthropic API
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: maxTokens,
       temperature: temperature,
       system: systemPrompt || 'You are a helpful AI assistant.',
@@ -106,7 +106,7 @@ serve(async (req) => {
       user_id: user.id,
       prompt: message,
       response: assistantMessage,
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-5-20250929',
       tokens_used: response.usage.input_tokens + response.usage.output_tokens,
       metadata: {
         input_tokens: response.usage.input_tokens,

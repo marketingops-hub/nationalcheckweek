@@ -7,12 +7,15 @@
  * active tab changes; nothing fancier needed at the current volume.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { listDrafts, approveIdea, archiveDraft } from "@/lib/content-creator/client";
+import { listDrafts, approveIdea, archiveDraft, generateDraft } from "@/lib/content-creator/client";
 import type { ContentDraft, ContentStatus, ContentType } from "@/lib/content-creator/types";
 
 type TabKey = 'ideas' | 'drafts' | 'verified' | 'archived';
+
+/** Rows in these statuses can be checkbox-selected for bulk actions. */
+const SELECTABLE_STATUSES: ContentStatus[] = ['idea', 'approved_idea'];
 
 const TABS: { key: TabKey; label: string; statuses: ContentStatus[]; icon: string }[] = [
   { key: 'ideas',    label: 'Ideas',    statuses: ['idea', 'approved_idea', 'generating'],  icon: 'lightbulb' },
@@ -27,6 +30,11 @@ export default function ContentCreatorDashboard() {
   const [drafts, setDrafts] = useState<ContentDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Bulk-selection state. Cleared whenever the tab/filter changes so a stale
+  // selection can't leak into a different list.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState<null | { label: string; done: number; total: number }>(null);
 
   const refresh = useCallback(async () => {
     const activeStatuses = TABS.find((t) => t.key === tab)!.statuses;
@@ -49,6 +57,83 @@ export default function ContentCreatorDashboard() {
   }, [tab, typeFilter]);
 
   useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { setSelected(new Set()); }, [tab, typeFilter]);
+
+  const selectableDrafts = useMemo(
+    () => drafts.filter((d) => SELECTABLE_STATUSES.includes(d.status)),
+    [drafts],
+  );
+  const allSelected = selectableDrafts.length > 0 && selectableDrafts.every((d) => selected.has(d.id));
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function toggleSelectAll() {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(selectableDrafts.map((d) => d.id)));
+  }
+  function clearSelection() { setSelected(new Set()); }
+
+  /**
+   * Run an async action against each selected id sequentially. Sequential (not
+   * parallel) because the edge function is AI-heavy and shares a 30/hr budget;
+   * parallel fire would burn the limiter and surface confusing 429s.
+   */
+  async function runBulk(label: string, ids: string[], action: (id: string) => Promise<unknown>) {
+    if (ids.length === 0) return;
+    setError("");
+    setBulkBusy({ label, done: 0, total: ids.length });
+    let failed = 0;
+    let firstErr = "";
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        await action(ids[i]);
+      } catch (e) {
+        failed += 1;
+        if (!firstErr) firstErr = e instanceof Error ? e.message : String(e);
+      }
+      setBulkBusy({ label, done: i + 1, total: ids.length });
+    }
+    setBulkBusy(null);
+    clearSelection();
+    await refresh();
+    if (failed > 0) setError(`${failed}/${ids.length} ${label.toLowerCase()} failed. First error: ${firstErr}`);
+  }
+
+  async function onBulkApprove() {
+    const ids = drafts.filter((d) => selected.has(d.id) && d.status === 'idea').map((d) => d.id);
+    await runBulk('Approve', ids, approveIdea);
+  }
+
+  async function onBulkArchive() {
+    const ids = Array.from(selected);
+    if (!confirm(`Archive ${ids.length} item${ids.length === 1 ? '' : 's'}?`)) return;
+    await runBulk('Archive', ids, archiveDraft);
+  }
+
+  /**
+   * Approve-then-generate pipeline. Each idea is:
+   *   1. approveIdea      (idea → approved_idea)
+   *   2. generateDraft    (approved_idea → draft)
+   * Already-approved items skip step 1. Sequential to respect the AI limiter.
+   */
+  async function onBulkGenerate() {
+    const items = drafts.filter((d) => selected.has(d.id) && SELECTABLE_STATUSES.includes(d.status));
+    if (items.length === 0) return;
+    const confirmed = items.length <= 3 || confirm(
+      `Generate content for ${items.length} ideas? This uses the AI limiter (30 calls/hour) and may take ~${items.length * 45}s total.`,
+    );
+    if (!confirmed) return;
+    await runBulk('Generate', items.map((d) => d.id), async (id) => {
+      const d = items.find((x) => x.id === id)!;
+      if (d.status === 'idea') await approveIdea(id);
+      await generateDraft(id);
+    });
+  }
 
   async function onApprove(id: string) {
     try {
@@ -130,11 +215,69 @@ export default function ContentCreatorDashboard() {
       ) : drafts.length === 0 ? (
         <EmptyState tab={tab} />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {drafts.map((d) => (
-            <DraftRow key={d.id} draft={d} onApprove={onApprove} onArchive={onArchive} />
-          ))}
-        </div>
+        <>
+          {selectableDrafts.length > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+              background: selected.size > 0 ? '#EEF2FF' : '#F9FAFB',
+              border: '1px solid ' + (selected.size > 0 ? '#C7D2FE' : '#E5E7EB'),
+              borderRadius: 10, marginBottom: 10, fontSize: 13,
+            }}>
+              <input
+                type="checkbox" checked={allSelected} onChange={toggleSelectAll}
+                disabled={!!bulkBusy}
+                title={allSelected ? 'Clear selection' : 'Select all'}
+                style={{ cursor: bulkBusy ? 'wait' : 'pointer' }}
+              />
+              {selected.size === 0 ? (
+                <span style={{ color: '#6B7280' }}>Select ideas to approve or generate in bulk.</span>
+              ) : (
+                <>
+                  <span style={{ fontWeight: 600, color: '#1E1040' }}>
+                    {selected.size} selected
+                  </span>
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {bulkBusy ? (
+                      <span style={{ color: '#4338CA', fontWeight: 600 }}>
+                        {bulkBusy.label} {bulkBusy.done}/{bulkBusy.total}…
+                      </span>
+                    ) : (
+                      <>
+                        <button onClick={onBulkApprove} className="swa-btn" style={{ fontSize: 12, padding: '6px 12px' }}
+                          disabled={!drafts.some((d) => selected.has(d.id) && d.status === 'idea')}>
+                          Approve
+                        </button>
+                        <button onClick={onBulkGenerate} className="swa-btn swa-btn--primary" style={{ fontSize: 12, padding: '6px 12px' }}>
+                          Approve &amp; Generate
+                        </button>
+                        <button onClick={onBulkArchive} className="swa-btn" style={{ fontSize: 12, padding: '6px 12px', color: '#B91C1C' }}>
+                          Archive
+                        </button>
+                        <button onClick={clearSelection} className="swa-icon-btn" title="Clear selection">
+                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {drafts.map((d) => (
+              <DraftRow
+                key={d.id}
+                draft={d}
+                onApprove={onApprove}
+                onArchive={onArchive}
+                selectable={SELECTABLE_STATUSES.includes(d.status)}
+                selected={selected.has(d.id)}
+                onToggleSelect={() => toggleSelect(d.id)}
+                disabled={!!bulkBusy}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -146,10 +289,18 @@ function DraftRow({
   draft,
   onApprove,
   onArchive,
+  selectable,
+  selected,
+  onToggleSelect,
+  disabled,
 }: {
   draft: ContentDraft;
   onApprove: (id: string) => void;
   onArchive: (id: string) => void;
+  selectable: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+  disabled: boolean;
 }) {
   const title = draft.title ?? (draft.body.slice(0, 80) + (draft.body.length > 80 ? '…' : ''));
   const isGenerating = draft.status === 'generating' || draft.status === 'verifying';
@@ -160,12 +311,21 @@ function DraftRow({
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        background: '#fff',
-        border: '1px solid #E5E7EB',
+        background: selected ? '#F5F3FF' : '#fff',
+        border: '1px solid ' + (selected ? '#C4B5FD' : '#E5E7EB'),
         borderRadius: 12,
         padding: '14px 18px',
+        opacity: disabled ? 0.6 : 1,
       }}
     >
+      {selectable ? (
+        <input
+          type="checkbox" checked={selected} onChange={onToggleSelect} disabled={disabled}
+          style={{ cursor: disabled ? 'wait' : 'pointer', flexShrink: 0 }}
+        />
+      ) : (
+        <span style={{ width: 13, flexShrink: 0 }} />
+      )}
       <StatusPill status={draft.status} />
       <TypePill type={draft.content_type} platform={draft.platform} />
 

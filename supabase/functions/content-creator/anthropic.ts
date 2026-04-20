@@ -25,7 +25,10 @@ export interface AnthropicResult {
 }
 
 export async function callAnthropic(opts: AnthropicOpts): Promise<AnthropicResult> {
-  const model = opts.model ?? "claude-3-5-sonnet-20241022";
+  // Claude Sonnet 4.5 — current flagship as of 2025-09-29. The previous
+  // default (claude-3-5-sonnet-20241022) was retired by Anthropic and
+  // started returning 404 "not_found_error".
+  const model = opts.model ?? "claude-sonnet-4-5-20250929";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

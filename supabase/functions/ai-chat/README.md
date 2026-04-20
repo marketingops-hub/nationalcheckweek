@@ -264,7 +264,7 @@ For real-time streaming (future enhancement):
 ```typescript
 // In edge function
 const stream = await anthropic.messages.stream({
-  model: 'claude-3-5-sonnet-20241022',
+  model: 'claude-sonnet-4-5-20250929',
   max_tokens: 1024,
   messages: messages,
 })

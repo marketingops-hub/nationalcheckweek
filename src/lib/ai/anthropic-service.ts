@@ -28,11 +28,13 @@ export interface AnthropicGeneratedContent {
 /**
  * Model mapping from OpenAI to Anthropic equivalents
  */
+// Updated 2026-04 — Anthropic retired the claude-3-5-* snapshots.
+// Claude 4.5 family (2025-09-29) is the current default.
 const MODEL_MAPPING: Record<string, string> = {
-  'gpt-4o': 'claude-3-5-sonnet-20241022',
-  'gpt-4o-mini': 'claude-3-5-haiku-20241022',
-  'gpt-4': 'claude-3-opus-20240229',
-  'gpt-3.5-turbo': 'claude-3-5-haiku-20241022',
+  'gpt-4o':        'claude-sonnet-4-5-20250929',
+  'gpt-4o-mini':   'claude-haiku-4-5-20251001',
+  'gpt-4':         'claude-opus-4-1-20250805',
+  'gpt-3.5-turbo': 'claude-haiku-4-5-20251001',
 };
 
 /**
@@ -64,7 +66,7 @@ export class AnthropicService {
    * Map OpenAI model to Anthropic equivalent
    */
   private mapModel(openaiModel: string): string {
-    return MODEL_MAPPING[openaiModel] || 'claude-3-5-sonnet-20241022';
+    return MODEL_MAPPING[openaiModel] || 'claude-sonnet-4-5-20250929';
   }
 
   /**
