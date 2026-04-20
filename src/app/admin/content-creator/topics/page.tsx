@@ -193,9 +193,9 @@ function TopicCard({
         </p>
       )}
 
-      {topic.suggested_keywords.length > 0 && (
+      {(topic.suggested_keywords ?? []).length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {topic.suggested_keywords.slice(0, 6).map((k) => (
+          {(topic.suggested_keywords ?? []).slice(0, 6).map((k) => (
             <span key={k} style={{ fontSize: 11, padding: '2px 8px', background: '#F3F4F6', borderRadius: 4, color: '#374151' }}>
               {k}
             </span>
@@ -209,7 +209,7 @@ function TopicCard({
             {topic.vault_category}
           </span>
         )}
-        <span>{topic.source_document_ids.length} source{topic.source_document_ids.length === 1 ? '' : 's'}</span>
+        <span>{(topic.source_document_ids ?? []).length} source{(topic.source_document_ids ?? []).length === 1 ? '' : 's'}</span>
         {topic.suggested_audience && <span>· {topic.suggested_audience}</span>}
       </div>
 

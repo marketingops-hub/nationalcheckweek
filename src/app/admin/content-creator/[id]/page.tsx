@@ -54,7 +54,10 @@ export default function DraftDetailPage() {
       const d = await getDraft(id);
       setDraft(d);
       setTitle(d.title ?? "");
-      setBody(d.body);
+      // Defensive: body is TEXT NOT NULL DEFAULT '' so this should always be
+      // a string, but guard anyway since the page previously crashed when
+      // a partial/stale row came through with body=null.
+      setBody(typeof d.body === 'string' ? d.body : "");
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -171,9 +174,10 @@ export default function DraftDetailPage() {
 
   async function copyBody() {
     if (!draft) return;
+    const safeBody = typeof draft.body === 'string' ? draft.body : '';
     const text = draft.content_type === 'social'
-      ? draft.body
-      : `# ${draft.title ?? ''}\n\n${draft.body}`;
+      ? safeBody
+      : `# ${draft.title ?? ''}\n\n${safeBody}`;
     await navigator.clipboard.writeText(text);
     // minimal feedback — no toast library yet
     setError("Copied to clipboard");
@@ -182,9 +186,10 @@ export default function DraftDetailPage() {
 
   function downloadMd() {
     if (!draft) return;
+    const safeBody = typeof draft.body === 'string' ? draft.body : '';
     const text = draft.content_type === 'social'
-      ? draft.body
-      : `# ${draft.title ?? ''}\n\n${draft.body}`;
+      ? safeBody
+      : `# ${draft.title ?? ''}\n\n${safeBody}`;
     const blob = new Blob([text], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -199,6 +204,7 @@ export default function DraftDetailPage() {
   if (loading) return <div style={{ padding: 40, color: '#9CA3AF' }}>Loading…</div>;
   if (!draft) return <div className="swa-alert swa-alert--error">Draft not found.</div>;
 
+  const safeBody = typeof draft.body === 'string' ? draft.body : '';
   const isEditable =
     draft.status === 'draft' || draft.status === 'rejected' ||
     draft.status === 'approved_idea' || draft.status === 'idea' ||
@@ -223,10 +229,11 @@ export default function DraftDetailPage() {
             </span>
           </div>
           <h1 className="swa-page-title">
-            {draft.title ?? ((draft.body.slice(0, 60) + (draft.body.length > 60 ? '…' : '')) || '(untitled)')}
+            {draft.title ?? ((safeBody.slice(0, 60) + (safeBody.length > 60 ? '…' : '')) || '(untitled)')}
           </h1>
           <p className="swa-page-subtitle">
-            Status: <strong>{draft.status}</strong> · Topic: {draft.brief.topic}
+            Status: <strong>{draft.status}</strong>
+            {draft.brief?.topic ? <> · Topic: {draft.brief.topic}</> : null}
           </p>
         </div>
         <button onClick={doArchive} className="swa-btn" style={{ color: '#EF4444' }}>
@@ -494,7 +501,7 @@ function MetaPanel({ draft }: { draft: ContentDraft }) {
         <dt>OpenAI</dt>     <dd>{m.openai_model ?? '—'}</dd>
         <dt>Anthropic</dt>  <dd>{m.anthropic_model ?? '—'}</dd>
         <dt>Tokens</dt>     <dd>{m.tokens?.total ?? '—'}</dd>
-        <dt>Vault refs</dt> <dd>{draft.vault_refs.length}</dd>
+        <dt>Vault refs</dt> <dd>{(draft.vault_refs ?? []).length}</dd>
         <dt>Created</dt>    <dd>{new Date(draft.created_at).toLocaleString()}</dd>
         <dt>Updated</dt>    <dd>{new Date(draft.updated_at).toLocaleString()}</dd>
       </dl>

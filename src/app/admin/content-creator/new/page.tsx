@@ -59,7 +59,7 @@ function NewBriefPageInner() {
     setTopic(t.title);
     if (t.suggested_tone)     setTone(t.suggested_tone);
     if (t.suggested_audience) setAudience(t.suggested_audience);
-    if (t.suggested_keywords.length > 0) setKeywords(t.suggested_keywords.join(', '));
+    if ((t.suggested_keywords ?? []).length > 0) setKeywords((t.suggested_keywords ?? []).join(', '));
     if (t.vault_category)     setVaultCat(t.vault_category);
   }, []);
 
