@@ -38,6 +38,6 @@ export const POST = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
     );
   }
 
-  const edgeRes = await callEdge({ stage: 'verify', draft_id: id });
+  const edgeRes = await callEdge('content-creator-verify', { draft_id: id });
   return NextResponse.json(edgeRes.body, { status: edgeRes.status });
 });

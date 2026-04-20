@@ -69,7 +69,7 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     );
   }
 
-  const edgeRes = await callEdge({ stage: 'generate_ideas', ...parsed.data });
+  const edgeRes = await callEdge('content-creator-ideas', { ...parsed.data });
 
   // One-shot topic lifecycle: if this brief was spawned from a topic, flip
   // that topic to 'used' as soon as ideas are successfully generated. The
@@ -102,14 +102,21 @@ export const POST = requireAdmin(async (req: NextRequest) => {
 /* ─── Shared edge-function proxy used by POST and the action routes ──────── */
 
 /**
- * Forward a payload to the `content-creator` Supabase Edge Function.
+ * Forward a payload to one of the per-stage Supabase Edge Functions.
+ *
+ * Each pipeline stage now has its own function (content-creator-topics,
+ * -ideas, -generate, -verify). The caller names the target so we stay
+ * explicit; no more `stage` discriminator in the body.
  *
  * Handles three failure modes cleanly:
  *   • env vars missing             → 500 with specific message
  *   • fetch aborts past timeout    → 504 so the client can show a retry CTA
  *   • edge fn returns non-JSON     → 502 with a preview of the body
  */
-export async function callEdge(payload: Record<string, unknown>) {
+export async function callEdge(
+  fnName: 'content-creator-topics' | 'content-creator-ideas' | 'content-creator-generate' | 'content-creator-verify',
+  payload: Record<string, unknown>,
+) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceKey) {
@@ -120,7 +127,7 @@ export async function callEdge(payload: Record<string, unknown>) {
   const timer = setTimeout(() => controller.abort(), EDGE_FN_TIMEOUT_MS);
 
   try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/content-creator`, {
+    const res = await fetch(`${supabaseUrl}/functions/v1/${fnName}`, {
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',

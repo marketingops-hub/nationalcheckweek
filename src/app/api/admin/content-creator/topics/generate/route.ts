@@ -30,6 +30,6 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     );
   }
 
-  const edgeRes = await callEdge({ stage: 'generate_topics', ...parsed.data });
+  const edgeRes = await callEdge('content-creator-topics', { ...parsed.data });
   return NextResponse.json(edgeRes.body, { status: edgeRes.status });
 });
