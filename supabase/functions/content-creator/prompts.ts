@@ -246,7 +246,17 @@ Return STRICT JSON only:
   "title": ${input.content_type === "social" ? "null" : "\"improved headline\""},
   "body": "improved body",
   "drift_warnings": ["claim X appears unsupported by vault", ...]
-}`.trim();
+}
+
+JSON QUOTING RULES — CRITICAL
+- The entire response MUST be valid RFC-8259 JSON.
+- Inside any string value, every literal double-quote MUST be escaped as \\".
+- Prefer curly quotes (", ", ', ') or single quotes for internal quotations
+  so straight \\" is rarely needed.
+- Example — WRONG: "body": "So-called "soft skills" matter."
+- Example — RIGHT: "body": "So-called \\"soft skills\\" matter."
+- Example — RIGHT: "body": "So-called 'soft skills' matter."
+- Do not wrap the JSON in markdown fences.`.trim();
 
   const user = `CURRENT DRAFT
 title: ${input.draft.title ?? "(none — social post)"}

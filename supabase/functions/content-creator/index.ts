@@ -357,7 +357,27 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       temperature: 0.3,
       maxTokens:   3500,
     });
-    improved = safeParseJson(anthroRes.content, "anthropic improve");
+
+    // Graceful degradation: if Claude's improve pass returns unparseable
+    // JSON we keep the OpenAI draft verbatim instead of blowing up the
+    // whole stage. The improve pass is a nice-to-have polish — the OpenAI
+    // draft is already grounded and usable. We record the parse failure in
+    // ai_metadata so admins can see which drafts skipped the polish.
+    try {
+      improved = safeParseJson(anthroRes.content, "anthropic improve");
+    } catch (parseErr) {
+      console.warn("[content-creator] improve parse failed, keeping OpenAI draft:",
+        parseErr instanceof Error ? parseErr.message : parseErr);
+      improved = {
+        title:          openaiDraft.title,
+        body:           openaiDraft.body,
+        drift_warnings: [
+          `Anthropic improve pass skipped: invalid JSON from model (${
+            parseErr instanceof Error ? parseErr.message.slice(0, 120) : "parse error"
+          }).`,
+        ],
+      };
+    }
   } catch (err) {
     // Reset the row so the admin can retry.
     await sb
@@ -546,13 +566,51 @@ function dedupUuids(arr: string[]): string[] {
 /**
  * Parse a JSON string but wrap errors with a label so the admin can see
  * which stage failed (OpenAI draft vs Anthropic improve vs verify).
+ *
+ * Claude occasionally emits invalid JSON with un-escaped double quotes inside
+ * a long body string (e.g. `"body": "So-called "soft skills" matter"`). We
+ * make one repair attempt before giving up.
  */
 function safeParseJson<T>(raw: string, label: string): T {
   try {
     return JSON.parse(raw) as T;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const preview = raw.slice(0, 200).replace(/\s+/g, " ");
-    throw new Error(`${label} returned invalid JSON: ${msg}. Preview: ${preview}`);
+  } catch {
+    try {
+      return JSON.parse(repairJson(raw)) as T;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const preview = raw.slice(0, 200).replace(/\s+/g, " ");
+      throw new Error(`${label} returned invalid JSON: ${msg}. Preview: ${preview}`);
+    }
   }
+}
+
+/**
+ * Best-effort repair for the most common Claude JSON mistake: unescaped
+ * straight double-quotes inside a string value. The heuristic:
+ *
+ *   1. Strip markdown fences (```json ... ```) in case the model wrapped it.
+ *   2. For each run of text between a `"key": "` opener and the next `",` or
+ *      `"\n}` closer, escape any straight quote that isn't already escaped.
+ *
+ * This is intentionally conservative — it doesn't try to handle nested
+ * objects, arrays, or keys with embedded quotes. It just fixes the one
+ * pattern we see in practice. If the input is already valid JSON or the
+ * damage is more complex, the caller's second JSON.parse will still throw.
+ */
+function repairJson(raw: string): string {
+  let s = raw.trim();
+  // 1. Strip fences.
+  s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+
+  // 2. Escape inner quotes. Matches: "key": "...content..."
+  // and re-escapes any " inside `content` that isn't followed by , ] } or newline+}.
+  s = s.replace(
+    /("(?:title|body|notes|angle|rationale|claim|reason|suggested_fix|summary|source)"\s*:\s*")([\s\S]*?)("\s*(?:,|\n\s*[}\]]))/g,
+    (_m, open, inner, close) => {
+      const fixed = inner.replace(/(?<!\\)"/g, '\\"');
+      return open + fixed + close;
+    },
+  );
+  return s;
 }
