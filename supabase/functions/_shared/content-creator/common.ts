@@ -61,9 +61,11 @@ export function readCtx(opts: { requireOpenAI?: boolean; requireAnthropic?: bool
 /**
  * Parse JSON with Claude-friendly repair fallback.
  *
- * Claude occasionally returns JSON where an inner `"` wasn't escaped
- * (e.g. `"body": "So-called "soft skills" matter"`). `repairJson` makes
- * one targeted pass to fix that specific shape before we give up.
+ * Implementation is kept inline (rather than imported from `src/lib`) so
+ * edge functions don't need a bundler — Deno imports only URLs or relative
+ * paths. The behaviour is mirrored 1:1 by `src/lib/content-creator/json.ts`
+ * which has a full unit test suite. If you edit this, port the change over
+ * and re-run `vitest run src/lib/content-creator`.
  */
 export function safeParseJson<T>(raw: string, label: string): T {
   try {
@@ -79,20 +81,12 @@ export function safeParseJson<T>(raw: string, label: string): T {
   }
 }
 
-/**
- * Best-effort JSON repair for models that forget to escape inner double
- * quotes. Conservative: only re-escapes within a known set of long-form
- * string fields. If the damage is something else (bad keys, trailing
- * commas, etc.) the caller's second JSON.parse will still throw.
- */
+/** See `src/lib/content-creator/json.ts` for the canonical documented version + tests. */
 export function repairJson(raw: string): string {
   let s = raw.trim();
-  // Strip ```json ... ``` fences if present.
   s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  // For each `"key": "…"` where key is one of the long-prose fields we
-  // actually generate, re-escape any unescaped " inside.
   s = s.replace(
-    /("(?:title|body|notes|angle|rationale|claim|reason|suggested_fix|summary|source)"\s*:\s*")([\s\S]*?)("\s*(?:,|\n\s*[}\]]))/g,
+    /("(?:title|body|notes|angle|rationale|claim|reason|suggested_fix|summary|source)"\s*:\s*")([\s\S]*?)("\s*(?:,|\n\s*[}\]]|\s*[}\]]))/g,
     (_m, open, inner, close) => {
       const fixed = inner.replace(/(?<!\\)"/g, '\\"');
       return open + fixed + close;

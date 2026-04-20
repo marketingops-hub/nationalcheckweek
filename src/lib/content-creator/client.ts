@@ -49,6 +49,16 @@ export async function getDraft(id: string): Promise<ContentDraft> {
   return draft;
 }
 
+/**
+ * Exact per-status row counts via PostgREST HEAD counts. Used by the
+ * pipeline overview page to display accurate KPI cards past 100 rows.
+ */
+export async function getStats(): Promise<Record<ContentStatus, number>> {
+  const res = await adminFetch(`${BASE}/stats`);
+  const { counts } = await asJson<{ counts: Record<ContentStatus, number> }>(res);
+  return counts;
+}
+
 export interface CreateBriefInput {
   content_type: ContentType;
   platform?: SocialPlatform;

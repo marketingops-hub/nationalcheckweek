@@ -42,19 +42,40 @@ export interface ContentBrief {
 /**
  * Everything we record about the AI chain for a given draft.
  * Used for cost analysis, debugging, and the fallback-used dashboard.
+ *
+ * Declared as a loose bag because each stage (topics/ideas/generate/verify)
+ * adds its own extras (drift_warnings, seed, last_error, verification_tokens,
+ * hallucinated_vault_ids, etc). The "known" keys are documented; anything
+ * else is allowed without tripping TS.
  */
 export interface AIMetadata {
-  openai_model?: string;
+  /* ── identity of the models + token usage ── */
+  openai_model?:    string;
   anthropic_model?: string;
   tokens?: {
     prompt: number;
     completion: number;
     total: number;
   };
+  verification_tokens?: { prompt: number; completion: number; total: number };
   provider?: 'openai' | 'anthropic';
-  fallback_used?: boolean;
+
+  /* ── lifecycle timestamps ── */
   generated_at?: string;
-  verified_at?: string;
+  verified_at?:  string;
+
+  /* ── failure + degradation signals ── */
+  fallback_used?:    boolean;         // true when Anthropic improve was skipped
+  drift_warnings?:   string[];        // improve-pass complaints
+  last_error?:       string;
+  last_error_at?:    string;
+  last_error_stage?: 'generate' | 'verify' | 'topics' | 'ideas';
+
+  /* ── topic-stage only ── */
+  seed?: string | null;
+
+  /* ── escape hatch: stage-specific fields we don't want to enumerate ── */
+  [key: string]: unknown;
 }
 
 /** One factual claim the verifier has cross-checked against the vault. */
@@ -100,40 +121,21 @@ export interface ContentDraft {
   updated_at: string;
 }
 
-/* ─── Edge function request/response shapes ─────────────────────────────── */
-
-export type EdgeStage = 'generate_ideas' | 'generate' | 'verify';
-
-export interface GenerateIdeasRequest {
-  stage: 'generate_ideas';
-  content_type: ContentType;
-  platform?: SocialPlatform;
-  brief: ContentBrief;
-  count?: number;  // default 5
-}
+/* ─── Edge function response shapes ─────────────────────────────────────────
+ * Requests are validated by Zod schemas in `./schemas.ts` and `./topics.ts`.
+ * Responses are what each `content-creator-*` edge fn returns on 200.
+ * ────────────────────────────────────────────────────────────────────────── */
 
 export interface GenerateIdeasResponse {
-  ideas: Array<{ id: string; title: string; summary: string }>;  // inserted draft rows
-}
-
-export interface GenerateRequest {
-  stage: 'generate';
-  draft_id: string;
+  /** New draft rows inserted with status='idea'. */
+  ideas: ContentDraft[];
 }
 
 export interface GenerateResponse {
   draft: ContentDraft;
 }
 
-export interface VerifyRequest {
-  stage: 'verify';
-  draft_id: string;
-}
-
 export interface VerifyResponse {
-  draft: ContentDraft;
+  draft:        ContentDraft;
   verification: VerificationResult;
 }
-
-/** Convenience type for any edge fn payload. */
-export type EdgeRequest = GenerateIdeasRequest | GenerateRequest | VerifyRequest;

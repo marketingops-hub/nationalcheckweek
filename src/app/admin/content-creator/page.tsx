@@ -19,7 +19,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { listDrafts } from "@/lib/content-creator/client";
+import { listDrafts, getStats } from "@/lib/content-creator/client";
 import type { ContentDraft, ContentStatus } from "@/lib/content-creator/types";
 
 type StageSummary = {
@@ -47,21 +47,22 @@ export default function ContentCreatorOverview() {
     let cancelled = false;
     async function load() {
       try {
-        // One list call per status, in parallel. Caps at 100 per status so the
-        // count is a floor; good enough for the KPI card.
-        const results = await Promise.all(
-          stages.map((s) =>
-            Promise.all(s.statuses.map((st) => listDrafts({ status: st, limit: 100 })))
-              .then((r) => r.flat()),
-          ),
-        );
+        // Two calls in parallel:
+        //   1. getStats      → exact per-status counts (PostgREST HEAD)
+        //   2. listDrafts    → the 20 most-recently-updated rows for the
+        //                       "recent activity" strip. We then take 5.
+        const [counts, recentRows] = await Promise.all([
+          getStats(),
+          listDrafts({ limit: 20 }),
+        ]);
         if (cancelled) return;
         setStages((prev) =>
-          prev.map((s, i) => ({ ...s, count: results[i].length })),
+          prev.map((s) => ({
+            ...s,
+            count: s.statuses.reduce((sum, st) => sum + (counts[st] ?? 0), 0),
+          })),
         );
-        // Flatten + take 5 most recent across all stages.
-        const all = results.flat().sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-        setRecent(all.slice(0, 5));
+        setRecent(recentRows.slice(0, 5));
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -70,7 +71,6 @@ export default function ContentCreatorOverview() {
     }
     load();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
