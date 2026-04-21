@@ -26,14 +26,23 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve }       from 'node:path';
 
-/** Each entry maps a file name (shared by both sides) to the set of
- *  exported function names whose bodies must match byte-for-byte after
- *  normalisation. Interfaces / types are NOT compared — TS changes
- *  legitimately differ (edge fn sometimes adds Deno-only annotations). */
-const FUNCTIONS_TO_CHECK: Array<{ file: string; fns: string[] }> = [
-  { file: 'length.ts',  fns: ['wordTarget', 'countWords', 'isOutsideTarget', 'buildLengthRetryDirective'] },
-  { file: 'density.ts', fns: ['densityTarget', 'evaluateDensity', 'densityPromptRule'] },
-  { file: 'styles.ts',  fns: ['buildStyleExamplesBlock'] },
+/** Each entry identifies the src-side file, the edge-side file, and the
+ *  set of exported function names whose bodies must match byte-for-byte
+ *  after normalisation. Interfaces / types are NOT compared — TS changes
+ *  legitimately differ (edge fn sometimes adds Deno-only annotations).
+ *
+ *  Most pairs are same-named, but the logger helpers are mirrored from
+ *  `logger.ts` on the src side into `common.ts` on the edge side (the
+ *  edge fn already has a common.ts with related utilities). */
+const FUNCTIONS_TO_CHECK: Array<{
+  srcFile:  string;
+  edgeFile: string;
+  fns:      string[];
+}> = [
+  { srcFile: 'length.ts',  edgeFile: 'length.ts',  fns: ['wordTarget', 'countWords', 'isOutsideTarget', 'buildLengthRetryDirective'] },
+  { srcFile: 'density.ts', edgeFile: 'density.ts', fns: ['densityTarget', 'evaluateDensity', 'densityPromptRule'] },
+  { srcFile: 'styles.ts',  edgeFile: 'styles.ts',  fns: ['buildStyleExamplesBlock'] },
+  { srcFile: 'logger.ts',  edgeFile: 'common.ts',  fns: ['newRequestId', 'createLogger'] },
 ];
 
 /** Extract the source text of a single top-level `export function <name>`
@@ -80,10 +89,11 @@ function normalise(text: string): string {
 const SRC_DIR  = resolve(process.cwd(), 'src/lib/content-creator');
 const EDGE_DIR = resolve(process.cwd(), 'supabase/functions/_shared/content-creator');
 
-for (const { file, fns } of FUNCTIONS_TO_CHECK) {
-  describe(`mirror parity — ${file}`, () => {
-    const srcText  = readFileSync(resolve(SRC_DIR,  file), 'utf-8');
-    const edgeText = readFileSync(resolve(EDGE_DIR, file), 'utf-8');
+for (const { srcFile, edgeFile, fns } of FUNCTIONS_TO_CHECK) {
+  const label = srcFile === edgeFile ? srcFile : `${srcFile} ⇄ ${edgeFile}`;
+  describe(`mirror parity — ${label}`, () => {
+    const srcText  = readFileSync(resolve(SRC_DIR,  srcFile),  'utf-8');
+    const edgeText = readFileSync(resolve(EDGE_DIR, edgeFile), 'utf-8');
 
     for (const fn of fns) {
       it(`${fn}() body matches edge-fn mirror`, () => {

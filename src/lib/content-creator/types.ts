@@ -97,9 +97,16 @@ export interface AIMetadata {
   /* ── failure + degradation signals ── */
   fallback_used?:    boolean;         // true when Anthropic improve was skipped
   drift_warnings?:   string[];        // improve-pass complaints
-  last_error?:       string;
-  last_error_at?:    string;
-  last_error_stage?: 'generate' | 'verify' | 'topics' | 'ideas';
+  last_error?:            string;
+  last_error_at?:         string;
+  last_error_stage?:      'generate' | 'verify' | 'topics' | 'ideas';
+  /** Request id (10 hex chars) tagged onto the failing run by the edge
+   *  fn's createLogger. Admins paste this into Supabase log search to
+   *  trace the upstream cause of a failure. */
+  last_error_request_id?: string;
+  /** Request id of the last successful run. Same provenance as above —
+   *  useful for eyeballing slow runs on the Provenance card. */
+  request_id?:            string;
 
   /* ── topic-stage only ── */
   seed?: string | null;

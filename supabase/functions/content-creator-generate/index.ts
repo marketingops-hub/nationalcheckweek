@@ -38,7 +38,7 @@ import { evaluateDensity } from "../_shared/content-creator/density.ts";
 import { sumCosts } from "../_shared/content-creator/pricing.ts";
 import {
   corsHeaders, json, readCtx, requireAuth,
-  safeParseJson, dedupUuids, type Ctx,
+  safeParseJson, dedupUuids, createLogger, type Ctx, type Logger,
 } from "../_shared/content-creator/common.ts";
 
 /* Hard character budgets per social platform — mirrors the values in
@@ -62,19 +62,33 @@ Deno.serve(async (req: Request) => {
   if (ctxOrErr instanceof Response) return ctxOrErr;
   const ctx = ctxOrErr;
 
+  // Request-scoped logger: every line below is prefixed with the same
+  // req= id so Supabase log search can filter a single admin click
+  // across vault fetch + OpenAI + Anthropic + post-process.
+  const log = createLogger("content-creator-generate");
+  const topSpan = log.span("handleGenerate");
+
   try {
     const body = await req.json() as Record<string, unknown>;
-    const result = await handleGenerate(body, ctx);
-    return json(result);
+    const result = await handleGenerate(body, ctx, log);
+    topSpan.end();
+    // request_id echoed on the success response so the admin UI can
+    // surface it next to any drift warning the generate step produced.
+    return json({ ...result, request_id: log.requestId });
   } catch (err) {
-    console.error("[content-creator-generate]", err);
-    return json({ error: err instanceof Error ? err.message : String(err) }, 500);
+    topSpan.end();
+    log.error("failed:", err);
+    return json({
+      error: err instanceof Error ? err.message : String(err),
+      request_id: log.requestId,
+    }, 500);
   }
 });
 
-async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
+async function handleGenerate(body: Record<string, unknown>, ctx: Ctx, log: Logger) {
   const draft_id = body.draft_id as string;
   if (!draft_id) throw new Error("draft_id is required.");
+  log.info(`draft_id=${draft_id}`);
 
   const sb = createClient(ctx.sbUrl, ctx.sbKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -125,9 +139,14 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
   // and for debugging prompt drift on long-form.
   let lengthRetry: { first_count: number; final_count: number; direction: 'short' | 'long' | 'ok' } | null = null;
 
+  log.info(
+    `status=${draft.status}→generating type=${draft.content_type}`,
+    isRegeneration ? "regen" : "first-pass",
+  );
+
   try {
     // Fetch vault + style concurrently — both are independent DB reads.
-    const vaultStart = Date.now();
+    const vaultSpan = log.span("vault+style");
     const [vaultRes, style] = await Promise.all([
       fetchVaultContext(ctx.sbUrl, ctx.sbKey, {
         keywords:       draft.brief.keywords,
@@ -138,7 +157,7 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
         contentType: draft.content_type,
       }),
     ]);
-    msVault    = Date.now() - vaultStart;
+    msVault    = vaultSpan.end();
     vault      = vaultRes;
     vaultBlock = formatVaultContext(vault);
 
@@ -182,13 +201,13 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       length_preset: draft.brief?.length_preset,
     });
 
-    const openaiStart = Date.now();
+    const openaiSpan = log.span("openai.first");
     openaiRes = await callOpenAI({
       apiKey: ctx.openaiKey!,
       system: gen.system, user: gen.user,
       temperature: 0.5, maxTokens: 3500,
     });
-    msOpenai += Date.now() - openaiStart;
+    msOpenai += openaiSpan.end();
     openaiTokenAcc.prompt     += openaiRes.tokens.prompt;
     openaiTokenAcc.completion += openaiRes.tokens.completion;
     openaiTokenAcc.total      += openaiRes.tokens.total;
@@ -210,13 +229,16 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
         const directive = buildLengthRetryDirective(firstCount, target, gate.direction as 'short' | 'long');
         const retryUser = `${gen.user}\n\nLENGTH CORRECTION\n${directive}`;
 
-        const retryStart = Date.now();
+        log.info(
+          `length gate: ${firstCount} ${gate.direction} target ${target.min}-${target.max}, retrying`,
+        );
+        const retrySpan = log.span("openai.lengthRetry");
         const retryRes = await callOpenAI({
           apiKey: ctx.openaiKey!,
           system: gen.system, user: retryUser,
           temperature: 0.5, maxTokens: 3500,
         });
-        msOpenai += Date.now() - retryStart;
+        msOpenai += retrySpan.end();
         openaiTokenAcc.prompt     += retryRes.tokens.prompt;
         openaiTokenAcc.completion += retryRes.tokens.completion;
         openaiTokenAcc.total      += retryRes.tokens.total;
@@ -233,7 +255,7 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
           };
         } catch (parseErr) {
           // Bad JSON on retry — keep the original draft but note it.
-          console.warn("[content-creator-generate] length retry parse failed, keeping first draft:",
+          log.warn("length retry parse failed, keeping first draft:",
             parseErr instanceof Error ? parseErr.message : parseErr);
           lengthRetry = {
             first_count: firstCount,
@@ -252,20 +274,20 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       vault_block:  vaultBlock,
     });
 
-    const anthroStart = Date.now();
+    const anthroSpan = log.span("anthropic.improve");
     anthroRes = await callAnthropic({
       apiKey: ctx.anthropicKey!,
       system: imp.system, user: imp.user,
       temperature: 0.3, maxTokens: 3500,
     });
-    msAnthropic = Date.now() - anthroStart;
+    msAnthropic = anthroSpan.end();
 
     // Graceful degradation: if Claude returns unparseable JSON we keep the
     // OpenAI draft and surface a drift warning rather than fail the stage.
     try {
       improved = safeParseJson(anthroRes.content, "anthropic improve");
     } catch (parseErr) {
-      console.warn("[content-creator-generate] improve parse failed, keeping OpenAI draft:",
+      log.warn("improve parse failed, keeping OpenAI draft:",
         parseErr instanceof Error ? parseErr.message : parseErr);
       improved = {
         title:          openaiDraft.title,
@@ -289,6 +311,9 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
         last_error: err instanceof Error ? err.message : String(err),
         last_error_at: new Date().toISOString(),
         last_error_stage: "generate",
+        // Persist the request_id on failure so the admin can paste it
+        // straight into Supabase log search to find the upstream cause.
+        last_error_request_id: log.requestId,
       },
     }).eq("id", draft_id);
     throw err;
@@ -386,6 +411,10 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
     },
     cost_usd:          cost.total,
     cost_partial:      cost.partial,
+    // Request id from createLogger — matches the `req=` prefix on every
+    // log line for this invocation. Stored so the detail-page Provenance
+    // card can let admins jump to the matching Supabase log filter.
+    request_id:        log.requestId,
   };
 
   // Clear one-shot fields after a successful run: regeneration_feedback
