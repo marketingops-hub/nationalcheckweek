@@ -142,6 +142,7 @@ export async function patchDraft(
       audience:              string;
       keywords:              string[];
       vault_category:        string;
+      length_preset:         'short' | 'standard' | 'long';
     }>;
   },
 ): Promise<ContentDraft> {
@@ -173,10 +174,15 @@ export async function finalizeDraft(id: string): Promise<ContentDraft> {
  * and calls the generate edge fn with `regeneration: true`.
  */
 export async function regenerateDraft(id: string, feedback: string): Promise<ContentDraft> {
+  // Regenerate has the same profile as generate — OpenAI + Anthropic
+  // round-trip can take 30–60s, so we give the browser 100s before
+  // giving up. The default 30s adminFetch timeout aborts a request that
+  // is actually still working on the server. (Matches `generateDraft`.)
   const res = await adminFetch(`${BASE}/${id}/regenerate`, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ feedback }),
+    body:    JSON.stringify({ feedback }),
+    timeout: 100_000,
   });
   const { draft } = await asJson<{ draft: ContentDraft }>(res);
   return draft;

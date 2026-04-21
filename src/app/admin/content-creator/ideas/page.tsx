@@ -19,14 +19,23 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import Link from "next/link";
+import { useState } from "react";
 import { useIdeasList }       from "./_hooks/useIdeasList";
 import { IdeaCard }           from "./_components/IdeaCard";
 import { IdeasToolbar }       from "./_components/IdeasToolbar";
 import { BulkToolbar }        from "./_components/BulkToolbar";
 import { IdeasEmptyState }    from "./_components/IdeasEmptyState";
+import { GenerateOptionsModal } from "./_components/GenerateOptionsModal";
+import type { ContentDraft } from "@/lib/content-creator/types";
 
 export default function IdeasPage() {
   const d = useIdeasList();
+
+  /* Generate-options modal state.
+   *   null           → closed
+   *   ContentDraft   → the idea being configured for generation */
+  const [modalFor, setModalFor] = useState<ContentDraft | null>(null);
+  const [modalBusy, setModalBusy] = useState(false);
 
   // Hide a row mid-bulk-action so a half-applied bulk doesn't mislead.
   // We disable the card at the row level instead of removing it outright
@@ -111,12 +120,33 @@ export default function IdeasPage() {
               onToggleSelect={() => d.toggleSelect(idea.id)}
               onApprove={()      => d.onApprove(idea.id)}
               onUnapprove={()    => d.onUnapprove(idea.id)}
-              onGenerate={()     => d.onGenerate(idea.id)}
+              onGenerate={()     => setModalFor(idea)}
               onArchive={()      => d.onArchive(idea.id)}
               onDelete={()       => d.onDelete(idea.id)}
             />
           ))}
         </div>
+      )}
+
+      {/* Generate-options modal — rendered outside the grid so it doesn't
+          participate in the card layout. Mounts only while an idea is
+          selected for configuration. */}
+      {modalFor && (
+        <GenerateOptionsModal
+          idea={modalFor}
+          busy={modalBusy}
+          onCancel={() => { if (!modalBusy) setModalFor(null); }}
+          onConfirm={async (opts) => {
+            setModalBusy(true);
+            try {
+              await d.generateWithOptions(modalFor.id, opts);
+              // Only close on success — on failure the error banner above
+              // the grid explains what went wrong and the modal stays up.
+              setModalFor(null);
+            } catch { /* error surfaced via d.error */ }
+            finally { setModalBusy(false); }
+          }}
+        />
       )}
     </div>
   );

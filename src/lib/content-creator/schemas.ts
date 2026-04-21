@@ -51,6 +51,10 @@ export const ContentBriefSchema = z.object({
    *  The generate edge fn appends this to the user prompt so the next
    *  pass tries to address it. Cleared after a successful regen. */
   regeneration_feedback: z.string().max(2000).optional(),
+  /** Per-draft length preference (see ContentBrief). Drives the word
+   *  range the generate prompt asks the model to hit. Social posts
+   *  ignore this field. */
+  length_preset:   z.enum(['short', 'standard', 'long']).optional(),
 });
 
 /* ─── Stage 1: generate ideas (POST /api/admin/content-creator) ──────────── */

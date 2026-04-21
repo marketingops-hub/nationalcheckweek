@@ -11,6 +11,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { densityPromptRule } from "./density.ts";
+import { wordTarget } from "./length.ts";
 
 // ── Platform constraints (mirrors src/lib/content-creator/platforms.ts — ────
 //    duplicated because edge fns can't import from src/) ─────────────────────
@@ -185,10 +186,16 @@ export interface GeneratePromptInput {
    * `title: null` and the body must not rely on a headline. Defaults to true.
    */
   include_title?: boolean;
+  /**
+   * Optional admin-picked length hint (from the "Generate options" modal).
+   * 'short' / 'long' scale the word range the prompt asks for; undefined
+   * or 'standard' keeps the baseline per content_type. Social ignored.
+   */
+  length_preset?: "short" | "standard" | "long";
 }
 
 export function buildGeneratePrompt(input: GeneratePromptInput): { system: string; user: string } {
-  const typeRules = typeSpecificRules(input.content_type, input.platform);
+  const typeRules = typeSpecificRules(input.content_type, input.platform, input.length_preset);
 
   const stylePrefix = input.style_prompt
     ? `WRITING STYLE\n${input.style_prompt.trim()}\n\n`
@@ -266,8 +273,17 @@ Write the ${input.content_type} now. Return JSON only.`.trim();
 
 /** Renders the per-type / per-platform rule block for stage 2. The evidence-
  *  density line is centralised in density.ts so the verifier sees the same
- *  rule the writer does. */
-function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: string): string {
+ *  rule the writer does.
+ *
+ *  `length_preset` scales the stated word range — 'short' / 'long' come from
+ *  the "Generate options" modal; undefined and 'standard' keep the baseline.
+ *  Range numbers are computed in length.ts · wordTarget so a single source
+ *  of truth drives both the prompt and the post-generation length gate. */
+function typeSpecificRules(
+  type: "social" | "blog" | "newsletter",
+  platform?: string,
+  length_preset?: "short" | "standard" | "long",
+): string {
   const densityRule = densityPromptRule(type);
 
   if (type === "social") {
@@ -284,9 +300,20 @@ function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: st
       densityRule,
     ].join("\n");
   }
+
+  // Long-form: pull the scaled range from the shared helper so the prompt
+  // rule and the length gate can never drift apart.
+  const target = wordTarget(type, length_preset);
+  const lengthLine = target
+    ? `- Length: ${target.min}–${target.max} words.`
+    // wordTarget returns null for social; long-form always returns a range,
+    // but keep a defensive fallback so a future content_type addition
+    // doesn't explode the prompt.
+    : `- Length: as appropriate for the format.`;
+
   if (type === "blog") {
     return [
-      `- Length: 600–900 words.`,
+      lengthLine,
       `- Structure: compelling headline (title field), 1-sentence hook, 3–5 H2 sections, conclusion with CTA.`,
       `- Tone: evidence-based, accessible, no jargon.`,
       `- title field REQUIRED (compelling, ≤ 70 chars).`,
@@ -296,7 +323,7 @@ function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: st
   }
   // newsletter
   return [
-    `- Length: 300–500 words.`,
+    lengthLine,
     `- Structure: punchy subject line (title field), greeting, 2–3 short paragraphs, clear CTA.`,
     `- Tone: warm, direct, conversational but credible.`,
     `- title field REQUIRED (subject line, ≤ 60 chars, avoids spam triggers).`,

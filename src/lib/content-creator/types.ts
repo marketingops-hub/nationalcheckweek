@@ -56,6 +56,14 @@ export interface ContentBrief {
    * user prompt, and clears it on success.
    */
   regeneration_feedback?: string;
+  /**
+   * Optional length hint surfaced to the admin at generate time (see the
+   * "Generate options" modal). Widens or tightens the word range the
+   * generate prompt asks the model to hit. Undefined = the baseline range
+   * for the content_type. Social posts ignore this field (their length is
+   * driven by platform char limits).
+   */
+  length_preset?: 'short' | 'standard' | 'long';
 }
 
 /**

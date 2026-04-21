@@ -177,6 +177,9 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       include_title: draft.content_type === "social"
         ? false
         : (draft.brief?.include_title ?? true),
+      // Admin-picked length on the "Generate options" modal. Undefined →
+      // prompts.ts emits the default range for the content type.
+      length_preset: draft.brief?.length_preset,
     });
 
     const openaiStart = Date.now();
@@ -197,7 +200,9 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
     // wrong-length draft and expect the admin to eyeball + regenerate,
     // we check the count once and retry *once* with a concrete directive.
     // Cap the retry at 1 so the worst case is 2 OpenAI calls, not a loop.
-    const target = wordTarget(draft.content_type);
+    // Length preset (undefined → 'standard') scales the range the prompt
+    // asked for. Keeps admin's "Generate options" choice honoured here too.
+    const target = wordTarget(draft.content_type, draft.brief?.length_preset);
     if (target) {
       const firstCount = countWords(openaiDraft.body ?? "");
       const gate = isOutsideTarget(firstCount, target);

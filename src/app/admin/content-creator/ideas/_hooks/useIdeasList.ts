@@ -22,8 +22,18 @@ import {
   archiveDraft,
   deleteDraft,
   generateDraft,
+  patchDraft,
 } from "@/lib/content-creator/client";
-import type { ContentDraft, ContentType, ContentStatus } from "@/lib/content-creator/types";
+import type { ContentDraft, ContentType, ContentStatus, SocialPlatform } from "@/lib/content-creator/types";
+
+/** Payload posted by the "Generate options" modal. Any field equal to the
+ *  current draft value is skipped in the PATCH to keep the update minimal. */
+export interface GenerateWithOptionsInput {
+  content_type:  ContentType;
+  platform:      SocialPlatform | null;
+  length_preset: 'short' | 'standard' | 'long';
+  style_id:      string | null;
+}
 
 /** Statuses that belong to this stage. Ordered so `generating` rows are
  *  visible but visually de-emphasised at the bottom. */
@@ -70,6 +80,11 @@ export interface UseIdeasList {
   onGenerate:  (id: string) => Promise<void>;
   onArchive:   (id: string) => Promise<void>;
   onDelete:    (id: string) => Promise<void>;
+  /** Single-row variant used by the "Generate options" modal. Diffs the
+   *  payload against the idea, PATCHes only what changed, flips idea →
+   *  approved_idea if needed, then fires the generate edge fn. Errors
+   *  bubble to `error`. */
+  generateWithOptions: (id: string, opts: GenerateWithOptionsInput) => Promise<void>;
 }
 
 export function useIdeasList(): UseIdeasList {
@@ -197,6 +212,67 @@ export function useIdeasList(): UseIdeasList {
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   }
 
+  /* ─── Generate with options (from the modal) ─────────────────────────── */
+
+  async function generateWithOptions(id: string, opts: GenerateWithOptionsInput) {
+    setError("");
+    try {
+      const current = ideas.find((r) => r.id === id);
+      if (!current) throw new Error("Idea not found in local state — refresh and try again.");
+
+      /* 1. Diff payload → minimal patch
+       *
+       * The PATCH route accepts top-level content_type/platform AND a
+       * brief_patch for { style_id, length_preset, … }. We only send the
+       * fields that actually differ so the server doesn't log a pointless
+       * "no-op PATCH". */
+      const patch: Parameters<typeof patchDraft>[1] = {};
+      if (opts.content_type !== current.content_type) {
+        patch.content_type = opts.content_type;
+      }
+      if ((opts.platform ?? null) !== (current.platform ?? null)) {
+        patch.platform = opts.platform;
+      }
+
+      const briefPatch: NonNullable<typeof patch.brief_patch> = {};
+      const currentStyleId = current.brief?.style_id ?? null;
+      if (opts.style_id !== currentStyleId) {
+        // brief_patch uses strings; null is encoded by simply assigning
+        // undefined (the shallow-merge keeps whatever was there). For an
+        // explicit unset we'd need a new endpoint, so we just no-op on
+        // null → null. If the admin *changed* to null, we also skip the
+        // patch — the edge fn drops a dangling style_id silently via
+        // resolveStylePrompt, so a stale id is harmless until next edit.
+        if (opts.style_id) briefPatch.style_id = opts.style_id;
+      }
+      if (opts.length_preset !== (current.brief?.length_preset ?? 'standard')) {
+        briefPatch.length_preset = opts.length_preset;
+      }
+      if (Object.keys(briefPatch).length > 0) {
+        patch.brief_patch = briefPatch;
+      }
+
+      if (Object.keys(patch).length > 0) {
+        await patchDraft(id, patch);
+      }
+
+      /* 2. Approve if still an idea, then generate. */
+      if (current.status === 'idea') {
+        await approveIdea(id);
+      }
+      await generateDraft(id);
+
+      /* 3. Refresh once — the just-generated row is now at status=draft
+       *    which moves it off this page's list, which is the right signal
+       *    that the work succeeded. */
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      // Re-throw so the modal can keep itself open on failure.
+      throw e;
+    }
+  }
+
   /* ─── Bulk actions ──────────────────────────────────────────────────── */
 
   /**
@@ -254,5 +330,6 @@ export function useIdeasList(): UseIdeasList {
     canApproveSelected,
     bulkBusy, bulkApprove, bulkGenerate, bulkArchive,
     refresh, onApprove, onUnapprove, onGenerate, onArchive, onDelete,
+    generateWithOptions,
   };
 }

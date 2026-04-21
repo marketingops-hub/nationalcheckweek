@@ -33,13 +33,29 @@ export interface WordTarget {
   tolerance: number;
 }
 
-/** Mirror of the ranges in prompts.ts · typeSpecificRules. */
+/** Optional length override surfaced on the "Generate options" modal. */
+export type LengthPreset = 'short' | 'standard' | 'long';
+
+/** Mirror of the ranges in prompts.ts · typeSpecificRules. Accepts an
+ *  optional `preset` which widens / tightens the baseline range so an
+ *  admin can nudge the same brief toward a shorter or longer piece. */
 export function wordTarget(
   content_type: 'social' | 'blog' | 'newsletter',
+  preset: LengthPreset = 'standard',
 ): WordTarget | null {
-  if (content_type === 'blog')       return { min: 600, max: 900, tolerance: 0.15 };
-  if (content_type === 'newsletter') return { min: 300, max: 500, tolerance: 0.15 };
-  return null;
+  if (content_type === 'social') return null;
+  const base = content_type === 'blog'
+    ? { min: 600, max: 900 }
+    : { min: 300, max: 500 };
+  const scale =
+    preset === 'short' ? 0.6
+    : preset === 'long' ? 1.6
+    : 1;
+  return {
+    min: Math.round(base.min * scale),
+    max: Math.round(base.max * scale),
+    tolerance: 0.15,
+  };
 }
 
 /**
