@@ -47,6 +47,12 @@ export function DraftRow({
       border: '1px solid ' + (selected ? '#C4B5FD' : '#E5E7EB'),
       borderRadius: 12, padding: '14px 18px',
       opacity: disabled ? 0.6 : 1,
+      // Explicit full width + box-sizing defend against parent flex/grid
+      // ancestors that occasionally stretched the row past its column.
+      width: '100%', boxSizing: 'border-box',
+      // If content still overflows despite nowrap/ellipsis below, hide it
+      // rather than let it blow the row open and collapse the title column.
+      overflow: 'hidden',
     }}>
       {selectable ? (
         <input
@@ -64,14 +70,20 @@ export function DraftRow({
       <StatusPill status={draft.status} />
       <TypePill type={draft.content_type} platform={draft.platform} />
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      {/* flex: '1 1 0' with minWidth: 0 is the canonical recipe for a
+          shrinkable flex child. Both title and topic get nowrap+ellipsis
+          so a long topic string can't blow the layout open. */}
+      <div style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden' }}>
         <div style={{
           fontWeight: 600, color: '#1E1040', marginBottom: 2,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {title || '(untitled)'}
         </div>
-        <div style={{ fontSize: 12, color: '#9CA3AF' }}>
+        <div style={{
+          fontSize: 12, color: '#9CA3AF',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
           {topic && <>topic: {topic}</>}
           <span> · updated {new Date(draft.updated_at).toLocaleString()}</span>
         </div>
@@ -83,7 +95,7 @@ export function DraftRow({
           <button
             onClick={() => onApprove(draft.id)}
             className="swa-btn swa-btn--primary"
-            style={{ fontSize: 13, padding: '6px 12px' }}
+            style={{ fontSize: 13, padding: '6px 12px', flexShrink: 0, whiteSpace: 'nowrap' }}
           >
             Approve
           </button>
@@ -93,7 +105,7 @@ export function DraftRow({
             onClick={() => onUnapprove(draft.id)}
             className="swa-btn"
             title="Send back to idea for more edits"
-            style={{ fontSize: 13, padding: '6px 12px' }}
+            style={{ fontSize: 13, padding: '6px 12px', flexShrink: 0, whiteSpace: 'nowrap' }}
           >
             Unapprove
           </button>

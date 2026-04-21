@@ -355,6 +355,36 @@
 .swa-btn-primary:hover { background: #6d28d9; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
 .swa-btn-ghost { background: none; color: var(--color-primary); font-weight: 500; padding: 6px 8px; border: none; }
 
+/* Icon-only button — square, flat, hover highlight. Used across the
+ * admin (content, cms, blog, content-creator). Previously referenced in
+ * JSX with no CSS definition, which let the browser default button chrome
+ * leak into flex layouts and broke rows in Firefox/Safari. */
+.swa-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+  flex-shrink: 0;               /* never squish inside a flex cluster */
+  text-decoration: none;        /* for <Link> usage */
+  transition: var(--transition-fast);
+}
+.swa-icon-btn:hover {
+  background: #F3F4F6;
+  border-color: #E5E7EB;
+}
+.swa-icon-btn:disabled,
+.swa-icon-btn[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 /* ── Data Table ── */
 .swa-table { width: 100%; border-collapse: collapse; }
 .swa-table th {
