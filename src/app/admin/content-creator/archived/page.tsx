@@ -1,25 +1,13 @@
-"use client";
-
 /* ═══════════════════════════════════════════════════════════════════════════
  * /admin/content-creator/archived
  *
- * Soft-deleted drafts. Kept for audit. Rows are read-only from the list.
+ * Apr-2026: archived view now lives inside the unified Content Library so
+ * there's only one listing UI to maintain. This page stays as a permanent
+ * redirect so old bookmarks, emails, and links keep working.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-import { StageList } from "@/components/content-creator/StageList";
+import { redirect } from 'next/navigation';
 
 export default function ArchivedPage() {
-  return (
-    <div>
-      <div className="swa-page-header">
-        <div>
-          <h1 className="swa-page-title">Archived</h1>
-          <p className="swa-page-subtitle">
-            Soft-deleted drafts. Retained for audit; not visible in other stages.
-          </p>
-        </div>
-      </div>
-      <StageList stageKey="archived" />
-    </div>
-  );
+  redirect('/admin/content-creator/library?tab=archived');
 }

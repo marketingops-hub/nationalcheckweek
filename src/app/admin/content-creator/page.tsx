@@ -35,9 +35,9 @@ type StageSummary = {
 export default function ContentCreatorOverview() {
   const [stages, setStages] = useState<StageSummary[]>([
     { key: 'ideas',    label: 'Ideas',    href: '/admin/content-creator/ideas',    icon: 'lightbulb',   statuses: ['idea', 'approved_idea', 'generating'], count: 0, hint: 'Stage 1. Approve to generate content.' },
-    { key: 'drafts',   label: 'Drafts',   href: '/admin/content-creator/drafts',   icon: 'edit_note',   statuses: ['draft', 'verifying', 'rejected'],      count: 0, hint: 'Stage 2. Edit and verify against vault.' },
-    { key: 'verified', label: 'Verified', href: '/admin/content-creator/verified', icon: 'verified',    statuses: ['verified'],                            count: 0, hint: 'Stage 3. Ready for team use.' },
-    { key: 'archived', label: 'Archived', href: '/admin/content-creator/archived', icon: 'inventory_2', statuses: ['archived'],                            count: 0, hint: 'Soft-deleted. Kept for audit.' },
+    { key: 'drafts',   label: 'Drafts',   href: '/admin/content-creator/library?tab=drafts',   icon: 'edit_note',   statuses: ['draft', 'verifying', 'rejected'], count: 0, hint: 'Stage 2. Edit and verify against vault.' },
+    { key: 'verified', label: 'Verified', href: '/admin/content-creator/library?tab=verified', icon: 'verified',    statuses: ['verified'],                        count: 0, hint: 'Stage 3. Ready for team use.' },
+    { key: 'archived', label: 'Archived', href: '/admin/content-creator/library?tab=archived', icon: 'inventory_2', statuses: ['archived'],                        count: 0, hint: 'Soft-deleted. Kept for audit.' },
   ]);
   const [recent,  setRecent]  = useState<ContentDraft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,9 +108,9 @@ export default function ContentCreatorOverview() {
         <PipelineArrow />
         <PipelineStep icon="lightbulb"   label="Ideas"     href="/admin/content-creator/ideas"    color="#B45309" />
         <PipelineArrow />
-        <PipelineStep icon="edit_note"   label="Drafts"    href="/admin/content-creator/drafts"   color="#374151" />
+        <PipelineStep icon="edit_note"   label="Drafts"    href="/admin/content-creator/library?tab=drafts"   color="#374151" />
         <PipelineArrow />
-        <PipelineStep icon="verified"    label="Verified"  href="/admin/content-creator/verified" color="#047857" />
+        <PipelineStep icon="verified"    label="Verified"  href="/admin/content-creator/library?tab=verified" color="#047857" />
       </div>
 
       {/* Stage KPI cards */}
