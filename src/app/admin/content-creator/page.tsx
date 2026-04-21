@@ -82,10 +82,19 @@ export default function ContentCreatorOverview() {
             Vault-grounded pipeline: topic → idea → draft → verified. Every stage has its own page so you can focus on one thing at a time.
           </p>
         </div>
-        <Link href="/admin/content-creator/new" className="swa-btn swa-btn--primary">
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
-          New Brief
-        </Link>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {/* Library is the fastest path to "I just created something,
+              where is it?" — put it next to New Brief so it's always
+              one click away from the header. */}
+          <Link href="/admin/content-creator/library" className="swa-btn">
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>menu_book</span>
+            Content Created
+          </Link>
+          <Link href="/admin/content-creator/new" className="swa-btn swa-btn--primary">
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+            New Brief
+          </Link>
+        </div>
       </div>
 
       {error && <div className="swa-alert swa-alert--error" style={{ marginBottom: 20 }}>{error}</div>}
@@ -138,7 +147,7 @@ export default function ContentCreatorOverview() {
           <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Recent activity
           </h2>
-          <Link href="/admin/content-creator/ideas" style={{ fontSize: 12, color: '#6B7280', textDecoration: 'none' }}>
+          <Link href="/admin/content-creator/library" style={{ fontSize: 12, color: '#6B7280', textDecoration: 'none' }}>
             See all →
           </Link>
         </div>
