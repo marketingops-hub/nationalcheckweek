@@ -166,15 +166,46 @@ export function useContentLibrary({ initialTab = 'all' }: UseContentLibraryOpts 
 
   /* ─── Row actions ─────────────────────────────────────────────────────── */
 
+  /**
+   * Optimistic single-row mutations.
+   *
+   * Removing the row from local state before the network round-trip makes
+   * the grid feel snappy and avoids a mid-flight re-flow where the row
+   * stays visible for ~200ms. On failure we refresh to restore it, so the
+   * user never ends up with stale local state silently disagreeing with
+   * the server.
+   */
+  function optimisticRemove(id: string) {
+    setDrafts((rows) => rows.filter((r) => r.id !== id));
+  }
+
   async function onArchive(id: string) {
     if (!confirm("Archive this item? You can find it in the Archived tab.")) return;
-    try { await archiveDraft(id); await Promise.all([refresh(), refreshCounts()]); }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    const snapshot = drafts;
+    optimisticRemove(id);
+    try {
+      await archiveDraft(id);
+      // Counts still need a server round-trip — local bookkeeping won't
+      // know that archiving increases the Archived tab's badge.
+      refreshCounts();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      // Restore the snapshot rather than a fresh fetch — avoids a double
+      // network hop when the server is having a bad second.
+      setDrafts(snapshot);
+    }
   }
   async function onDelete(id: string) {
     if (!confirm("Delete permanently? This cannot be undone.")) return;
-    try { await deleteDraft(id); await Promise.all([refresh(), refreshCounts()]); }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    const snapshot = drafts;
+    optimisticRemove(id);
+    try {
+      await deleteDraft(id);
+      refreshCounts();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setDrafts(snapshot);
+    }
   }
 
   async function onCopyBody(id: string) {

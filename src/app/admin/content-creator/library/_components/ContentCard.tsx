@@ -147,8 +147,8 @@ export function ContentCard(props: ContentCardProps) {
             }}
           >
             <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 14, animation: 'spin 1s linear infinite' }}
+              className="material-symbols-outlined swa-spin"
+              style={{ fontSize: 14 }}
             >
               progress_activity
             </span>
@@ -315,10 +315,6 @@ export function ContentCard(props: ContentCardProps) {
         </div>
       </div>
 
-      {/* Local keyframe for the spinner chip. Scoped via a dynamic <style>
-          block so we don't bleed global animations into the rest of the
-          admin. Duplicated on every card is fine — the browser dedupes. */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

@@ -158,18 +158,14 @@ export function LibraryToolbar({
         title="Refresh list"
       >
         <span
-          className="material-symbols-outlined"
-          style={{
-            fontSize: 14,
-            animation: loading ? 'spin 1s linear infinite' : undefined,
-          }}
+          className={`material-symbols-outlined${loading ? ' swa-spin' : ''}`}
+          style={{ fontSize: 14 }}
         >
           refresh
         </span>
         Refresh
       </button>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

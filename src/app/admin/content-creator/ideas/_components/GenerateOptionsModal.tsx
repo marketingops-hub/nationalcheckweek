@@ -18,8 +18,9 @@
  * The actual work — patch-if-dirty → approve-if-idea → generate — lives in
  * `useIdeasList.generateWithOptions`. This component is pure UI + onSubmit.
  *
- * Accessibility: focus-traps via the standard browser dialog element, closes
- * on Escape, and the backdrop click cancels (explicit Cancel button too).
+ * Accessibility: real focus trap via useFocusTrap (captures Tab / Shift+Tab
+ * and restores focus on close), closes on Escape, and the backdrop click
+ * cancels (explicit Cancel button too).
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { useEffect, useMemo, useState } from "react";
@@ -29,6 +30,8 @@ import type {
 } from "@/lib/content-creator/types";
 import { listStyles, type WritingStyle } from "@/lib/content-creator/styles";
 import { wordTarget } from "@/lib/content-creator/length";
+import { Segmented } from "@/components/content-creator/Segmented";
+import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 
 /** Payload returned to the parent on confirm. Any field left undefined means
  *  "keep whatever the draft already has" — the hook consumer dedupes by
@@ -60,6 +63,11 @@ export interface GenerateOptionsModalProps {
 export function GenerateOptionsModal({
   idea, busy, onCancel, onConfirm,
 }: GenerateOptionsModalProps) {
+  /* Focus trap: locks Tab to the dialog while it's mounted, returns
+   * focus to whatever launched it on close. Always active — the modal
+   * only renders when the parent opens it, so "mounted == active". */
+  const trapRef = useFocusTrap<HTMLFormElement>(true);
+
   /* ─── Local form state — seeded from the idea ────────────────────────── */
 
   const [contentType,  setContentType]  = useState<ContentType>(idea.content_type);
@@ -144,6 +152,7 @@ export function GenerateOptionsModal({
       }}
     >
       <form
+        ref={trapRef}
         onSubmit={submit}
         style={{
           background: '#fff', borderRadius: 16, width: '100%', maxWidth: 560,
@@ -300,8 +309,8 @@ export function GenerateOptionsModal({
             {busy ? (
               <>
                 <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 14, animation: 'gen-opts-spin 1s linear infinite' }}
+                  className="material-symbols-outlined swa-spin"
+                  style={{ fontSize: 14 }}
                 >
                   progress_activity
                 </span>
@@ -318,7 +327,6 @@ export function GenerateOptionsModal({
           </button>
         </div>
 
-        <style>{`@keyframes gen-opts-spin { to { transform: rotate(360deg); } }`}</style>
       </form>
     </div>
   );
@@ -356,54 +364,3 @@ const selectStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-interface SegOption<T extends string> {
-  value: T; label: string; icon?: string; hint?: string;
-}
-
-function Segmented<T extends string>({
-  value, options, onChange, disabled,
-}: {
-  value: T; options: SegOption<T>[]; onChange: (v: T) => void; disabled: boolean;
-}) {
-  return (
-    <div
-      role="radiogroup"
-      style={{
-        display: 'inline-flex', background: '#F3F4F6', borderRadius: 10,
-        padding: 3, gap: 2, flexWrap: 'wrap',
-      }}
-    >
-      {options.map((o) => {
-        const active = value === o.value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => onChange(o.value)}
-            disabled={disabled}
-            title={o.hint}
-            style={{
-              padding: '7px 14px', border: 'none', borderRadius: 8,
-              background: active ? '#fff' : 'transparent',
-              color:      active ? '#1E1040' : '#6B7280',
-              fontSize: 12, fontWeight: 600,
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              boxShadow: active ? '0 1px 2px rgba(16,24,40,0.08)' : undefined,
-              transition: 'background 120ms ease, color 120ms ease',
-            }}
-          >
-            {o.icon && (
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-                {o.icon}
-              </span>
-            )}
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}

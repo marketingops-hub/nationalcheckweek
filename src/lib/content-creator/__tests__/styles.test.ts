@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   CreateStyleSchema,
   PatchStyleSchema,
+  buildStyleExamplesBlock,
 } from '../styles';
 
 describe('CreateStyleSchema', () => {
@@ -164,5 +165,61 @@ describe('CreateStyleSchema — examples few-shot', () => {
       examples: [{ snippet: 'ok', bogus: 1 }],
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('buildStyleExamplesBlock', () => {
+  it('returns empty string when there are no examples', () => {
+    expect(buildStyleExamplesBlock([])).toBe('');
+    // Defensive: some callers may pass an undefined field cast through
+    // an Array<StyleExample>. The helper tolerates that by design.
+    expect(buildStyleExamplesBlock(undefined as unknown as never[])).toBe('');
+  });
+
+  it('renders a single untitled example with a numbered heading', () => {
+    const out = buildStyleExamplesBlock([{ snippet: 'Be brief.' }]);
+    expect(out).toContain('STYLE EXAMPLES');
+    expect(out).toContain('#1\nBe brief.');
+    // No blank #1 — #2 dashes must not appear for a lone example.
+    expect(out).not.toContain('#2');
+  });
+
+  it('uses "#N — title" when the example has a title', () => {
+    const out = buildStyleExamplesBlock([{ title: 'Opener', snippet: 'Hook first.' }]);
+    expect(out).toContain('#1 — Opener\nHook first.');
+  });
+
+  it('caps at 3 examples even if more are passed (defence-in-depth)', () => {
+    const four = Array.from({ length: 4 }, (_, i) => ({
+      snippet: `Example ${i + 1}`,
+    }));
+    const out = buildStyleExamplesBlock(four);
+    expect(out).toContain('Example 1');
+    expect(out).toContain('Example 3');
+    expect(out).not.toContain('Example 4');
+  });
+
+  it('trims whitespace around each snippet', () => {
+    const out = buildStyleExamplesBlock([{ snippet: '   Lots of space.   \n\n' }]);
+    // No trailing newline, no leading padding.
+    expect(out).toMatch(/#1\nLots of space\.$/);
+  });
+
+  it('joins multiple examples with a blank line between them', () => {
+    const out = buildStyleExamplesBlock([
+      { snippet: 'A' },
+      { snippet: 'B' },
+    ]);
+    expect(out).toContain('#1\nA\n\n#2\nB');
+  });
+
+  it('opens with a header line that tells the model not to copy', () => {
+    const out = buildStyleExamplesBlock([{ snippet: 'x' }]);
+    // The exact wording is part of the prompt contract — if it changes
+    // the verifier's "match tone, not wording" expectation needs to
+    // update too.
+    expect(out.split('\n')[0]).toBe(
+      'STYLE EXAMPLES (match this tone and cadence — do not copy the wording)',
+    );
   });
 });

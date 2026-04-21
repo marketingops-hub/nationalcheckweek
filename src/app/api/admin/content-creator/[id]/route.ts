@@ -127,9 +127,24 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
 
   /* ── Brief merge ──────────────────────────────────────────────────────── */
 
-  const nextBrief: ContentBrief | undefined = input.brief_patch
-    ? { ...(current.brief ?? {}), ...input.brief_patch } as ContentBrief
-    : undefined;
+  // Shallow merge, but scrub keys the caller explicitly nulled — storing
+  // `style_id: null` would keep the key in the JSONB column and the edge
+  // fn would then re-enter the "style no longer applies" branch every
+  // run. Null here means "unset", so we delete rather than overwrite.
+  let nextBrief: ContentBrief | undefined;
+  if (input.brief_patch) {
+    const merged: Record<string, unknown> = {
+      ...(current.brief ?? {}),
+      ...input.brief_patch,
+    };
+    for (const [k, v] of Object.entries(input.brief_patch)) {
+      if (v === null) delete merged[k];
+    }
+    // Cast via unknown: `topic` is technically required on ContentBrief
+    // but we're merging onto the existing brief which already has one,
+    // so the runtime shape is safe even when TS can't prove it.
+    nextBrief = merged as unknown as ContentBrief;
+  }
 
   /* ── Assemble the actual update payload ───────────────────────────────── */
 

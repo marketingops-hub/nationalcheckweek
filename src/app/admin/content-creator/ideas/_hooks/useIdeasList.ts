@@ -35,6 +35,48 @@ export interface GenerateWithOptionsInput {
   style_id:      string | null;
 }
 
+/**
+ * Pure helper: compute the minimal `patchDraft` payload needed to make
+ * `current` match `opts`. Returns `null` when the two are already
+ * equivalent and no PATCH is required.
+ *
+ * Kept pure (no hook state, no imports from client.ts beyond the type)
+ * so the diff rules are unit-testable without React or network mocks.
+ * Exported for tests and reused from `generateWithOptions` below.
+ */
+export function diffGenerateOptions(
+  current: Pick<ContentDraft, 'content_type' | 'platform' | 'brief'>,
+  opts:    GenerateWithOptionsInput,
+): Parameters<typeof patchDraft>[1] | null {
+  const patch: Parameters<typeof patchDraft>[1] = {};
+  if (opts.content_type !== current.content_type) {
+    patch.content_type = opts.content_type;
+  }
+  if ((opts.platform ?? null) !== (current.platform ?? null)) {
+    patch.platform = opts.platform;
+  }
+
+  const briefPatch: NonNullable<typeof patch.brief_patch> = {};
+  const currentStyleId = current.brief?.style_id ?? null;
+  if (opts.style_id !== currentStyleId) {
+    // Explicit unset goes through as style_id: null — the PATCH route
+    // deletes nulled keys from the merged brief, so a cleared style
+    // doesn't leave a dangling id the edge fn then has to step around.
+    briefPatch.style_id = opts.style_id;
+  }
+  // 'standard' is the stored default. Treat a missing field as standard
+  // so switching FROM standard to standard is always a no-op.
+  const currentPreset = current.brief?.length_preset ?? 'standard';
+  if (opts.length_preset !== currentPreset) {
+    briefPatch.length_preset = opts.length_preset;
+  }
+  if (Object.keys(briefPatch).length > 0) {
+    patch.brief_patch = briefPatch;
+  }
+
+  return Object.keys(patch).length === 0 ? null : patch;
+}
+
 /** Statuses that belong to this stage. Ordered so `generating` rows are
  *  visible but visually de-emphasised at the bottom. */
 const IDEAS_STATUSES: ContentStatus[] = ['idea', 'approved_idea', 'generating'];
@@ -220,41 +262,10 @@ export function useIdeasList(): UseIdeasList {
       const current = ideas.find((r) => r.id === id);
       if (!current) throw new Error("Idea not found in local state — refresh and try again.");
 
-      /* 1. Diff payload → minimal patch
-       *
-       * The PATCH route accepts top-level content_type/platform AND a
-       * brief_patch for { style_id, length_preset, … }. We only send the
-       * fields that actually differ so the server doesn't log a pointless
-       * "no-op PATCH". */
-      const patch: Parameters<typeof patchDraft>[1] = {};
-      if (opts.content_type !== current.content_type) {
-        patch.content_type = opts.content_type;
-      }
-      if ((opts.platform ?? null) !== (current.platform ?? null)) {
-        patch.platform = opts.platform;
-      }
-
-      const briefPatch: NonNullable<typeof patch.brief_patch> = {};
-      const currentStyleId = current.brief?.style_id ?? null;
-      if (opts.style_id !== currentStyleId) {
-        // brief_patch uses strings; null is encoded by simply assigning
-        // undefined (the shallow-merge keeps whatever was there). For an
-        // explicit unset we'd need a new endpoint, so we just no-op on
-        // null → null. If the admin *changed* to null, we also skip the
-        // patch — the edge fn drops a dangling style_id silently via
-        // resolveStylePrompt, so a stale id is harmless until next edit.
-        if (opts.style_id) briefPatch.style_id = opts.style_id;
-      }
-      if (opts.length_preset !== (current.brief?.length_preset ?? 'standard')) {
-        briefPatch.length_preset = opts.length_preset;
-      }
-      if (Object.keys(briefPatch).length > 0) {
-        patch.brief_patch = briefPatch;
-      }
-
-      if (Object.keys(patch).length > 0) {
-        await patchDraft(id, patch);
-      }
+      /* 1. Diff payload → minimal patch. diffGenerateOptions is a pure
+       *    helper (see top of file) with its own unit-test coverage. */
+      const patch = diffGenerateOptions(current, opts);
+      if (patch) await patchDraft(id, patch);
 
       /* 2. Approve if still an idea, then generate. */
       if (current.status === 'idea') {

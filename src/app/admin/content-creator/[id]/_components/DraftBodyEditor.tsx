@@ -286,8 +286,8 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
           </div>
           <p style={{ margin: 0, fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>
             The model will read your current draft and rewrite it to address
-            these notes, staying grounded in the Vault. Be specific — "shorter
-            intro, punchier CTA, drop the loneliness stat" beats "make it better".
+            these notes, staying grounded in the Vault. Be specific — &ldquo;shorter
+            intro, punchier CTA, drop the loneliness stat&rdquo; beats &ldquo;make it better&rdquo;.
           </p>
           <textarea
             value={feedback}

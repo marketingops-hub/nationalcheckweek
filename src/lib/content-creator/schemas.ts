@@ -41,8 +41,9 @@ export const ContentBriefSchema = z.object({
   /** When the brief was spawned from a content_topics row, track it here. */
   source_topic_id: z.string().uuid().optional(),
   /** Optional writing-style (content_writing_styles.id). Prepended to the
-   *  edge-fn system prompt. */
-  style_id:        z.string().uuid().optional(),
+   *  edge-fn system prompt. Null is accepted so the PATCH route can
+   *  explicitly clear a style the admin retired. */
+  style_id:        z.string().uuid().nullable().optional(),
   /** For long-form only: admin toggle to generate / keep a title field.
    *  Social posts never have a title regardless. Defaults to true when
    *  missing, which matches pre-Apr-2026 behaviour. */

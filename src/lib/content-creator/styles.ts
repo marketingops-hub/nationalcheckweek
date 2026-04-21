@@ -95,6 +95,32 @@ export const PatchStyleSchema = z.object({
 }).strict();
 export type PatchStyleInput = z.infer<typeof PatchStyleSchema>;
 
+/* ─── Prompt block builder (mirror of edge-fn `buildStyleExamplesBlock`) ── */
+
+/**
+ * Render up to 3 style examples as a STYLE EXAMPLES block that sits below
+ * the WRITING STYLE directive. Returns an empty string when there are no
+ * examples, so callers can unconditionally interpolate.
+ *
+ * Shape is intentionally terse (numbered, optional title, blank line
+ * between) so it reads as few-shot anchors rather than a spec — we want
+ * the model to absorb tone, not copy structure. Bounded length is
+ * guaranteed upstream (DB CHECK = 4 KB on the row; Zod caps each snippet
+ * at 500 chars; max 3 entries), so no truncation needed here.
+ *
+ * IMPORTANT: this function body MUST stay identical to the Deno-side
+ * mirror at `supabase/functions/_shared/content-creator/styles.ts`.
+ * The parity test in `__tests__/edge-fn-mirror.test.ts` enforces that.
+ */
+export function buildStyleExamplesBlock(examples: StyleExample[]): string {
+  if (!examples || examples.length === 0) return "";
+  const items = examples.slice(0, 3).map((ex, i) => {
+    const heading = ex.title ? `#${i + 1} — ${ex.title}` : `#${i + 1}`;
+    return `${heading}\n${ex.snippet.trim()}`;
+  });
+  return `STYLE EXAMPLES (match this tone and cadence — do not copy the wording)\n${items.join("\n\n")}`;
+}
+
 /* ─── Client wrappers ───────────────────────────────────────────────────── */
 
 const BASE = '/api/admin/content-creator/styles';

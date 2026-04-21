@@ -18,6 +18,17 @@ import type {
 
 const BASE = '/api/admin/content-creator';
 
+/**
+ * Browser-side timeout for endpoints that proxy to the long-running AI
+ * chain (generate, regenerate, verify). The edge fn cap is 85s and the
+ * Next.js route uses maxDuration=90, so we give the client 100s before
+ * giving up. Named so every AI-facing wrapper uses the same number —
+ * picking a smaller value aborts a request that is still doing real
+ * work, and picking a larger one just waits longer after the server
+ * has already hung up.
+ */
+export const AI_ROUND_TRIP_TIMEOUT_MS = 100_000;
+
 async function asJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -99,7 +110,7 @@ export async function unapproveIdea(id: string): Promise<ContentDraft> {
 export async function generateDraft(id: string): Promise<ContentDraft> {
   const res = await adminFetch(`${BASE}/${id}/generate`, {
     method:  'POST',
-    timeout: 100_000,
+    timeout: AI_ROUND_TRIP_TIMEOUT_MS,
   });
   const { draft } = await asJson<{ draft: ContentDraft }>(res);
   return draft;
@@ -111,7 +122,7 @@ export async function verifyDraft(
 ): Promise<{ draft: ContentDraft; verification: VerificationResult }> {
   const res = await adminFetch(`${BASE}/${id}/verify`, {
     method:  'POST',
-    timeout: 100_000,
+    timeout: AI_ROUND_TRIP_TIMEOUT_MS,
   });
   return asJson<{ draft: ContentDraft; verification: VerificationResult }>(res);
 }
@@ -134,7 +145,7 @@ export async function patchDraft(
     content_type?: 'social' | 'blog' | 'newsletter';
     platform?:     'twitter' | 'linkedin' | 'facebook' | 'instagram' | null;
     brief_patch?:  Partial<{
-      style_id:              string;
+      style_id:              string | null;
       include_title:         boolean;
       regeneration_feedback: string;
       topic:                 string;
@@ -182,7 +193,7 @@ export async function regenerateDraft(id: string, feedback: string): Promise<Con
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ feedback }),
-    timeout: 100_000,
+    timeout: AI_ROUND_TRIP_TIMEOUT_MS,
   });
   const { draft } = await asJson<{ draft: ContentDraft }>(res);
   return draft;

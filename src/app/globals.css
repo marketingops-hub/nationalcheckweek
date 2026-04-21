@@ -30,3 +30,9 @@
 .animate-blob { animation: blob 7s infinite; }
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-4000 { animation-delay: 4s; }
+
+/* Shared spinner keyframe + helper class. Used by every "Working…" /
+ * "Loading…" / in-flight indicator across the admin so we don't inline
+ * the same @keyframes in five different component files. */
+@keyframes swa-spin { to { transform: rotate(360deg); } }
+.swa-spin { animation: swa-spin 1s linear infinite; }

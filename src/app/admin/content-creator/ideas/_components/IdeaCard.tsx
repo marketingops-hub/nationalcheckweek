@@ -147,12 +147,9 @@ export function IdeaCard(props: IdeaCardProps) {
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
           {isGenerating ? (
             <span
-              className="material-symbols-outlined"
+              className="material-symbols-outlined swa-spin"
               aria-label="Generating"
-              style={{
-                fontSize: 18, color: '#7C3AED',
-                animation: 'idea-card-spin 1.2s linear infinite',
-              }}
+              style={{ fontSize: 18, color: '#7C3AED' }}
             >
               progress_activity
             </span>
@@ -293,9 +290,6 @@ export function IdeaCard(props: IdeaCardProps) {
         </div>
       </div>
 
-      {/* Spinner keyframes, local to the card tree (keeps the global CSS
-          clean and lets us avoid a shared animation stylesheet). */}
-      <style>{`@keyframes idea-card-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

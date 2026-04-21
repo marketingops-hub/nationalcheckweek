@@ -40,9 +40,12 @@ export interface ContentBrief {
   /**
    * Optional reference to a content_writing_styles row. When set, the
    * edge functions fetch that style's `prompt` field and prepend it to
-   * the system message so the AI adopts the chosen voice.
+   * the system message so the AI adopts the chosen voice. Null is
+   * accepted (distinct from undefined) so PATCH payloads can explicitly
+   * clear a previously-set style — the route handler treats null as
+   * "unset this field" when merging brief_patch.
    */
-  style_id?: string;
+  style_id?: string | null;
   /**
    * For long-form only (blog / newsletter). When explicitly false the
    * generate stage is instructed to omit the title, and the PATCH route

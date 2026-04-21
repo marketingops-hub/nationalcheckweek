@@ -24,6 +24,7 @@ import type {
   ContentDraft, ContentType, SocialPlatform,
 } from "@/lib/content-creator/types";
 import { listStyles, type WritingStyle } from "@/lib/content-creator/styles";
+import { Segmented } from "@/components/content-creator/Segmented";
 import type { BriefMetaPatch } from "../_hooks/useDraftDetail";
 
 const PLATFORMS: SocialPlatform[] = ['twitter', 'linkedin', 'facebook', 'instagram'];
@@ -160,7 +161,7 @@ export function BriefSettingsPanel({ draft, disabled, onSave }: BriefSettingsPan
 
       {/* Row 1: content type segmented control */}
       <FieldRow label="Content type">
-        <SegmentedControl<ContentType>
+        <Segmented<ContentType>
           value={contentType}
           options={[
             { value: 'blog',       label: 'Blog post',  icon: 'article' },
@@ -292,60 +293,3 @@ const selectStyle: React.CSSProperties = {
   cursor: 'pointer', minWidth: 180,
 };
 
-/* ─── Segmented control ────────────────────────────────────────────────── */
-
-interface SegOption<T extends string> { value: T; label: string; icon: string }
-
-function SegmentedControl<T extends string>({
-  value, options, onChange, disabled,
-}: {
-  value:    T;
-  options:  SegOption<T>[];
-  onChange: (v: T) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div
-      role="radiogroup"
-      style={{
-        display: 'inline-flex',
-        background: '#F3F4F6',
-        borderRadius: 10,
-        padding: 3,
-        gap: 2,
-      }}
-    >
-      {options.map((o) => {
-        const active = value === o.value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => onChange(o.value)}
-            disabled={disabled}
-            style={{
-              padding: '6px 14px',
-              border: 'none',
-              borderRadius: 8,
-              background: active ? '#fff' : 'transparent',
-              color:      active ? '#1E1040' : '#6B7280',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              boxShadow: active ? '0 1px 2px rgba(16,24,40,0.08)' : undefined,
-              transition: 'background 120ms ease, color 120ms ease',
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-              {o.icon}
-            </span>
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}

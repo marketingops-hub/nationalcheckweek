@@ -62,14 +62,43 @@ describe('countWords', () => {
 });
 
 describe('wordTarget', () => {
-  it('returns null for social', () => {
+  it('returns null for social regardless of preset', () => {
     expect(wordTarget('social')).toBeNull();
+    expect(wordTarget('social', 'short')).toBeNull();
+    expect(wordTarget('social', 'long')).toBeNull();
   });
-  it('returns blog range', () => {
+
+  it('returns the baseline blog range when preset is standard / omitted', () => {
     expect(wordTarget('blog')).toEqual({ min: 600, max: 900, tolerance: 0.15 });
+    expect(wordTarget('blog', 'standard')).toEqual({ min: 600, max: 900, tolerance: 0.15 });
   });
-  it('returns newsletter range', () => {
+
+  it('returns the baseline newsletter range when preset is standard / omitted', () => {
     expect(wordTarget('newsletter')).toEqual({ min: 300, max: 500, tolerance: 0.15 });
+    expect(wordTarget('newsletter', 'standard')).toEqual({ min: 300, max: 500, tolerance: 0.15 });
+  });
+
+  it('scales blog down 0.6× for short', () => {
+    // 600×0.6=360, 900×0.6=540. Math.round applied explicitly.
+    expect(wordTarget('blog', 'short')).toEqual({ min: 360, max: 540, tolerance: 0.15 });
+  });
+
+  it('scales blog up 1.6× for long', () => {
+    // 600×1.6=960, 900×1.6=1440.
+    expect(wordTarget('blog', 'long')).toEqual({ min: 960, max: 1440, tolerance: 0.15 });
+  });
+
+  it('scales newsletter proportionally', () => {
+    expect(wordTarget('newsletter', 'short')).toEqual({ min: 180, max: 300, tolerance: 0.15 });
+    expect(wordTarget('newsletter', 'long')).toEqual({ min: 480, max: 800, tolerance: 0.15 });
+  });
+
+  it('tolerance stays at 0.15 across all presets', () => {
+    // If we ever scale tolerance per preset the length-gate retry logic
+    // has to change too — this test guards that coupling.
+    for (const p of ['short', 'standard', 'long'] as const) {
+      expect(wordTarget('blog', p)?.tolerance).toBe(0.15);
+    }
   });
 });
 

@@ -129,8 +129,8 @@ export function ContentLibraryView({ state }: { state: LibraryState }) {
       {loading && drafts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#9CA3AF' }}>
           <span
-            className="material-symbols-outlined"
-            style={{ fontSize: 36, display: 'block', marginBottom: 10, animation: 'spin 1s linear infinite' }}
+            className="material-symbols-outlined swa-spin"
+            style={{ fontSize: 36, display: 'block', marginBottom: 10 }}
           >
             progress_activity
           </span>
@@ -167,7 +167,6 @@ export function ContentLibraryView({ state }: { state: LibraryState }) {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
