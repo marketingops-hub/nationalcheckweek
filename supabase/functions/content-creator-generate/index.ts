@@ -29,11 +29,12 @@ import {
 } from "../_shared/content-creator/prompts.ts";
 import { callOpenAI } from "../_shared/content-creator/openai.ts";
 import { callAnthropic } from "../_shared/content-creator/anthropic.ts";
-import { resolveStylePrompt } from "../_shared/content-creator/styles.ts";
+import { resolveStylePrompt, buildStyleExamplesBlock } from "../_shared/content-creator/styles.ts";
 import { formatCitations } from "../_shared/content-creator/citations.ts";
 import {
   countWords, wordTarget, isOutsideTarget, buildLengthRetryDirective,
 } from "../_shared/content-creator/length.ts";
+import { evaluateDensity } from "../_shared/content-creator/density.ts";
 import { sumCosts } from "../_shared/content-creator/pricing.ts";
 import {
   corsHeaders, json, readCtx, requireAuth,
@@ -133,7 +134,9 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
         vault_category: draft.brief.vault_category,
         topic:          draft.brief.topic,
       }),
-      resolveStylePrompt(ctx.sbUrl, ctx.sbKey, draft.brief?.style_id),
+      resolveStylePrompt(ctx.sbUrl, ctx.sbKey, draft.brief?.style_id, {
+        contentType: draft.content_type,
+      }),
     ]);
     msVault    = Date.now() - vaultStart;
     vault      = vaultRes;
@@ -162,7 +165,8 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       idea:         { title: draft.title ?? "(untitled idea)", summary: draft.body },
       brief:        draft.brief,
       vault_block:  vaultBlock,
-      style_prompt: style?.prompt,
+      style_prompt:         style?.prompt,
+      style_examples_block: style ? buildStyleExamplesBlock(style.examples) : undefined,
       regeneration_feedback: isRegeneration
         ? (draft.brief?.regeneration_feedback as string | undefined)
         : undefined,
@@ -325,6 +329,23 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
     ? null
     : countWords(newBody);
 
+  // Evidence-density post-check. We score against the *distinct vault ids*
+  // the citation post-processor already extracted, not the raw [vault:...]
+  // count, so a writer that cites the same source three times only gets
+  // credit once (matches the prompt rule the model was given).
+  // Social posts get a simple "≥1 cite" check here rather than words-per-cite.
+  const distinctCites = cited.ordered_vault_ids.length;
+  const densityReport = evaluateDensity(
+    draft.content_type,
+    draft.content_type === 'social' ? newBody.length : (finalWordCount ?? 0),
+    distinctCites,
+  );
+  if (draft.content_type === 'social' && distinctCites === 0) {
+    drift.push('No vault citations in this social post. Add at least one to keep the claim auditable.');
+  } else if (densityReport.belowTarget && densityReport.warning) {
+    drift.push(densityReport.warning);
+  }
+
   const ai_metadata = {
     ...(draft.ai_metadata ?? {}),
     openai_model:    openaiRes.model,
@@ -345,6 +366,13 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
     char_limit_exceeded:   platformLimit ? newBody.length > platformLimit : false,
     word_count:            finalWordCount,
     length_retry:          lengthRetry,
+    evidence: {
+      cites:              distinctCites,
+      words_per_cite:     Number.isFinite(densityReport.wordsPerCite)
+                            ? Math.round(densityReport.wordsPerCite)
+                            : null,
+      below_target:       densityReport.belowTarget,
+    },
     latency_ms: {
       vault:     msVault,
       openai:    msOpenai,

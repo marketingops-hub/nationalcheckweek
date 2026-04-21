@@ -80,3 +80,89 @@ describe('PatchStyleSchema', () => {
     expect(PatchStyleSchema.safeParse({ prompt: 'x'.repeat(4001) }).success).toBe(false);
   });
 });
+
+/* ─── Apr-2026: applies_to + examples fields ─────────────────────────────── */
+
+describe('CreateStyleSchema — applies_to scoping', () => {
+  const base = {
+    title:  'Storytelling',
+    prompt: 'You write in a story-telling voice. Open with a concrete scene or moment.',
+  };
+
+  it('accepts a blog-only scope', () => {
+    const r = CreateStyleSchema.safeParse({ ...base, applies_to: ['blog'] });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.applies_to).toEqual(['blog']);
+  });
+
+  it('accepts multi-type scope', () => {
+    const r = CreateStyleSchema.safeParse({ ...base, applies_to: ['blog', 'newsletter'] });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.applies_to).toEqual(['blog', 'newsletter']);
+  });
+
+  it("normalises any array containing 'all' down to ['all']", () => {
+    // Prevents ambiguous rows like ['all','blog'] landing in the DB.
+    const r = CreateStyleSchema.safeParse({ ...base, applies_to: ['all', 'blog'] });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.applies_to).toEqual(['all']);
+  });
+
+  it('rejects an empty applies_to array', () => {
+    const r = CreateStyleSchema.safeParse({ ...base, applies_to: [] });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects an unknown content type value', () => {
+    const r = CreateStyleSchema.safeParse({ ...base, applies_to: ['podcast'] });
+    expect(r.success).toBe(false);
+  });
+});
+
+describe('CreateStyleSchema — examples few-shot', () => {
+  const base = {
+    title:  'Storytelling',
+    prompt: 'You write in a story-telling voice. Open with a concrete scene or moment.',
+  };
+
+  it('accepts up to 3 examples with optional titles', () => {
+    const r = CreateStyleSchema.safeParse({
+      ...base,
+      examples: [
+        { title: 'Opener', snippet: 'The bell rang at 8:47am.' },
+        { snippet: 'Most teachers nod when I say this.' },
+      ],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects more than 3 examples', () => {
+    const snippet = 'Lorem ipsum.';
+    const r = CreateStyleSchema.safeParse({
+      ...base,
+      examples: [{ snippet }, { snippet }, { snippet }, { snippet }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects an empty snippet', () => {
+    const r = CreateStyleSchema.safeParse({ ...base, examples: [{ snippet: '' }] });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects a snippet over 500 chars', () => {
+    const r = CreateStyleSchema.safeParse({
+      ...base,
+      examples: [{ snippet: 'x'.repeat(501) }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects unknown keys inside an example', () => {
+    const r = CreateStyleSchema.safeParse({
+      ...base,
+      examples: [{ snippet: 'ok', bogus: 1 }],
+    });
+    expect(r.success).toBe(false);
+  });
+});

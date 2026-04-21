@@ -10,6 +10,8 @@
  * Keep prompt text here, not in index.ts, so they can be diffed in isolation.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+import { densityPromptRule } from "./density.ts";
+
 // ── Platform constraints (mirrors src/lib/content-creator/platforms.ts — ────
 //    duplicated because edge fns can't import from src/) ─────────────────────
 const PLATFORM: Record<
@@ -104,6 +106,9 @@ export interface IdeaPromptInput {
   count: number;
   /** Optional writing-style directive, prepended to the system message. */
   style_prompt?: string;
+  /** Optional rendered STYLE EXAMPLES block (from buildStyleExamplesBlock).
+   *  Already a full block with heading — interpolated as-is. */
+  style_examples_block?: string;
 }
 
 export function buildIdeaPrompt(input: IdeaPromptInput): { system: string; user: string } {
@@ -119,8 +124,14 @@ export function buildIdeaPrompt(input: IdeaPromptInput): { system: string; user:
   const stylePrefix = input.style_prompt
     ? `WRITING STYLE\n${input.style_prompt.trim()}\n\n`
     : "";
+  // Few-shot examples land between the style directive and the mission
+  // so the model has "you are this voice → here's what it sounds like"
+  // in reading order. Empty string when no examples are configured.
+  const examplesBlock = input.style_examples_block
+    ? `${input.style_examples_block.trim()}\n\n`
+    : "";
 
-  const system = `${stylePrefix}${MISSION}
+  const system = `${stylePrefix}${examplesBlock}${MISSION}
 
 Task: propose ${input.count} distinct content IDEAS for ${typeLabel}. Each idea
 should be rooted in ONE or more of the provided vault entries.
@@ -156,6 +167,8 @@ export interface GeneratePromptInput {
   vault_block: string;
   /** Optional writing-style directive, prepended to the system message. */
   style_prompt?: string;
+  /** Optional rendered STYLE EXAMPLES block (from buildStyleExamplesBlock). */
+  style_examples_block?: string;
   /**
    * Free-text feedback captured from the "Request improvement" flow.
    * When present, the user prompt gains a FEEDBACK section and the model
@@ -180,6 +193,9 @@ export function buildGeneratePrompt(input: GeneratePromptInput): { system: strin
   const stylePrefix = input.style_prompt
     ? `WRITING STYLE\n${input.style_prompt.trim()}\n\n`
     : "";
+  const examplesBlock = input.style_examples_block
+    ? `${input.style_examples_block.trim()}\n\n`
+    : "";
 
   // Title is null for social, OR for long-form with include_title === false.
   const wantsTitle = input.content_type !== "social"
@@ -189,7 +205,7 @@ export function buildGeneratePrompt(input: GeneratePromptInput): { system: strin
     ? `title field REQUIRED.`
     : `title field MUST be null. Open the body with the hook directly — no headline line.`;
 
-  const system = `${stylePrefix}${MISSION}
+  const system = `${stylePrefix}${examplesBlock}${MISSION}
 
 Task: write the ${input.content_type} post described by the approved idea below.
 Follow the TYPE RULES exactly. Every factual claim MUST cite a vault id
@@ -248,8 +264,12 @@ Write the ${input.content_type} now. Return JSON only.`.trim();
   return { system, user };
 }
 
-/** Renders the per-type / per-platform rule block for stage 2. */
+/** Renders the per-type / per-platform rule block for stage 2. The evidence-
+ *  density line is centralised in density.ts so the verifier sees the same
+ *  rule the writer does. */
 function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: string): string {
+  const densityRule = densityPromptRule(type);
+
   if (type === "social") {
     const cfg = PLATFORM[platform ?? "twitter"] ?? PLATFORM.twitter;
     return [
@@ -261,6 +281,7 @@ function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: st
         : `- Do NOT use hashtags.`,
       `- title field MUST be null.`,
       `- No links unless explicitly present in a vault entry.`,
+      densityRule,
     ].join("\n");
   }
   if (type === "blog") {
@@ -270,6 +291,7 @@ function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: st
       `- Tone: evidence-based, accessible, no jargon.`,
       `- title field REQUIRED (compelling, ≤ 70 chars).`,
       `- body should use simple markdown (## for subheads, - for lists).`,
+      densityRule,
     ].join("\n");
   }
   // newsletter
@@ -279,6 +301,7 @@ function typeSpecificRules(type: "social" | "blog" | "newsletter", platform?: st
     `- Tone: warm, direct, conversational but credible.`,
     `- title field REQUIRED (subject line, ≤ 60 chars, avoids spam triggers).`,
     `- body should open with the reader's name placeholder "{{first_name}}" where natural.`,
+    densityRule,
   ].join("\n");
 }
 
@@ -369,7 +392,10 @@ Rules:
 - status = "verified" only if flagged_claims is empty.
 - status = "partially_verified" if some claims are flagged but the core
   thesis is supported.
-- status = "unverified" if the core thesis is not supported.`.trim();
+- status = "unverified" if the core thesis is not supported.
+
+EVIDENCE DENSITY (the draft was written under this rule — flag if violated)
+${densityPromptRule(input.content_type)}`.trim();
 
   const user = `DRAFT TO VERIFY
 ${input.draft.title ? `TITLE: ${input.draft.title}\n` : ""}BODY:

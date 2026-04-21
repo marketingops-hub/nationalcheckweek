@@ -57,14 +57,29 @@ export function BriefSettingsPanel({ draft, disabled, onSave }: BriefSettingsPan
     setStyleId(draft.brief?.style_id ?? "");
   }, [draft.content_type, draft.platform, draft.brief?.include_title, draft.brief?.style_id]);
 
-  /* ─── Style list — fetched once, non-critical if it fails ────────────── */
+  /* ─── Style list — fetched per content_type, non-critical if it fails ──
+   *
+   * Scoped to the *local* contentType (not the persisted draft.content_type)
+   * so the dropdown updates the instant the admin toggles the segmented
+   * control, well before they hit Save. If the currently-selected style
+   * doesn't apply to the new type, we clear it; otherwise the Save patch
+   * would carry an orphan style_id the edge fn would silently drop. */
 
   const [styles, setStyles] = useState<WritingStyle[]>([]);
   useEffect(() => {
-    listStyles({ active_only: true })
-      .then(setStyles)
+    listStyles({ active_only: true, applies_to: contentType })
+      .then((rows) => {
+        setStyles(rows);
+        // Clear an orphan selection: the previously-picked style no
+        // longer applies to this content type.
+        if (styleId && !rows.some((s) => s.id === styleId)) setStyleId("");
+      })
       .catch(() => { /* non-critical; dropdown falls back to "(default)" only */ });
-  }, []);
+    // styleId is intentionally read but not a dep — we only want to
+    // re-fetch on content-type changes, and the orphan-clear above uses
+    // the latest value from closure at call time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentType]);
 
   /* ─── Dirty check drives the Save button ─────────────────────────────── */
 

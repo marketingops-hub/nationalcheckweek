@@ -15,6 +15,16 @@ import { adminFetch } from '@/lib/adminFetch';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
+/** One `examples` item. Short on-brand snippets shown to the model as
+ *  few-shot anchors. `title` is optional but helpful for the admin UI. */
+export interface StyleExample {
+  title?:   string;
+  snippet:  string;
+}
+
+/** Content types a style may apply to. 'all' is a wildcard. Keep lowercased. */
+export type StyleAppliesTo = 'all' | 'blog' | 'newsletter' | 'social';
+
 /** Mirrors the content_writing_styles row 1:1. */
 export interface WritingStyle {
   id:          string;
@@ -23,6 +33,8 @@ export interface WritingStyle {
   prompt:      string;
   is_active:   boolean;
   sort_order:  number;
+  applies_to:  StyleAppliesTo[];
+  examples:    StyleExample[];
   created_by:  string | null;
   created_at:  string;
   updated_at:  string;
@@ -39,12 +51,31 @@ const descriptionField = z.string().trim().max(400).nullable().optional();
 const promptField      = nonEmpty.min(10, 'Prompt must be at least 10 characters').max(4000);
 const sortOrderField   = z.number().int().min(0).max(10_000);
 
+const AppliesToValue = z.enum(['all', 'blog', 'newsletter', 'social']);
+
+// applies_to: at least one entry. If 'all' is present we normalise to
+// just ['all'] server-side so the DB doesn't carry ambiguous data like
+// ['all','blog']; enforced by the PG CHECK plus a transform here.
+const appliesToField = z.array(AppliesToValue).min(1).max(4)
+  .transform((arr) => (arr.includes('all') ? ['all'] as const : arr));
+
+// examples: up to 3 snippets, each ≤ 500 chars. Mirrors (slightly tighter
+// than) the 4 KB row-level cap so the user can't push a single snippet
+// that fills the whole budget.
+const StyleExampleSchema = z.object({
+  title:   z.string().trim().max(80).optional(),
+  snippet: nonEmpty.max(500),
+}).strict();
+const examplesField = z.array(StyleExampleSchema).max(3);
+
 export const CreateStyleSchema = z.object({
   title:       titleField,
   description: descriptionField,
   prompt:      promptField,
   is_active:   z.boolean().optional(),
   sort_order:  sortOrderField.optional(),
+  applies_to:  appliesToField.optional(),
+  examples:    examplesField.optional(),
 }).strict();
 export type CreateStyleInput = z.infer<typeof CreateStyleSchema>;
 
@@ -56,6 +87,8 @@ export const PatchStyleSchema = z.object({
   prompt:      promptField.optional(),
   is_active:   z.boolean().optional(),
   sort_order:  sortOrderField.optional(),
+  applies_to:  appliesToField.optional(),
+  examples:    examplesField.optional(),
 }).strict();
 export type PatchStyleInput = z.infer<typeof PatchStyleSchema>;
 
@@ -74,11 +107,15 @@ async function asJson<T>(res: Response): Promise<T> {
 export interface ListStylesFilters {
   /** When true, only return `is_active=true` rows. Default false (all). */
   active_only?: boolean;
+  /** When set, only return styles whose `applies_to` contains this value
+   *  or the 'all' wildcard. Powers the content-type-scoped brief dropdown. */
+  applies_to?: Exclude<StyleAppliesTo, 'all'>;
 }
 
 export async function listStyles(filters: ListStylesFilters = {}): Promise<WritingStyle[]> {
   const qs = new URLSearchParams();
   if (filters.active_only) qs.set('active_only', 'true');
+  if (filters.applies_to)  qs.set('applies_to', filters.applies_to);
   const res = await adminFetch(`${BASE}?${qs.toString()}`);
   const { styles } = await asJson<{ styles: WritingStyle[] }>(res);
   return styles;

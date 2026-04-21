@@ -22,7 +22,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { fetchVaultContext, formatVaultContext } from "../_shared/content-creator/vault.ts";
 import { buildIdeaPrompt } from "../_shared/content-creator/prompts.ts";
 import { callOpenAI } from "../_shared/content-creator/openai.ts";
-import { resolveStylePrompt } from "../_shared/content-creator/styles.ts";
+import { resolveStylePrompt, buildStyleExamplesBlock } from "../_shared/content-creator/styles.ts";
 import {
   corsHeaders, json, readCtx, requireAuth, safeParseJson, dedupUuids, type Ctx,
 } from "../_shared/content-creator/common.ts";
@@ -67,7 +67,9 @@ async function handleGenerateIdeas(body: Record<string, unknown>, ctx: Ctx) {
       vault_category: brief.vault_category,
       topic:          brief.topic,
     }),
-    resolveStylePrompt(ctx.sbUrl, ctx.sbKey, (brief as { style_id?: string }).style_id),
+    resolveStylePrompt(ctx.sbUrl, ctx.sbKey, (brief as { style_id?: string }).style_id, {
+      contentType: content_type,
+    }),
   ]);
 
   // 2. Call OpenAI for N ideas. Temperature bumped for diversity.
@@ -75,7 +77,8 @@ async function handleGenerateIdeas(body: Record<string, unknown>, ctx: Ctx) {
     content_type, platform, brief,
     vault_block:  formatVaultContext(vault),
     count,
-    style_prompt: style?.prompt,
+    style_prompt:         style?.prompt,
+    style_examples_block: style ? buildStyleExamplesBlock(style.examples) : undefined,
   });
 
   const ai = await callOpenAI({
