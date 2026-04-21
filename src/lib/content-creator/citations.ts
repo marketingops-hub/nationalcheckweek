@@ -50,6 +50,22 @@ export interface FormatCitationsResult {
 const VAULT_MARKER = /\[vault:([0-9a-f-]{36})\]/gi;
 
 /**
+ * Regex that detects an AI-authored Sources / References section at the end
+ * of the body. We consider it "present" if any of these appear near the
+ * tail of the document (last 40% of lines) on their own line:
+ *
+ *   - `## Sources` / `## References`    (markdown heading variant)
+ *   - `Sources:`  / `References:`       (label variant)
+ *   - `---` followed by `Sources:`      (our own post-processor format —
+ *                                        makes the check idempotent if
+ *                                        formatCitations is ever called twice)
+ *
+ * Case-insensitive, trimmed per-line. Anchoring near the tail avoids
+ * false positives when "sources" appears in the body prose.
+ */
+const SOURCES_HEADING = /^(?:#{1,6}\s*)?(sources|references)\s*:?\s*$/i;
+
+/**
  * Main entrypoint. `content_type` controls the in-body marker style and
  * whether a Sources block is appended.
  *
@@ -99,8 +115,17 @@ export function formatCitations(
 
   // Long-form pieces get a reference list at the end. Social posts don't
   // because even 30 chars of "[1] URL" blows Twitter/Instagram budgets.
+  //
+  // Dedupe: if the AI already wrote its own Sources / References heading
+  // near the tail of the body, we skip the append. This covers two cases:
+  //   (a) a well-behaved model writing its own refs section despite the
+  //       prompt asking for inline markers only
+  //   (b) idempotency if formatCitations gets called twice on the same
+  //       body (e.g. a regen that pulls the pre-formatted body back in
+  //       as "previous_draft" and then runs through the post-processor
+  //       again — unlikely today but cheap insurance).
   let out = replaced;
-  if (verbose) {
+  if (verbose && !hasTrailingSourcesBlock(replaced)) {
     const lines = uniqueOrder.map((id, i) => {
       const e = byId.get(id);
       const title = (e?.title  ?? '').trim() || 'Untitled source';
@@ -122,4 +147,22 @@ export function formatCitations(
     ordered_vault_ids: uniqueOrder,
     citation_style:    verbose ? 'verbose' : 'compact',
   };
+}
+
+/**
+ * True when the last 40% of the body contains a line matching
+ * SOURCES_HEADING or a literal `---` divider followed by `Sources:`.
+ * The 40% tail window is important — we don't want "References:" in
+ * body prose to block the append.
+ */
+function hasTrailingSourcesBlock(body: string): boolean {
+  const lines = body.split('\n');
+  if (lines.length === 0) return false;
+  const tailStart = Math.floor(lines.length * 0.6);
+  for (let i = tailStart; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (SOURCES_HEADING.test(line)) return true;
+  }
+  return false;
 }

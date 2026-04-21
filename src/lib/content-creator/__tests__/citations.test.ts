@@ -100,3 +100,57 @@ describe('formatCitations — newsletter', () => {
     expect(out.citation_style).toBe('verbose');
   });
 });
+
+describe('formatCitations — Sources block dedupe', () => {
+  it('skips append when model already emitted a "## Sources" heading near the tail', () => {
+    const body = [
+      `Intro claim [vault:${uuidA}].`,
+      `Another claim [vault:${uuidB}].`,
+      ``,
+      `## Sources`,
+      `- Some link the model made up`,
+    ].join('\n');
+    const out = formatCitations(body, vault, 'blog');
+    // Markers replaced but no second Sources section appended.
+    expect(out.body).toContain('[Source 1]');
+    expect(out.body).toContain('[Source 2]');
+    // Only one Sources/references-style heading in the final body.
+    const matches = out.body.match(/^(?:#{1,6}\s*)?(sources|references)\s*:?\s*$/gim) ?? [];
+    expect(matches.length).toBe(1);
+  });
+
+  it('skips append when model wrote a plain "References:" label', () => {
+    const body = [
+      `Claim one [vault:${uuidA}].`,
+      ``,
+      `References:`,
+      `1. Something`,
+    ].join('\n');
+    const out = formatCitations(body, vault, 'blog');
+    expect(out.body).not.toContain('---\nSources:');
+  });
+
+  it('is idempotent: running formatCitations twice on long-form does not double-append', () => {
+    const body = `Original [vault:${uuidA}] and another [vault:${uuidB}].`;
+    const once = formatCitations(body, vault, 'blog');
+    // Second pass uses the already-transformed body (which has our own
+    // Sources block near the end) — should not append a second one.
+    const twice = formatCitations(once.body, vault, 'blog');
+    const occurrences = (twice.body.match(/\nSources:\n/g) ?? []).length;
+    expect(occurrences).toBe(1);
+  });
+
+  it('does NOT dedupe when "sources" appears in the middle of prose', () => {
+    // First line mentions "sources" in prose; tail does not have a heading.
+    // formatCitations should still append.
+    const body = [
+      `Our sources matter. [vault:${uuidA}]`,
+      `Second paragraph [vault:${uuidB}].`,
+      `Third paragraph with content.`,
+      `Fourth paragraph wraps up.`,
+      `Fifth paragraph final words.`,
+    ].join('\n');
+    const out = formatCitations(body, vault, 'blog');
+    expect(out.body).toContain('\nSources:');
+  });
+});

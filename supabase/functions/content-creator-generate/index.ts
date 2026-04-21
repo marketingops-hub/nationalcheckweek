@@ -32,6 +32,10 @@ import { callAnthropic } from "../_shared/content-creator/anthropic.ts";
 import { resolveStylePrompt } from "../_shared/content-creator/styles.ts";
 import { formatCitations } from "../_shared/content-creator/citations.ts";
 import {
+  countWords, wordTarget, isOutsideTarget, buildLengthRetryDirective,
+} from "../_shared/content-creator/length.ts";
+import { sumCosts } from "../_shared/content-creator/pricing.ts";
+import {
   corsHeaders, json, readCtx, requireAuth,
   safeParseJson, dedupUuids, type Ctx,
 } from "../_shared/content-creator/common.ts";
@@ -108,8 +112,21 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
   let vault: VaultEntry[];
   let vaultBlock: string;
 
+  // Per-stage latency counters. Populated as we go so the final update
+  // can stash them on ai_metadata for the detail page's Provenance card.
+  let msVault     = 0;
+  let msOpenai    = 0;
+  let msAnthropic = 0;
+  // Tokens accumulated across the (up to 2) OpenAI draft passes when the
+  // length gate kicks in. Anthropic only runs once per request.
+  const openaiTokenAcc = { prompt: 0, completion: 0, total: 0 };
+  // Word-count retry telemetry — we need these for the Provenance card
+  // and for debugging prompt drift on long-form.
+  let lengthRetry: { first_count: number; final_count: number; direction: 'short' | 'long' | 'ok' } | null = null;
+
   try {
     // Fetch vault + style concurrently — both are independent DB reads.
+    const vaultStart = Date.now();
     const [vaultRes, style] = await Promise.all([
       fetchVaultContext(ctx.sbUrl, ctx.sbKey, {
         keywords:       draft.brief.keywords,
@@ -118,6 +135,7 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       }),
       resolveStylePrompt(ctx.sbUrl, ctx.sbKey, draft.brief?.style_id),
     ]);
+    msVault    = Date.now() - vaultStart;
     vault      = vaultRes;
     vaultBlock = formatVaultContext(vault);
 
@@ -157,12 +175,65 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
         : (draft.brief?.include_title ?? true),
     });
 
+    const openaiStart = Date.now();
     openaiRes = await callOpenAI({
       apiKey: ctx.openaiKey!,
       system: gen.system, user: gen.user,
       temperature: 0.5, maxTokens: 3500,
     });
+    msOpenai += Date.now() - openaiStart;
+    openaiTokenAcc.prompt     += openaiRes.tokens.prompt;
+    openaiTokenAcc.completion += openaiRes.tokens.completion;
+    openaiTokenAcc.total      += openaiRes.tokens.total;
     openaiDraft = safeParseJson(openaiRes.content, "openai draft");
+
+    /* ─── Length gate (long-form only) ────────────────────────── */
+    // Blog + newsletter have explicit word-count ranges in the prompt,
+    // but the model routinely misses by ±30%. Rather than ship a
+    // wrong-length draft and expect the admin to eyeball + regenerate,
+    // we check the count once and retry *once* with a concrete directive.
+    // Cap the retry at 1 so the worst case is 2 OpenAI calls, not a loop.
+    const target = wordTarget(draft.content_type);
+    if (target) {
+      const firstCount = countWords(openaiDraft.body ?? "");
+      const gate = isOutsideTarget(firstCount, target);
+      if (gate.outside) {
+        const directive = buildLengthRetryDirective(firstCount, target, gate.direction as 'short' | 'long');
+        const retryUser = `${gen.user}\n\nLENGTH CORRECTION\n${directive}`;
+
+        const retryStart = Date.now();
+        const retryRes = await callOpenAI({
+          apiKey: ctx.openaiKey!,
+          system: gen.system, user: retryUser,
+          temperature: 0.5, maxTokens: 3500,
+        });
+        msOpenai += Date.now() - retryStart;
+        openaiTokenAcc.prompt     += retryRes.tokens.prompt;
+        openaiTokenAcc.completion += retryRes.tokens.completion;
+        openaiTokenAcc.total      += retryRes.tokens.total;
+
+        try {
+          const retryDraft = safeParseJson<typeof openaiDraft>(retryRes.content, "openai retry");
+          openaiDraft = retryDraft;
+          // Keep the latest model id from the retry leg for provenance.
+          openaiRes = retryRes;
+          lengthRetry = {
+            first_count: firstCount,
+            final_count: countWords(retryDraft.body ?? ""),
+            direction:   gate.direction,
+          };
+        } catch (parseErr) {
+          // Bad JSON on retry — keep the original draft but note it.
+          console.warn("[content-creator-generate] length retry parse failed, keeping first draft:",
+            parseErr instanceof Error ? parseErr.message : parseErr);
+          lengthRetry = {
+            first_count: firstCount,
+            final_count: firstCount,
+            direction:   gate.direction,
+          };
+        }
+      }
+    }
 
     // Anthropic improvement pass.
     const imp = buildImprovePrompt({
@@ -172,11 +243,13 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       vault_block:  vaultBlock,
     });
 
+    const anthroStart = Date.now();
     anthroRes = await callAnthropic({
       apiKey: ctx.anthropicKey!,
       system: imp.system, user: imp.user,
       temperature: 0.3, maxTokens: 3500,
     });
+    msAnthropic = Date.now() - anthroStart;
 
     // Graceful degradation: if Claude returns unparseable JSON we keep the
     // OpenAI draft and surface a drift warning rather than fail the stage.
@@ -239,14 +312,27 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
     );
   }
 
+  // Cost estimate for the two AI legs. Embeddings are counted in the
+  // vault fetcher's own telemetry (not here) because they happen outside
+  // this try/catch. `partial: true` means we hit an unknown model and
+  // the total is under-reported; the UI renders "~" to signal that.
+  const cost = sumCosts([
+    { model: openaiRes.model, tokens: openaiTokenAcc },
+    { model: anthroRes.model, tokens: anthroRes.tokens },
+  ]);
+
+  const finalWordCount = draft.content_type === 'social'
+    ? null
+    : countWords(newBody);
+
   const ai_metadata = {
     ...(draft.ai_metadata ?? {}),
     openai_model:    openaiRes.model,
     anthropic_model: anthroRes.model,
     tokens: {
-      prompt:     (openaiRes.tokens.prompt     + anthroRes.tokens.prompt),
-      completion: (openaiRes.tokens.completion + anthroRes.tokens.completion),
-      total:      (openaiRes.tokens.total      + anthroRes.tokens.total),
+      prompt:     openaiTokenAcc.prompt     + anthroRes.tokens.prompt,
+      completion: openaiTokenAcc.completion + anthroRes.tokens.completion,
+      total:      openaiTokenAcc.total      + anthroRes.tokens.total,
     },
     drift_warnings:        drift,
     generated_at:          new Date().toISOString(),
@@ -257,6 +343,16 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
     char_count:            newBody.length,
     char_limit:            platformLimit ?? null,
     char_limit_exceeded:   platformLimit ? newBody.length > platformLimit : false,
+    word_count:            finalWordCount,
+    length_retry:          lengthRetry,
+    latency_ms: {
+      vault:     msVault,
+      openai:    msOpenai,
+      anthropic: msAnthropic,
+      total:     msVault + msOpenai + msAnthropic,
+    },
+    cost_usd:          cost.total,
+    cost_partial:      cost.partial,
   };
 
   // Clear one-shot fields after a successful run: regeneration_feedback
