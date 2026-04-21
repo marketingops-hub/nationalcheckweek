@@ -37,6 +37,12 @@ export interface ContentBrief {
   vault_category?: string;
   /** When the brief was spawned from a content_topics row, track it here. */
   source_topic_id?: string;
+  /**
+   * Optional reference to a content_writing_styles row. When set, the
+   * edge functions fetch that style's `prompt` field and prepend it to
+   * the system message so the AI adopts the chosen voice.
+   */
+  style_id?: string;
 }
 
 /**

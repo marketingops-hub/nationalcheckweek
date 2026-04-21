@@ -48,6 +48,7 @@ const SECTIONS = [
       { label: 'Vault upload',   href: '/admin/vault/upload',    ms: 'upload' },
       { label: 'Content pipeline', href: '/admin/content-creator',          ms: 'dashboard' },
       { label: 'Topics',           href: '/admin/content-creator/topics',   ms: 'lightbulb' },
+      { label: 'Styles',           href: '/admin/content-creator/styles',   ms: 'brush' },
       { label: 'Ideas',            href: '/admin/content-creator/ideas',    ms: 'emoji_objects' },
       { label: 'Drafts',           href: '/admin/content-creator/drafts',   ms: 'edit_note' },
       { label: 'Verified',         href: '/admin/content-creator/verified', ms: 'verified' },

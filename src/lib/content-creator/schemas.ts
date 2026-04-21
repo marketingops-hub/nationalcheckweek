@@ -40,6 +40,9 @@ export const ContentBriefSchema = z.object({
   vault_category:  z.string().max(60).optional(),
   /** When the brief was spawned from a content_topics row, track it here. */
   source_topic_id: z.string().uuid().optional(),
+  /** Optional writing-style (content_writing_styles.id). Prepended to the
+   *  edge-fn system prompt. */
+  style_id:        z.string().uuid().optional(),
 });
 
 /* ─── Stage 1: generate ideas (POST /api/admin/content-creator) ──────────── */

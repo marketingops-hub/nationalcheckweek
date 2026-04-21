@@ -29,6 +29,7 @@ import {
 } from "../_shared/content-creator/prompts.ts";
 import { callOpenAI } from "../_shared/content-creator/openai.ts";
 import { callAnthropic } from "../_shared/content-creator/anthropic.ts";
+import { resolveStylePrompt } from "../_shared/content-creator/styles.ts";
 import {
   corsHeaders, json, readCtx, requireAuth,
   safeParseJson, dedupUuids, type Ctx,
@@ -82,12 +83,30 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
   let vaultBlock: string;
 
   try {
-    vault = await fetchVaultContext(ctx.sbUrl, ctx.sbKey, {
-      keywords:       draft.brief.keywords,
-      vault_category: draft.brief.vault_category,
-      topic:          draft.brief.topic,
-    });
+    // Fetch vault + style concurrently — both are independent DB reads.
+    const [vaultRes, style] = await Promise.all([
+      fetchVaultContext(ctx.sbUrl, ctx.sbKey, {
+        keywords:       draft.brief.keywords,
+        vault_category: draft.brief.vault_category,
+        topic:          draft.brief.topic,
+      }),
+      resolveStylePrompt(ctx.sbUrl, ctx.sbKey, draft.brief?.style_id),
+    ]);
+    vault      = vaultRes;
     vaultBlock = formatVaultContext(vault);
+
+    // Stash the resolved style on the draft's ai_metadata for audit. We do
+    // this on the "generate" pass (not ideas) because that's when a human
+    // committed to the voice — ideas may have been generated style-less.
+    if (style) {
+      await sb.from("content_drafts").update({
+        ai_metadata: {
+          ...(draft.ai_metadata ?? {}),
+          style_id:    style.id,
+          style_title: style.title,
+        },
+      }).eq("id", draft_id);
+    }
 
     // OpenAI draft.
     const gen = buildGeneratePrompt({
@@ -96,6 +115,7 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx) {
       idea:         { title: draft.title ?? "(untitled idea)", summary: draft.body },
       brief:        draft.brief,
       vault_block:  vaultBlock,
+      style_prompt: style?.prompt,
     });
 
     openaiRes = await callOpenAI({

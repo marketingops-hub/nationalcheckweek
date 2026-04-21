@@ -22,6 +22,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { fetchVaultContext, formatVaultContext } from "../_shared/content-creator/vault.ts";
 import { buildIdeaPrompt } from "../_shared/content-creator/prompts.ts";
 import { callOpenAI } from "../_shared/content-creator/openai.ts";
+import { resolveStylePrompt } from "../_shared/content-creator/styles.ts";
 import {
   corsHeaders, json, readCtx, requireAuth, safeParseJson, dedupUuids, type Ctx,
 } from "../_shared/content-creator/common.ts";
@@ -59,18 +60,22 @@ async function handleGenerateIdeas(body: Record<string, unknown>, ctx: Ctx) {
     throw new Error("content_type and brief.topic are required.");
   }
 
-  // 1. Pull vault context scoped to the brief.
-  const vault = await fetchVaultContext(ctx.sbUrl, ctx.sbKey, {
-    keywords:       brief.keywords,
-    vault_category: brief.vault_category,
-    topic:          brief.topic,
-  });
+  // 1. Pull vault context + optional writing style in parallel.
+  const [vault, style] = await Promise.all([
+    fetchVaultContext(ctx.sbUrl, ctx.sbKey, {
+      keywords:       brief.keywords,
+      vault_category: brief.vault_category,
+      topic:          brief.topic,
+    }),
+    resolveStylePrompt(ctx.sbUrl, ctx.sbKey, (brief as { style_id?: string }).style_id),
+  ]);
 
   // 2. Call OpenAI for N ideas. Temperature bumped for diversity.
   const { system, user } = buildIdeaPrompt({
     content_type, platform, brief,
-    vault_block: formatVaultContext(vault),
+    vault_block:  formatVaultContext(vault),
     count,
+    style_prompt: style?.prompt,
   });
 
   const ai = await callOpenAI({
@@ -105,6 +110,10 @@ async function handleGenerateIdeas(body: Record<string, unknown>, ctx: Ctx) {
       tokens:        ai.tokens,
       provider:      "openai",
       generated_at:  new Date().toISOString(),
+      // Record the writing style used so the admin can later filter /
+      // audit drafts by voice. `null` when no style was selected.
+      style_id:      style?.id    ?? null,
+      style_title:   style?.title ?? null,
     },
     vault_refs: dedupUuids(idea.vault_ids ?? vault.map((v) => v.id)),
   }));

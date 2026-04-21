@@ -102,6 +102,8 @@ export interface IdeaPromptInput {
   brief: { topic: string; tone?: string; audience?: string; keywords?: string[] };
   vault_block: string;
   count: number;
+  /** Optional writing-style directive, prepended to the system message. */
+  style_prompt?: string;
 }
 
 export function buildIdeaPrompt(input: IdeaPromptInput): { system: string; user: string } {
@@ -110,7 +112,15 @@ export function buildIdeaPrompt(input: IdeaPromptInput): { system: string; user:
       ? `a social post for ${PLATFORM[input.platform ?? "twitter"]?.label ?? "social"}`
       : `a ${input.content_type} post`;
 
-  const system = `${MISSION}
+  // Writing-style block (if any) sits ABOVE the mission so the model reads
+  // "you are this kind of writer" before it reads the vault discipline.
+  // Falls back to an empty string when no style is selected, so we don't
+  // leave ghost headers in the prompt.
+  const stylePrefix = input.style_prompt
+    ? `WRITING STYLE\n${input.style_prompt.trim()}\n\n`
+    : "";
+
+  const system = `${stylePrefix}${MISSION}
 
 Task: propose ${input.count} distinct content IDEAS for ${typeLabel}. Each idea
 should be rooted in ONE or more of the provided vault entries.
@@ -144,12 +154,18 @@ export interface GeneratePromptInput {
   idea: { title: string; summary: string };
   brief: { topic: string; tone?: string; audience?: string; keywords?: string[] };
   vault_block: string;
+  /** Optional writing-style directive, prepended to the system message. */
+  style_prompt?: string;
 }
 
 export function buildGeneratePrompt(input: GeneratePromptInput): { system: string; user: string } {
   const typeRules = typeSpecificRules(input.content_type, input.platform);
 
-  const system = `${MISSION}
+  const stylePrefix = input.style_prompt
+    ? `WRITING STYLE\n${input.style_prompt.trim()}\n\n`
+    : "";
+
+  const system = `${stylePrefix}${MISSION}
 
 Task: write the ${input.content_type} post described by the approved idea below.
 Follow the TYPE RULES exactly. Every factual claim MUST cite a vault id

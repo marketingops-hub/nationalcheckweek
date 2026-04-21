@@ -20,6 +20,10 @@ import {
   listTopics,
   type ContentTopic,
 } from "@/lib/content-creator/topics";
+import {
+  listStyles,
+  type WritingStyle,
+} from "@/lib/content-creator/styles";
 
 export default function NewBriefPage() {
   // useSearchParams requires a Suspense boundary in Next 14+ static/prerender
@@ -43,6 +47,10 @@ function NewBriefPageInner() {
   const [keywords, setKeywords] = useState("");   // comma-separated
   const [vaultCat, setVaultCat] = useState("");
   const [count, setCount]       = useState(5);
+  // Writing style — populated from /api/admin/content-creator/styles.
+  // Empty string means "no style" (edge fns fall back to the default voice).
+  const [styleId, setStyleId]   = useState<string>("");
+  const [styles,  setStyles]    = useState<WritingStyle[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -82,6 +90,14 @@ function NewBriefPageInner() {
       .catch(() => { /* sidebar is non-critical */ });
   }, []);
 
+  // Writing styles dropdown — active only, sorted by sort_order.
+  // Swallow errors because a missing /styles shouldn't block briefs.
+  useEffect(() => {
+    listStyles({ active_only: true })
+      .then(setStyles)
+      .catch(() => { /* non-critical */ });
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -98,6 +114,9 @@ function NewBriefPageInner() {
           vault_category: vaultCat.trim() || undefined,
           // Backend flips this topic to 'used' post-success.
           source_topic_id: sourceTopic?.id,
+          // Optional writing-style reference. Empty string -> undefined so
+          // the Zod schema's .uuid() doesn't reject it.
+          style_id:        styleId || undefined,
         },
         count,
       });
@@ -211,6 +230,30 @@ function NewBriefPageInner() {
             <input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="school principals, parents…" style={inputStyle} />
           </Field>
         </div>
+
+        {/* Writing style — prepends a prompt fragment to the system message
+            used by both ideas and generate stages. See
+            /admin/content-creator/styles to manage the catalogue. */}
+        <Field
+          label="Writing style (optional)"
+          hint={styles.length === 0
+            ? 'No styles yet — create some at Content Creator → Styles.'
+            : 'Prepends a style prompt to the AI system message. Leave on "Default" to keep the house voice.'}
+        >
+          <select
+            value={styleId}
+            onChange={(e) => setStyleId(e.target.value)}
+            style={inputStyle}
+            disabled={styles.length === 0}
+          >
+            <option value="">Default (no style)</option>
+            {styles.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}{s.description ? ` — ${s.description}` : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
 
         {/* Keywords + category */}
         <Field label="Keywords (optional)" hint="Comma-separated. Used for vault keyword matching and in the prompt.">
