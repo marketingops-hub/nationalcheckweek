@@ -234,6 +234,15 @@ export async function publishDraftToBlog(id: string): Promise<PublishToBlogResul
 export interface CreateGeoDraftInput {
   area_slug:  string;
   issue_slug: string;
+  /** When `area_slug` doesn't already exist in the `areas` table, the
+   *  server uses this payload to insert a new row before creating the
+   *  draft. Both fields are required on that path. Omit for existing
+   *  areas; the server will 404 the draft if the slug is unknown and
+   *  no `new_area` is supplied. */
+  new_area?: {
+    name:  string;
+    state: string;
+  };
   brief?: {
     tone?:          string;
     audience?:      string;

@@ -16,12 +16,18 @@ import Link from "next/link";
 import {
   SOCIAL_PLATFORMS, PLATFORM_CONFIG,
 } from "@/lib/content-creator/platforms";
+import { STATES } from "@/lib/data/states";
 import type { ContentType, SocialPlatform } from "@/lib/content-creator/types";
 import type { WritingStyle } from "@/lib/content-creator/styles";
 import {
   TONE_PRESETS, AUDIENCE_PRESETS, CUSTOM, isPreset,
 } from "@/lib/content-creator/brief-presets";
 import { Field, inputStyle } from "./form-primitives";
+
+/** Sentinel areaSlug value that tells the form "the admin wants to
+ *  type a new town"; the two free-text inputs become required in that
+ *  mode and we pass name + state up to the page on submit. */
+export const NEW_AREA_SENTINEL = '__new__';
 
 export interface BriefFormValues {
   contentType: ContentType;
@@ -34,8 +40,11 @@ export interface BriefFormValues {
   count:       number;
   styleId:     string;   // "" = no style
   // GEO-only fields. Empty strings when contentType !== 'geo'.
-  areaSlug:    string;
+  areaSlug:    string;   // may be NEW_AREA_SENTINEL when admin is typing a new town
   issueSlug:   string;
+  /** Only read when areaSlug === NEW_AREA_SENTINEL. */
+  newAreaName:  string;
+  newAreaState: string;   // full name, e.g. "Victoria"
 }
 
 export interface AreaOption  { slug: string; name: string; state: string }
@@ -107,13 +116,26 @@ export function BriefForm({
           {area.name}, {area.state}" server-side from these slugs. */}
       {isGeo ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <Field label="Area (town)" required hint={areas.length === 0 ? 'Loading areas…' : `${areas.length} towns available`}>
+          <Field
+            label="Area (town)"
+            required
+            hint={
+              value.areaSlug === NEW_AREA_SENTINEL
+                ? 'New town — fill in name and state below.'
+                : areas.length === 0
+                  ? 'Loading areas…'
+                  : `${areas.length} towns available — or pick "Add new town" at the bottom`
+            }
+          >
             <select
               value={value.areaSlug}
               onChange={(e) => onChange('areaSlug', e.target.value)}
               style={inputStyle}
               required
-              disabled={areas.length === 0}
+              /* Only disable while loading. Once the list is in we also
+                 offer the "Add new town" sentinel so the admin can keep
+                 working even if their town isn't in the catalogue yet. */
+              disabled={areas.length === 0 && value.areaSlug !== NEW_AREA_SENTINEL}
             >
               <option value="">— pick a town —</option>
               {areas.map((a) => (
@@ -121,7 +143,38 @@ export function BriefForm({
                   {a.name} · {a.state}
                 </option>
               ))}
+              <option value={NEW_AREA_SENTINEL}>+ Add new town…</option>
             </select>
+
+            {/* New-town inputs. Both required when the sentinel is active
+                — browser enforces via `required` + HTML form validation
+                before we ever hit the submit handler. */}
+            {value.areaSlug === NEW_AREA_SENTINEL && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                <input
+                  value={value.newAreaName}
+                  onChange={(e) => onChange('newAreaName', e.target.value)}
+                  placeholder="Town name, e.g. Echuca"
+                  style={inputStyle}
+                  required
+                  minLength={2}
+                  maxLength={80}
+                />
+                <select
+                  value={value.newAreaState}
+                  onChange={(e) => onChange('newAreaState', e.target.value)}
+                  style={inputStyle}
+                  required
+                >
+                  <option value="">— state (required) —</option>
+                  {STATES.map((s) => (
+                    <option key={s.slug} value={s.name}>
+                      {s.name} ({s.abbr})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </Field>
           <Field label="Issue" required hint={issues.length === 0 ? 'Loading issues…' : `${issues.length} issues available`}>
             <select

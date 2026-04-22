@@ -30,7 +30,7 @@ export const POST = requireAdmin(async (req: NextRequest) => {
   if (raw instanceof NextResponse) return raw;
   const parsed = validate(GenerateGeoDraftSchema, raw);
   if (parsed instanceof NextResponse) return parsed;
-  const { area_slug, issue_slug, brief } = parsed;
+  const { area_slug, issue_slug, brief, new_area } = parsed;
 
   const sb = adminClient();
 
@@ -48,10 +48,35 @@ export const POST = requireAdmin(async (req: NextRequest) => {
 
   if (areaRes.error)  return pgError(areaRes.error);
   if (issueRes.error) return pgError(issueRes.error);
-  if (!areaRes.data)  return err(`Unknown area slug: '${area_slug}'.`, 400);
   if (!issueRes.data) return err(`Unknown issue slug: '${issue_slug}'.`, 400);
 
-  const area  = areaRes.data;
+  /* ─── Auto-create area if missing and the client supplied new_area ── */
+  // State is required in this path — the BriefForm enforces it at the
+  // HTML level but we re-check here so a malformed client call still
+  // gets a useful error instead of a cryptic NOT NULL violation.
+  let area = areaRes.data;
+  if (!area) {
+    if (!new_area) {
+      return err(
+        `Unknown area slug: '${area_slug}'. Provide new_area.name + new_area.state to auto-create it.`,
+        400,
+      );
+    }
+    const { data: inserted, error: areaInsErr } = await sb
+      .from('areas')
+      .insert({
+        slug:   area_slug,
+        name:   new_area.name,
+        state:  new_area.state,
+        type:   'town',
+        issues: [],
+      })
+      .select('id, slug, name, state, type')
+      .single();
+    if (areaInsErr) return pgError(areaInsErr);
+    area = inserted;
+  }
+
   const issue = issueRes.data;
 
   /* ─── Dedupe check ───────────────────────────────────────────────── */

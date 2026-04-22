@@ -26,6 +26,7 @@ import {
 import { listStyles, type WritingStyle } from "@/lib/content-creator/styles";
 import {
   BriefForm,
+  NEW_AREA_SENTINEL,
   type BriefFormValues,
   type AreaOption,
   type IssueOption,
@@ -59,6 +60,8 @@ function NewBriefPageInner() {
     styleId:     '',
     areaSlug:    '',
     issueSlug:   '',
+    newAreaName:  '',
+    newAreaState: '',
   });
 
   // GEO dropdown data — loaded lazily (only when the admin switches to
@@ -133,11 +136,10 @@ function NewBriefPageInner() {
         .catch(() => { /* non-critical — form stays usable */ });
     }
     if (issues.length === 0) {
-      // Public /api/issues returns a flat array of issues. No admin
-      // endpoint exists (admin UI reads issues server-side directly),
-      // and issues are a public fixture so using the unauthenticated
-      // endpoint here is safe.
-      fetch('/api/issues')
+      // /api/admin/issues uses the service-role client, so RLS on the
+      // public `issues` table can't silently return zero rows (which
+      // was the failure mode when we hit the anon /api/issues route).
+      adminFetch('/api/admin/issues')
         .then((r) => r.json())
         .then((d: IssueOption[] | { issues?: IssueOption[] }) => {
           const list = Array.isArray(d) ? d : (d.issues ?? []);
@@ -161,9 +163,37 @@ function NewBriefPageInner() {
           setSubmitting(false);
           return;
         }
+
+        // "Add new town" path: slugify + send name/state. The API route
+        // inserts the areas row if the slug doesn't already exist, then
+        // proceeds as normal. State is already enforced as required at
+        // the form level, so reaching here without it is pathological.
+        let areaSlug = form.areaSlug;
+        let newArea: { name: string; state: string } | undefined;
+        if (areaSlug === NEW_AREA_SENTINEL) {
+          const name  = form.newAreaName.trim();
+          const state = form.newAreaState.trim();
+          if (!name || !state) {
+            setError('New town requires both a name and a state.');
+            setSubmitting(false);
+            return;
+          }
+          areaSlug = name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+          if (areaSlug.length < 2) {
+            setError('Town name produces an invalid slug — use letters and numbers.');
+            setSubmitting(false);
+            return;
+          }
+          newArea = { name, state };
+        }
+
         const draft = await createGeoDraft({
-          area_slug:  form.areaSlug,
+          area_slug:  areaSlug,
           issue_slug: form.issueSlug,
+          new_area:   newArea,
           brief: {
             tone:          form.tone.trim()     || undefined,
             audience:      form.audience.trim() || undefined,

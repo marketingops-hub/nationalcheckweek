@@ -126,6 +126,16 @@ export const GenerateIdeasSchema = z
 export const GenerateGeoDraftSchema = z.object({
   area_slug:  SlugSchema,
   issue_slug: SlugSchema,
+  /** Optional: insert a new row into `areas` under `area_slug` before
+   *  creating the draft. Only read when the slug doesn't already
+   *  resolve. Both fields are required when present. State is the full
+   *  name ("Victoria"), matching the existing areas.state convention. */
+  new_area: z
+    .object({
+      name:  z.string().trim().min(2).max(80),
+      state: z.string().trim().min(2).max(60),
+    })
+    .optional(),
   brief: z
     .object({
       tone:          z.string().max(120).optional(),
