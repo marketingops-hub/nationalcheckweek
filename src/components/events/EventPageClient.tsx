@@ -36,7 +36,12 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
 
   const handleFormSubmit = useCallback(
     (_$form: HTMLFormElement, data: Record<string, unknown>) => {
-      if (!event.hubspot_form_id) return;
+      console.log('[Zoom] onFormSubmit fired. Raw data:', data);
+
+      if (!event.hubspot_form_id) {
+        console.warn('[Zoom] No hubspot_form_id on event — aborting');
+        return;
+      }
 
       const fields: Record<string, string> = {};
       if (Array.isArray(data)) {
@@ -44,16 +49,24 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
           fields[f.name] = f.value;
         });
       }
+      console.log('[Zoom] Parsed fields:', fields);
 
       const webinarIds: string[] = [];
       const rawWebinarField = fields.bulk_zoom_registration;
+      console.log('[Zoom] bulk_zoom_registration value:', rawWebinarField);
+
       if (typeof rawWebinarField === 'string') {
         webinarIds.push(...rawWebinarField.split(/[;,]/).map((id) => id.trim()).filter(Boolean));
       } else if (Array.isArray(rawWebinarField)) {
         webinarIds.push(...(rawWebinarField as string[]));
       }
 
-      if (webinarIds.length === 0) return;
+      console.log('[Zoom] Webinar IDs to register:', webinarIds);
+
+      if (webinarIds.length === 0) {
+        console.warn('[Zoom] No webinar IDs found — skipping Zoom registration');
+        return;
+      }
 
       fetch('/api/hubspot-zoom-register', {
         method: 'POST',
@@ -68,14 +81,18 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
           },
         }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          console.log('[Zoom] API response status:', res.status);
+          return res.json();
+        })
         .then((result) => {
+          console.log('[Zoom] API response body:', JSON.stringify(result, null, 2));
           if (!result.success) {
-            console.error('[EventPage] Zoom registration failed:', result);
+            console.error('[Zoom] Registration failed:', result);
           }
         })
         .catch((err) => {
-          console.error('[EventPage] Zoom registration error:', err);
+          console.error('[Zoom] Fetch error:', err);
         });
     },
     [event.hubspot_form_id],
