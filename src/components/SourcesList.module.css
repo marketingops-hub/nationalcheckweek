@@ -1,0 +1,113 @@
+.sourcesSection {
+  margin-top: 48px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--color-text-primary);
+}
+
+.sourceGroup {
+  margin-bottom: 24px;
+}
+
+.sourceGroup:last-child {
+  margin-bottom: 0;
+}
+
+.groupTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sourceList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sourceList.secondary,
+.sourceList.reference {
+  gap: 8px;
+}
+
+.sourceItem {
+  display: block;
+}
+
+.sourceLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: text-decoration 0.2s ease;
+}
+
+.sourceLink:hover {
+  text-decoration: underline;
+}
+
+.sourceLink.secondary {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sourceLink.reference {
+  color: var(--color-text-body);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.externalIcon {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--color-text-body);
+  margin-top: 4px;
+  margin-left: 0;
+  margin-bottom: 0;
+}
+
+.domain {
+  font-size: 11px;
+  color: var(--color-text-faint);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.error {
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 14px;
+  margin-top: 48px;
+}
+
+.loading {
+  padding: 32px;
+  text-align: center;
+  color: var(--color-text-faint);
+  font-size: 14px;
+  margin-top: 48px;
+}

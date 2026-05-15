@@ -1,0 +1,44 @@
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ISSUES GRID + MODAL
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+.issue-card-link { text-decoration: none; display: block; }
+.issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.issue-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  box-shadow: var(--shadow-card);
+}
+.issue-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(41,184,232,0.14);
+  border-color: var(--primary);
+}
+.card-severity-bar { height: 4px; }
+.bar-critical { background: var(--red); }
+.bar-high     { background: var(--amber); }
+.bar-notable  { background: var(--green); }
+.card-body { padding: 22px; }
+.card-rank {
+  position: absolute; top: 18px; right: 18px;
+  font-family: var(--font-body);
+  font-size: 0.72rem; color: var(--text-light); font-weight: 700;
+  background: var(--primary-light); padding: 2px 8px; border-radius: var(--radius-pill);
+}
+.card-icon { font-size: 1.6rem; margin-bottom: 12px; }
+.card-title { font-family: var(--font-body); font-size: 1.05rem; font-weight: 800; color: var(--dark); margin-bottom: 8px; line-height: 1.4; padding-right: 40px; }
+.card-anchor-stat { font-family: var(--font-body); font-size: 0.9rem; color: var(--primary); margin-bottom: 10px; font-weight: 700; }
+.card-desc { font-family: var(--font-body); font-size: 0.925rem; color: var(--text-mid); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card-footer {
+  padding: 12px 22px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--primary-light);
+}
+.severity-chip { font-family: var(--font-body); font-size: 0.8rem; font-weight: 700; padding: 3px 12px; border-radius: var(--radius-pill); }
+.chip-critical { background: var(--red-bg); color: var(--red); }
+.chip-high     { background: var(--amber-bg); color: var(--amber); }
+.chip-notable  { background: var(--green-bg); color: var(--green); }
+.card-cta { font-family: var(--font-body); font-size: 0.875rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 4px; }

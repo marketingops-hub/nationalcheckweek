@@ -1,0 +1,1865 @@
+[
+  {
+    "slug": "sydney",
+    "name": "Sydney",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "city",
+    "population": "5.3 million",
+    "schools": "~2,400 schools",
+    "overview": "Australia's largest city carries proportional wellbeing challenges amplified by social inequality, housing stress, and high academic expectations. Western Sydney communities face compounded disadvantage.",
+    "keyStats": [
+      {
+        "num": "53%",
+        "label": "of 10ΓÇô17 year olds experienced cyberbullying"
+      },
+      {
+        "num": "1 in 5",
+        "label": "Sydney teens report high psychological distress"
+      },
+      {
+        "num": "47%",
+        "label": "of Year 12 students report study as their top stressor"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Cyberbullying & Online Harm",
+        "severity": "critical",
+        "stat": "53% affected",
+        "desc": "Sydney accounts for the largest absolute volume of cyberbullying cases in Australia. eSafety data shows more than half of 10ΓÇô17 year olds have experienced it, with spikes in western suburbs."
+      },
+      {
+        "title": "Academic Pressure & Anxiety",
+        "severity": "critical",
+        "stat": "47% cite study stress",
+        "desc": "The HSC and selective school culture drives extreme academic anxiety. School counsellors report surging demand in Years 10ΓÇô12, particularly in North Shore and Inner West schools."
+      },
+      {
+        "title": "Social Media & Self-Image",
+        "severity": "high",
+        "stat": "Γåæ Year on year",
+        "desc": "Body image dissatisfaction linked to social media use is rising among Sydney teens, particularly girls. Eating disorder referrals to Sydney Children's Hospital have increased 40% since 2019."
+      },
+      {
+        "title": "Housing Stress & Mental Health",
+        "severity": "high",
+        "stat": "Western Sydney focus",
+        "desc": "Families in housing stress produce children with measurably higher rates of emotional and behavioural difficulties. Western Sydney LGAs including Fairfield, Bankstown, and Campbelltown show elevated risk."
+      },
+      {
+        "title": "Loneliness Post-COVID",
+        "severity": "notable",
+        "stat": "20%+ of teens",
+        "desc": "Post-COVID social recovery has been slower for disadvantaged Sydney teens. School belonging scores remain below 2019 levels across many government secondary schools."
+      }
+    ],
+    "prevention": "Data-led screening tools like Life Skills GO can help Sydney schools identify which students are at risk before a crisis occurs ΓÇö enabling targeted support at scale across the city's diverse communities."
+  },
+  {
+    "slug": "newcastle",
+    "name": "Newcastle & Hunter Valley",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "620,000",
+    "schools": "~350 schools",
+    "overview": "The Hunter region balances industrial heritage with growing urban pressure. Youth mental health services are stretched, with rural communities in the Upper Hunter facing access deserts.",
+    "keyStats": [
+      {
+        "num": "1 in 6",
+        "label": "teens in Hunter report high distress"
+      },
+      {
+        "num": "Γåæ 28%",
+        "label": "school refusal increase post-COVID"
+      },
+      {
+        "num": "Low",
+        "label": "mental health service availability in Upper Hunter"
+      }
+    ],
+    "issues": [
+      {
+        "title": "School Refusal & Anxiety",
+        "severity": "critical",
+        "stat": "Γåæ 28% post-COVID",
+        "desc": "Hunter schools report significant increases in chronic absence driven by anxiety disorders, particularly in Years 7ΓÇô9. The transition from primary school is a documented flashpoint."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Above state average",
+        "desc": "Youth substance use in the Hunter region, including cannabis and alcohol, is above the NSW state average, often co-occurring with depression and family instability."
+      },
+      {
+        "title": "Rural Access Gaps",
+        "severity": "high",
+        "stat": "Upper Hunter desert",
+        "desc": "Students in Singleton, Muswellbrook, and Scone face acute shortages of school counsellors and youth mental health services, with waiting lists exceeding 3 months."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "notable",
+        "stat": "State average",
+        "desc": "Online harm mirrors state averages, with particular concern around gaming-related harassment among boys aged 12ΓÇô15."
+      }
+    ],
+    "prevention": "Understanding which Hunter students are disengaging early allows schools to act before refusal becomes entrenched. Wellbeing data tools can surface these students weeks before the first absence."
+  },
+  {
+    "slug": "wollongong",
+    "name": "Wollongong & Illawarra",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "310,000",
+    "schools": "~180 schools",
+    "overview": "The Illawarra coast combines coastal lifestyle with pockets of deep disadvantage. Areas like Warrawong and Dapto record socioeconomic pressures that translate directly into student wellbeing challenges.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "disadvantage index in northern Wollongong suburbs"
+      },
+      {
+        "num": "Γåæ",
+        "label": "youth self-harm presentations at Wollongong Hospital"
+      },
+      {
+        "num": "Limited",
+        "label": "specialist CAMHS availability outside city centre"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Self-Harm",
+        "severity": "critical",
+        "stat": "Γåæ Hospital presentations",
+        "desc": "Wollongong Hospital emergency data shows increasing youth self-harm presentations, concentrated in disadvantaged northern suburbs and Year 9ΓÇô10 cohorts."
+      },
+      {
+        "title": "Socioeconomic Disadvantage",
+        "severity": "high",
+        "stat": "SEIFA below state median",
+        "desc": "Multiple Illawarra LGA pockets score below the state median on SEIFA. This directly correlates with elevated rates of emotional and behavioural difficulties in schools."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "notable",
+        "stat": "Below NSW benchmark",
+        "desc": "CESE data shows belonging scores in several Illawarra schools below the NSW benchmark, particularly in schools serving disadvantaged catchments."
+      }
+    ],
+    "prevention": "Wollongong schools need tools to identify at-risk students early, before self-harm escalates to crisis. Data-led wellbeing platforms can flag disengagement signals weeks in advance."
+  },
+  {
+    "slug": "sapphire-coast",
+    "name": "Sapphire Coast",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "~40,000",
+    "schools": "~30 schools",
+    "overview": "The Sapphire Coast ΓÇö spanning Bega Valley, Eden, and surrounds ΓÇö is one of NSW's most beautiful but most under-resourced regions for youth mental health. Bushfire trauma (2019ΓÇô20) overlays existing disadvantage.",
+    "keyStats": [
+      {
+        "num": "Highest",
+        "label": "bushfire trauma exposure nationally (2019ΓÇô20)"
+      },
+      {
+        "num": "Critical",
+        "label": "shortage of youth mental health professionals"
+      },
+      {
+        "num": "Γåæ",
+        "label": "anxiety and PTSD referrals since Black Summer"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Bushfire Trauma & PTSD",
+        "severity": "critical",
+        "stat": "Highest exposure nationally",
+        "desc": "The 2019ΓÇô20 Black Summer fires devastated Sapphire Coast communities. Children as young as 5 experienced life-threatening trauma. PTSD, anxiety, and sleep disorders remain elevated 4+ years later."
+      },
+      {
+        "title": "Mental Health Access Desert",
+        "severity": "critical",
+        "stat": "No CAMHS locally",
+        "desc": "There is no Child and Adolescent Mental Health Service (CAMHS) in the Bega Valley Shire. Families must travel 4+ hours to Canberra or Sydney for specialist support."
+      },
+      {
+        "title": "Rural Isolation & Belonging",
+        "severity": "high",
+        "stat": "Small school pressures",
+        "desc": "Many Sapphire Coast schools have fewer than 100 students. While this can create community, social exclusion in small schools is intense and harder to escape."
+      },
+      {
+        "title": "Economic Stress",
+        "severity": "high",
+        "stat": "Post-fire economic disruption",
+        "desc": "Tourism and forestry job losses post-fires have created family financial stress that directly impacts children's psychological safety and school readiness."
+      }
+    ],
+    "prevention": "Sapphire Coast communities need low-cost, scalable wellbeing tools that don't require in-person specialist access. Digital data platforms can provide schools with the insight to act without waiting months for a referral."
+  },
+  {
+    "slug": "bega-valley",
+    "name": "Bega Valley",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "lga",
+    "population": "~32,000",
+    "schools": "~25 schools",
+    "overview": "Bega Valley Shire is a rural LGA on the Far South Coast of NSW. Following the 2019ΓÇô20 bushfires, the region faces a sustained mental health crisis in schools that lacks adequate resourcing.",
+    "keyStats": [
+      {
+        "num": "2019ΓÇô20",
+        "label": "Black Summer destroyed homes, livelihoods, and safety"
+      },
+      {
+        "num": "4+ hrs",
+        "label": "nearest CAMHS service (Canberra or Sydney)"
+      },
+      {
+        "num": "Γåæ 60%+",
+        "label": "anxiety-related referrals in local GP clinics post-fires"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Post-Bushfire PTSD",
+        "severity": "critical",
+        "stat": "Sustained 4+ years",
+        "desc": "GP and school counsellor data confirm ongoing PTSD symptoms in children who experienced the Black Summer fires. Avoidance, hypervigilance, and sleep disruption are common presentations."
+      },
+      {
+        "title": "Grief & Loss",
+        "severity": "critical",
+        "stat": "Multiple losses",
+        "desc": "Children who lost homes, pets, and community landmarks experience complex grief. Many have also lost peers who relocated ΓÇö compounding social disconnection."
+      },
+      {
+        "title": "Teacher Burnout ΓåÆ Student Impact",
+        "severity": "high",
+        "stat": "High staff turnover",
+        "desc": "Bega Valley schools struggle to retain teachers after the fires. High staff turnover creates relationship instability for students, damaging the school's capacity to provide consistent support."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "notable",
+        "stat": "Γåæ Post-fire",
+        "desc": "Youth alcohol and cannabis use increased post-fires in Bega Valley, consistent with coping patterns in other disaster-affected communities."
+      }
+    ],
+    "prevention": "Bega Valley schools need an always-on wellbeing monitoring system that captures early signs of trauma re-activation ΓÇö not one that only activates after crisis. Simple, data-led tools can enable school staff to act with confidence."
+  },
+  {
+    "slug": "central-coast-nsw",
+    "name": "Central Coast",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "345,000",
+    "schools": "~200 schools",
+    "overview": "The Central Coast sits between Sydney and Newcastle, combining semi-urban pressures with lifestyle community culture. Disadvantaged pockets in Gosford and Wyong co-exist with more affluent coastal suburbs.",
+    "keyStats": [
+      {
+        "num": "Above avg",
+        "label": "youth anxiety rates in Gosford district schools"
+      },
+      {
+        "num": "Γåæ",
+        "label": "school refusal rates post-COVID"
+      },
+      {
+        "num": "Limited",
+        "label": "specialist youth mental health services in northern LGAs"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Anxiety & School Refusal",
+        "severity": "high",
+        "stat": "Above state avg",
+        "desc": "Central Coast schools report elevated anxiety and school refusal, concentrated in Year 7 transition and Years 9ΓÇô10. Gosford district schools show higher rates than coastal counterparts."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "high",
+        "stat": "State average",
+        "desc": "Online harm is consistent with state averages, with particular concern in middle school age groups where social hierarchies are most intense."
+      },
+      {
+        "title": "Disadvantage & Disconnection",
+        "severity": "notable",
+        "stat": "Wyong LGA focus",
+        "desc": "Northern Central Coast suburbs including Wyong and Warnervale record elevated SEIFA disadvantage, translating to higher emotional and behavioural difficulties in local schools."
+      }
+    ],
+    "prevention": "Central Coast schools need affordable, scalable wellbeing data tools to identify which students are sliding toward crisis ΓÇö enabling earlier, more targeted support across this geographically dispersed region."
+  },
+  {
+    "slug": "melbourne",
+    "name": "Melbourne",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "city",
+    "population": "5.2 million",
+    "schools": "~2,200 schools",
+    "overview": "Melbourne's student population faces the highest demand for youth mental health services nationally, with post-COVID effects particularly pronounced in inner suburban and multicultural communities.",
+    "keyStats": [
+      {
+        "num": "1 in 5",
+        "label": "Victorian teens have high psychological distress"
+      },
+      {
+        "num": "Γåæ 45%",
+        "label": "headspace presentations since 2020"
+      },
+      {
+        "num": "20%+",
+        "label": "of Melbourne teens report persistent loneliness"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Depression & Psychological Distress",
+        "severity": "critical",
+        "stat": "1 in 5 teens",
+        "desc": "Mission Australia 2024 identifies one in five Melbourne teenagers with high or very high psychological distress. Victoria has the highest demand on youth mental health services nationally."
+      },
+      {
+        "title": "Loneliness & Social Disconnection",
+        "severity": "critical",
+        "stat": "20%+ persistent loneliness",
+        "desc": "Extended COVID lockdowns created lasting social deficits. Over one in five Melbourne teens report feeling lonely most or all of the time ΓÇö a key predictor of depression and self-harm."
+      },
+      {
+        "title": "Online Hate & Radicalisation",
+        "severity": "high",
+        "stat": "eSafety documented",
+        "desc": "Melbourne's diverse multicultural communities face targeted online hate. eSafety research documents high rates of exposure to extremist and hateful content among teens in inner north and western suburbs."
+      },
+      {
+        "title": "Academic Pressure",
+        "severity": "high",
+        "stat": "VCE pressure Year 11ΓÇô12",
+        "desc": "VCE competition is intense in Melbourne's private and selective school sectors. Mental health presentations linked to study pressure peak in Terms 3ΓÇô4 of Year 12."
+      },
+      {
+        "title": "Eating Disorders",
+        "severity": "notable",
+        "stat": "Γåæ Referrals",
+        "desc": "Melbourne has experienced a documented surge in youth eating disorder referrals since 2020, now with significant wait times at The Royal Children's Hospital eating disorders clinic."
+      }
+    ],
+    "prevention": "Melbourne's scale demands data-led solutions. Schools cannot rely on individual teacher observation to identify at-risk students across cohorts of 1,000+. Wellbeing data platforms make invisible students visible.",
+    "sources": [
+      {
+        "title": "National Check-In Week - Melbourne",
+        "url": "https://nationalcheckinweek.com/areas/melbourne",
+        "publisher": "National Check-In Week",
+        "year": "2024",
+        "type": "web"
+      }
+    ]
+  },
+  {
+    "slug": "geelong",
+    "name": "Geelong & Surf Coast",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "region",
+    "population": "270,000",
+    "schools": "~180 schools",
+    "overview": "Geelong is Victoria's second-largest city, blending industrial heritage with coastal lifestyle. Youth mental health challenges are significant, with the Northern suburbs experiencing acute disadvantage.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "psychological distress in Northern Geelong suburbs"
+      },
+      {
+        "num": "Γåæ",
+        "label": "youth self-harm presentations at Barwon Health"
+      },
+      {
+        "num": "Limited",
+        "label": "mental health services in outer Surf Coast"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Self-Harm",
+        "severity": "critical",
+        "stat": "Γåæ Barwon Health data",
+        "desc": "Barwon Health emergency data shows increasing youth self-harm presentations, concentrated in younger teens (12ΓÇô15) from disadvantaged Northern Geelong communities."
+      },
+      {
+        "title": "Disadvantage & Distress",
+        "severity": "high",
+        "stat": "Northern suburbs focus",
+        "desc": "Norlane, Corio, and Whittington record among Victoria's highest disadvantage indices. Children in these areas face compounding risk factors including housing instability and family stress."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "notable",
+        "stat": "Below Victorian benchmark",
+        "desc": "Several Geelong secondary schools score below the Victorian benchmark on belonging and connectedness, particularly post-COVID."
+      }
+    ],
+    "prevention": "Geelong's northern communities need wraparound support systems informed by data. Schools in high-disadvantage areas benefit most from early-warning wellbeing tools that don't rely on families proactively seeking help."
+  },
+  {
+    "slug": "ballarat",
+    "name": "Ballarat & Central Highlands",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "region",
+    "population": "125,000",
+    "schools": "~100 schools",
+    "overview": "Ballarat is a major regional centre with a strong school system, but youth mental health services are stretched across the Central Highlands. Rural communities outside Ballarat face access deserts.",
+    "keyStats": [
+      {
+        "num": "Γåæ",
+        "label": "headspace Ballarat presentations year on year"
+      },
+      {
+        "num": "Limited",
+        "label": "CAMHS access in outer Central Highlands"
+      },
+      {
+        "num": "High",
+        "label": "youth unemployment, linked to disengagement"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Mental Health Access Gaps",
+        "severity": "high",
+        "stat": "Outer Highlands desert",
+        "desc": "Students in Ararat, Stawell, and Maryborough face wait times of 3ΓÇô6 months for specialist mental health support, with no local CAMHS services."
+      },
+      {
+        "title": "School Refusal",
+        "severity": "high",
+        "stat": "Γåæ Post-COVID",
+        "desc": "Ballarat schools report elevated school refusal rates, particularly in Years 7ΓÇô8. Cold winters and limited social infrastructure compound isolation."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "notable",
+        "stat": "Above regional avg",
+        "desc": "Youth substance use in Ballarat, particularly cannabis, is above regional averages and often co-occurs with school disengagement and family stress."
+      }
+    ],
+    "prevention": "Regional centres like Ballarat serve as hubs for surrounding communities. Wellbeing data platforms that work across a network of schools can create a regional early-warning system, identifying at-risk students before they fall through the cracks."
+  },
+  {
+    "slug": "brisbane",
+    "name": "Brisbane",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "city",
+    "population": "2.7 million",
+    "schools": "~1,200 schools",
+    "overview": "Brisbane faces a documented bullying crisis, high cyberbullying rates, and rapidly growing mental health demand as the city prepares for the 2032 Olympics and associated pressure on communities.",
+    "keyStats": [
+      {
+        "num": "46,000+",
+        "label": "bullying incidents across QLD schools in 2023"
+      },
+      {
+        "num": "38%",
+        "label": "of young Queenslanders experienced cyberbullying"
+      },
+      {
+        "num": "Γåæ 35%",
+        "label": "headspace Brisbane presentations since 2021"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Bullying in Schools",
+        "severity": "critical",
+        "stat": "46,000+ QLD incidents",
+        "desc": "The Queensland Auditor-General recorded over 46,000 bullying incidents in state schools in 2023. Brisbane schools account for the majority. Incident counts alone understate the scale ΓÇö most bullying goes unreported."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "critical",
+        "stat": "38% in past 12 months",
+        "desc": "Over a third of Brisbane teens experienced cyberbullying in the past year. The online/offline boundary has collapsed ΓÇö school conflicts play out on social media 24/7."
+      },
+      {
+        "title": "Academic & ATAR Stress",
+        "severity": "high",
+        "stat": "Γåæ Year 11ΓÇô12",
+        "desc": "Brisbane's competitive private school sector intensifies ATAR pressure. Mental health presentations linked to study stress peak in Terms 3ΓÇô4, with Year 12 students most affected."
+      },
+      {
+        "title": "Racism & Discrimination",
+        "severity": "high",
+        "stat": "Mission AU 2024 top concern",
+        "desc": "Discrimination is a top wellbeing concern for Brisbane's diverse youth population. Students from Pacific Islander, Southeast Asian, and First Nations communities report the highest rates of school-based discrimination."
+      }
+    ],
+    "prevention": "Brisbane schools need systematic, data-led approaches to identify bullying victims and perpetrators early. Manual reporting systems miss the majority of incidents. Digital wellbeing monitoring can surface patterns that individual teachers cannot see."
+  },
+  {
+    "slug": "gold-coast",
+    "name": "Gold Coast",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "city",
+    "population": "750,000",
+    "schools": "~340 schools",
+    "overview": "Australia's tourism capital presents a paradox: a sun-soaked lifestyle image that masks significant youth mental health challenges, particularly around body image, substance use, and social media comparison.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "body image dissatisfaction among teen girls"
+      },
+      {
+        "num": "Γåæ",
+        "label": "youth eating disorder referrals at Gold Coast Hospital"
+      },
+      {
+        "num": "Above avg",
+        "label": "youth alcohol and cannabis use"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Body Image & Eating Disorders",
+        "severity": "critical",
+        "stat": "Γåæ Hospital referrals",
+        "desc": "The Gold Coast's beach culture and social media environment creates extreme body image pressure, particularly for teen girls. Eating disorder presentations at Gold Coast University Hospital have increased significantly since 2020."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Above Queensland average",
+        "desc": "Youth alcohol and cannabis use is above state averages on the Gold Coast, often linked to social anxiety, unsupervised weekend time, and peer pressure in a party-culture environment."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "high",
+        "stat": "State average",
+        "desc": "Cyberbullying is consistent with Queensland state averages, with intense social hierarchies in Gold Coast schools amplifying online conflicts."
+      },
+      {
+        "title": "Transient Communities",
+        "severity": "notable",
+        "stat": "High mobility",
+        "desc": "The Gold Coast's high population mobility means many students are newcomers navigating unfamiliar social environments ΓÇö a risk factor for isolation and bullying."
+      }
+    ],
+    "prevention": "Gold Coast schools need tools that can identify social and emotional distress signals early ΓÇö before eating disorders or substance use escalates. Wellbeing data platforms provide the early visibility that saves lives."
+  },
+  {
+    "slug": "cairns",
+    "name": "Cairns & Far North Queensland",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "region",
+    "population": "190,000",
+    "schools": "~150 schools",
+    "overview": "Far North Queensland combines tropical urban centres with remote Indigenous communities. The wellbeing gap between Cairns city students and remote Cape York communities is among the largest in Australia.",
+    "keyStats": [
+      {
+        "num": "Critical",
+        "label": "attendance crisis in remote Cape York communities"
+      },
+      {
+        "num": "Highest",
+        "label": "national percentile for youth self-harm (AIHW)"
+      },
+      {
+        "num": "Limited",
+        "label": "specialist youth mental health in FNQ"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Attendance Crisis",
+        "severity": "critical",
+        "stat": "Remote Cape York < 50%",
+        "desc": "Some remote Cape York communities record school attendance below 50%. This denies children access to the social and educational foundation they need for mental health and life outcomes."
+      },
+      {
+        "title": "Indigenous Youth Self-Harm",
+        "severity": "critical",
+        "stat": "AIHW: highest percentile",
+        "desc": "AIHW Youth Self-Harm Atlas data places FNQ Indigenous communities in the highest national percentile bands. Suicide rates among young Aboriginal and Torres Strait Islander males are a crisis-level concern."
+      },
+      {
+        "title": "Domestic Violence Impact",
+        "severity": "high",
+        "stat": "ABS data: FNQ elevated",
+        "desc": "Children in FNQ communities experience elevated exposure to domestic and family violence, a direct risk factor for PTSD, self-harm, and school disengagement."
+      }
+    ],
+    "prevention": "Far North Queensland needs culturally safe, community-designed wellbeing tools. Data platforms must be co-designed with Aboriginal and Torres Strait Islander communities to be effective and trusted."
+  },
+  {
+    "slug": "adelaide",
+    "name": "Adelaide",
+    "state": "South Australia",
+    "stateSlug": "south-australia",
+    "type": "city",
+    "population": "1.4 million",
+    "schools": "~700 schools",
+    "overview": "Adelaide's compact city structure masks significant inequality between its northern and southern suburbs. Youth mental health demand is high, with services stretched across a state that also serves vast rural communities.",
+    "keyStats": [
+      {
+        "num": "1 in 5",
+        "label": "SA teens report high psychological distress"
+      },
+      {
+        "num": "High",
+        "label": "distress in Northern Adelaide suburbs"
+      },
+      {
+        "num": "Γåæ 30%",
+        "label": "headspace Adelaide presentations since 2020"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Psychological Distress",
+        "severity": "critical",
+        "stat": "1 in 5 SA teens",
+        "desc": "Mission Australia 2024 data identifies one in five South Australian teenagers with high or very high psychological distress. Northern Adelaide suburbs including Salisbury and Elizabeth record elevated rates."
+      },
+      {
+        "title": "Disadvantage & Mental Health",
+        "severity": "high",
+        "stat": "Northern suburbs focus",
+        "desc": "Adelaide's northern suburbs score consistently low on SEIFA indices. Schools in this corridor support students with compounding risk factors ΓÇö poverty, unemployment, housing instability."
+      },
+      {
+        "title": "School Refusal",
+        "severity": "high",
+        "stat": "Γåæ Post-COVID",
+        "desc": "Adelaide schools report significant increases in school refusal since 2020, concentrated in Year 7 and Year 8 cohorts navigating high school transitions."
+      },
+      {
+        "title": "Access to Services",
+        "severity": "notable",
+        "stat": "Rural SA critical",
+        "desc": "While Adelaide has reasonable urban services, rural and regional SA faces significant CAMHS access gaps, with families waiting months for specialist support."
+      }
+    ],
+    "prevention": "Adelaide schools need affordable, accessible wellbeing data tools that work at scale ΓÇö identifying which students need support before they reach crisis point and before the school's limited counsellor time runs out."
+  },
+  {
+    "slug": "perth",
+    "name": "Perth",
+    "state": "Western Australia",
+    "stateSlug": "western-australia",
+    "type": "city",
+    "population": "2.2 million",
+    "schools": "~900 schools",
+    "overview": "Perth is geographically isolated from other Australian capitals. This isolation ΓÇö combined with resource-boom wealth inequality and significant Indigenous communities in outer suburbs ΓÇö creates a unique wellbeing landscape.",
+    "keyStats": [
+      {
+        "num": "Critical",
+        "label": "remote attendance crisis in Kimberley & Pilbara"
+      },
+      {
+        "num": "High",
+        "label": "self-harm rates in WA's remote regions (AIHW)"
+      },
+      {
+        "num": "1 in 5",
+        "label": "Perth teens report loneliness regularly"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Self-Harm (Remote WA)",
+        "severity": "critical",
+        "stat": "AIHW: highest national band",
+        "desc": "AIHW Youth Self-Harm Atlas places WA's remote regions (Kimberley, Pilbara) in the highest national percentile bands. Indigenous youth are disproportionately affected."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "high",
+        "stat": "State average",
+        "desc": "Perth's online harm rates mirror national urban averages. Geographic isolation amplifies social media dependency among teenagers, intensifying online conflicts."
+      },
+      {
+        "title": "Academic Pressure",
+        "severity": "high",
+        "stat": "ATAR focus",
+        "desc": "Perth's private school sector creates significant ATAR pressure. Year 11ΓÇô12 mental health presentations spike in Terms 3ΓÇô4, particularly in high-performing school networks."
+      },
+      {
+        "title": "Geographic Isolation",
+        "severity": "notable",
+        "stat": "5+ hrs to nearest capital",
+        "desc": "Perth's isolation from other capitals creates a sense of disconnection for mobile families. The city also has fewer specialist youth mental health services than its population size warrants."
+      }
+    ],
+    "prevention": "Perth schools need scalable wellbeing data tools that work in both urban and remote contexts. The challenge is identifying which students in outer Perth suburbs are beginning to disengage ΓÇö before refusal becomes entrenched."
+  },
+  {
+    "slug": "hobart",
+    "name": "Hobart & Southern Tasmania",
+    "state": "Tasmania",
+    "stateSlug": "tasmania",
+    "type": "city",
+    "population": "240,000",
+    "schools": "~130 schools",
+    "overview": "Hobart is Australia's smallest capital, but Tasmania's overall wellbeing challenges are among the most acute nationally. Low socioeconomic indicators, geographic isolation from mainland services, and cold-season impacts compound student distress.",
+    "keyStats": [
+      {
+        "num": "Lowest",
+        "label": "SEIFA scores of any Australian state"
+      },
+      {
+        "num": "Γåæ",
+        "label": "youth self-harm presentations at Royal Hobart Hospital"
+      },
+      {
+        "num": "High",
+        "label": "school refusal and disengagement in outer suburbs"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Socioeconomic Disadvantage",
+        "severity": "critical",
+        "stat": "Lowest SEIFA nationally",
+        "desc": "Tasmania consistently records Australia's lowest socioeconomic indicators. This structural disadvantage is the foundation beneath every other wellbeing challenge in Hobart schools."
+      },
+      {
+        "title": "Youth Self-Harm",
+        "severity": "critical",
+        "stat": "Γåæ RHH presentations",
+        "desc": "Royal Hobart Hospital data shows increasing youth self-harm presentations, with a significant proportion involving students from disadvantaged northern Hobart suburbs."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "high",
+        "stat": "Below national benchmark",
+        "desc": "Tasmanian students score below the national benchmark on school belonging, with small-school isolation and limited extracurricular options contributing to disconnection."
+      },
+      {
+        "title": "Academic Pressure (TCE)",
+        "severity": "notable",
+        "stat": "Year 11ΓÇô12 focus",
+        "desc": "The Tasmanian Certificate of Education creates significant stress in Years 11ΓÇô12, particularly for students without family academic support networks."
+      }
+    ],
+    "prevention": "Hobart schools, with limited counsellor resources, need data-led systems that can prioritise which students require immediate attention. Wellbeing platforms provide the triage capability that stretched support staff cannot achieve manually."
+  },
+  {
+    "slug": "darwin",
+    "name": "Darwin & Top End",
+    "state": "Northern Territory",
+    "stateSlug": "northern-territory",
+    "type": "city",
+    "population": "150,000",
+    "schools": "~80 schools",
+    "overview": "Darwin serves as the gateway to Australia's most acute wellbeing crisis. The city itself faces urban disadvantage, while surrounding remote communities experience a catastrophic convergence of attendance, self-harm, and psychological distress.",
+    "keyStats": [
+      {
+        "num": "~50ΓÇô60%",
+        "label": "average attendance in remote NT schools (RoGS 2026)"
+      },
+      {
+        "num": "Highest",
+        "label": "national youth self-harm rates (AIHW)"
+      },
+      {
+        "num": "Critical",
+        "label": "shortage of culturally safe mental health services"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Attendance Crisis",
+        "severity": "critical",
+        "stat": "50ΓÇô60% remote average",
+        "desc": "Remote NT schools average 50ΓÇô60% attendance ΓÇö sometimes lower. Every day a child is absent from school is a day without access to the social, emotional, and educational support they need."
+      },
+      {
+        "title": "Indigenous Youth Self-Harm & Suicide",
+        "severity": "critical",
+        "stat": "AIHW: highest nationally",
+        "desc": "The NT consistently records Australia's highest rates of youth self-harm and suicide among Aboriginal youth. This is a national emergency requiring systemic, culturally grounded responses."
+      },
+      {
+        "title": "Psychological Distress",
+        "severity": "critical",
+        "stat": "Compounded risk factors",
+        "desc": "Poverty, housing instability, family disruption, substance exposure, and intergenerational trauma create a convergence of risk factors for NT children that overwhelm standard school welfare responses."
+      },
+      {
+        "title": "Racism & Cultural Disconnect",
+        "severity": "high",
+        "stat": "Systemic barrier",
+        "desc": "The disconnect between Western schooling frameworks and Aboriginal cultural contexts remains a profound barrier to engagement, safety, and belonging for NT students."
+      }
+    ],
+    "prevention": "Darwin and remote NT schools need culturally safe, community-designed wellbeing approaches. Data tools must be co-designed with Aboriginal communities and used to advocate for resources, not as surveillance instruments."
+  },
+  {
+    "slug": "canberra",
+    "name": "Canberra & ACT",
+    "state": "Australian Capital Territory",
+    "stateSlug": "australian-capital-territory",
+    "type": "city",
+    "population": "470,000",
+    "schools": "~170 schools",
+    "overview": "Australia's capital has the highest-performing school system by PISA measures ΓÇö and some of the highest rates of self-reported student anxiety. High-income, high-expectation environments create hidden but significant mental health burdens.",
+    "keyStats": [
+      {
+        "num": "Highest",
+        "label": "self-reported academic anxiety in Australia"
+      },
+      {
+        "num": "1 in 4",
+        "label": "ACT Year 12 students report burnout symptoms"
+      },
+      {
+        "num": "High",
+        "label": "PISA scores mask significant underlying distress"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Academic Anxiety & Stress",
+        "severity": "critical",
+        "stat": "Highest self-reported nationally",
+        "desc": "ACT students attending Australia's highest-performing school system report the highest levels of academic anxiety and stress in the country. PISA 2022 data confirms this paradox."
+      },
+      {
+        "title": "Burnout & Workload",
+        "severity": "critical",
+        "stat": "1 in 4 Year 12 students",
+        "desc": "Year 11ΓÇô12 burnout is acute in the ACT, driven by high-expectation school cultures, university entrance focus, and limited permission to disengage from academic pressure."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "high",
+        "stat": "National urban average",
+        "desc": "Despite its smaller size, the ACT's tight social networks amplify cyberbullying incidents. Conflicts in small school communities spread rapidly across interconnected peer groups."
+      },
+      {
+        "title": "Sleep Deprivation",
+        "severity": "notable",
+        "stat": "Screen + study driven",
+        "desc": "Screen time and study pressure combine to drive significant sleep debt in ACT teens, with 50%+ of 16ΓÇô17 year olds failing to meet sleep guidelines."
+      }
+    ],
+    "prevention": "ACT schools need wellbeing data that looks beyond academic achievement. A student with straight As can be silently collapsing. Data-led wellbeing tools surface emotional and social signals that grades never reveal."
+  },
+  {
+    "slug": "western-sydney",
+    "name": "Western Sydney",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "2.6 million",
+    "schools": "~900 schools",
+    "overview": "Western Sydney is Australia's most diverse and fastest-growing urban region. It is also home to some of the country's highest concentrations of disadvantage, housing stress, and youth mental health need ΓÇö challenges that schools face daily with limited specialist support.",
+    "keyStats": [
+      {
+        "num": "Γåæ 60%",
+        "label": "headspace presentations in Western Sydney since 2020"
+      },
+      {
+        "num": "High",
+        "label": "proportion of students from refugee and CALD backgrounds"
+      },
+      {
+        "num": "Below avg",
+        "label": "SEIFA scores across Fairfield, Bankstown, Mt Druitt"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Refugee & Trauma-Affected Youth",
+        "severity": "critical",
+        "stat": "Highest concentration nationally",
+        "desc": "Western Sydney schools hold the largest concentration of refugee and humanitarian entrant students in Australia. Many carry unprocessed trauma, language barriers, and family separation histories that manifest as anxiety, hypervigilance, and disengagement."
+      },
+      {
+        "title": "Housing Stress & Food Insecurity",
+        "severity": "critical",
+        "stat": "ACOSS: 3├ù risk multiplier",
+        "desc": "Families in housing stress and food insecurity produce children with measurably higher rates of emotional and behavioural difficulties. Fairfield, Bankstown, and Mt Druitt corridors are significantly overrepresented."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "high",
+        "stat": "Above metropolitan avg",
+        "desc": "Western Sydney teens report higher rates of cyberbullying than the broader Sydney average, with ethnicity-based online harassment documented in eSafety research."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "high",
+        "stat": "Below NSW CESE benchmark",
+        "desc": "Belonging and connectedness scores in many Western Sydney government secondary schools are below the NSW benchmark, compounded by large school sizes and high staff turnover."
+      },
+      {
+        "title": "Mental Health Access Gaps",
+        "severity": "notable",
+        "stat": "Long CAMHS wait times",
+        "desc": "Despite population density, specialist child mental health services are chronically under-resourced in Western Sydney, with CAMHS wait times frequently exceeding 6 months."
+      }
+    ],
+    "prevention": "Western Sydney's scale and diversity demand data-led tools that work across cultural and linguistic barriers. Schools with 800+ students cannot rely on individual observation ΓÇö systematic wellbeing measurement surfaces the students who are silently struggling."
+  },
+  {
+    "slug": "blue-mountains",
+    "name": "Blue Mountains & Lithgow",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "82,000",
+    "schools": "~55 schools",
+    "overview": "The Blue Mountains region combines natural beauty with significant socioeconomic variation ΓÇö from affluent Leura to disadvantaged Katoomba and rural Lithgow. Mental health service access is limited, and bushfire-affected communities continue to recover.",
+    "keyStats": [
+      {
+        "num": "Limited",
+        "label": "specialist youth mental health services"
+      },
+      {
+        "num": "Γåæ",
+        "label": "anxiety referrals post-2019ΓÇô20 bushfires"
+      },
+      {
+        "num": "High",
+        "label": "disadvantage in Katoomba and Lithgow areas"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Post-Bushfire Anxiety",
+        "severity": "high",
+        "stat": "2019ΓÇô20 fires impact",
+        "desc": "Blue Mountains communities were severely impacted by the 2019ΓÇô20 fires. Ongoing anxiety, environmental hypervigilance, and PTSD continue to affect children years after the event."
+      },
+      {
+        "title": "Rural Isolation",
+        "severity": "high",
+        "stat": "Lithgow access desert",
+        "desc": "Students in Lithgow and outer Blue Mountains face 60ΓÇô90 minute commutes to access specialist mental health services, effectively creating a care desert for rural families."
+      },
+      {
+        "title": "Socioeconomic Disadvantage",
+        "severity": "notable",
+        "stat": "Katoomba SEIFA below avg",
+        "desc": "Katoomba and surrounds record below-average SEIFA scores. Schools in this pocket support students with compounding disadvantage that exceeds the region's popular image."
+      }
+    ],
+    "prevention": "Blue Mountains schools need simple, scalable wellbeing data tools that work without requiring specialist referrals. Digital platforms allow stretched school counsellors to monitor large cohorts and prioritise those most at risk."
+  },
+  {
+    "slug": "riverina",
+    "name": "Riverina & Wagga Wagga",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "215,000",
+    "schools": "~180 schools",
+    "overview": "The Riverina is a major agricultural and military region anchored by Wagga Wagga. Youth mental health challenges include rural isolation, drought-related family stress, and limited specialist services across a geographically vast area.",
+    "keyStats": [
+      {
+        "num": "Γåæ",
+        "label": "farm family financial stress linked to mental health"
+      },
+      {
+        "num": "Limited",
+        "label": "CAMHS outside major centres"
+      },
+      {
+        "num": "High",
+        "label": "school engagement challenges in remote communities"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Drought & Farm Family Stress",
+        "severity": "high",
+        "stat": "Documented NFF research",
+        "desc": "Children of farming families carry parental financial and climate anxiety. National Farmers Federation research documents the direct link between prolonged drought stress and child mental health deterioration."
+      },
+      {
+        "title": "Rural Access to Services",
+        "severity": "high",
+        "stat": "1ΓÇô2 hr travel for CAMHS",
+        "desc": "Schools in Narrandera, Griffith, Young, and Tumut face significant challenges accessing specialist youth mental health support, with families travelling hours for appointments."
+      },
+      {
+        "title": "Indigenous Youth Wellbeing",
+        "severity": "high",
+        "stat": "Elevated in AIHW data",
+        "desc": "Riverina communities including Wagga Wagga have significant Aboriginal populations. AIHW data places several Riverina SA3 regions in elevated percentile bands for youth distress and self-harm risk."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "notable",
+        "stat": "Small town pressures",
+        "desc": "In smaller Riverina communities, social exclusion is intense and highly visible. Students who don't fit the dominant social culture have few alternatives and limited social escape."
+      }
+    ],
+    "prevention": "Riverina schools need affordable, low-bandwidth wellbeing tools that work in regional and remote settings. Early identification of at-risk students is especially critical where specialist services are weeks away."
+  },
+  {
+    "slug": "new-england",
+    "name": "New England & Tamworth",
+    "state": "New South Wales",
+    "stateSlug": "new-south-wales",
+    "type": "region",
+    "population": "185,000",
+    "schools": "~160 schools",
+    "overview": "The New England region spans from Tamworth to Armidale and Inverell. It is a region of strong community identity but also elevated youth suicide rates, limited mental health infrastructure, and significant Indigenous disadvantage.",
+    "keyStats": [
+      {
+        "num": "Elevated",
+        "label": "youth suicide rates in AIHW regional mapping"
+      },
+      {
+        "num": "Critical",
+        "label": "shortage of CAMHS in outer New England"
+      },
+      {
+        "num": "High",
+        "label": "Indigenous youth population with elevated risk"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Suicide Risk",
+        "severity": "critical",
+        "stat": "AIHW: elevated percentile",
+        "desc": "AIHW Youth Self-Harm Atlas data places several New England SA3 regions in elevated national percentile bands for youth self-harm and suicidality. The region has experienced clusters of youth deaths."
+      },
+      {
+        "title": "Indigenous Youth Distress",
+        "severity": "critical",
+        "stat": "Moree, Inverell focus",
+        "desc": "Aboriginal communities in Moree Plains and Inverell face compounding risk factors ΓÇö intergenerational trauma, poverty, and limited culturally safe mental health services."
+      },
+      {
+        "title": "Mental Health Access Gaps",
+        "severity": "high",
+        "stat": "Weeks for appointments",
+        "desc": "Outside Tamworth and Armidale, specialist youth mental health support is effectively inaccessible. Families in Gunnedah, Narrabri, and Glen Innes face months-long wait times."
+      },
+      {
+        "title": "School Disengagement",
+        "severity": "notable",
+        "stat": "Above regional avg",
+        "desc": "Year 9ΓÇô10 disengagement and early leaving is above regional averages in several New England schools, particularly in communities with low tertiary aspiration."
+      }
+    ],
+    "prevention": "New England schools urgently need scalable wellbeing monitoring. The region's geography makes in-person specialist support impossible for most students ΓÇö data-led early intervention is the only viable prevention strategy at scale."
+  },
+  {
+    "slug": "mornington-peninsula",
+    "name": "Mornington Peninsula",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "region",
+    "population": "170,000",
+    "schools": "~90 schools",
+    "overview": "The Mornington Peninsula blends affluent coastal lifestyle with significant pockets of disadvantage in areas like Rosebud and Hastings. Youth mental health challenges are under-recognised given the region's scenic image.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "youth self-harm presentations at Peninsula Health"
+      },
+      {
+        "num": "Γåæ",
+        "label": "anxiety referrals in Years 8ΓÇô10"
+      },
+      {
+        "num": "Limited",
+        "label": "accessible youth mental health in outer Peninsula"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Hidden Disadvantage",
+        "severity": "high",
+        "stat": "Rosebud, Hastings pockets",
+        "desc": "The Peninsula's affluent image obscures significant disadvantage in its northern and eastern communities. Peninsula Health emergency data shows elevated youth self-harm presentations from Rosebud and Hastings."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Above regional avg",
+        "desc": "Youth substance use ΓÇö particularly cannabis and alcohol ΓÇö is elevated on the Mornington Peninsula, linked to limited structured activities, transient social environments, and weekend gatherings unsupervised by adults."
+      },
+      {
+        "title": "Social Isolation",
+        "severity": "notable",
+        "stat": "Rural outer Peninsula",
+        "desc": "Students in outer Peninsula communities including Red Hill, Flinders, and Merricks face social isolation amplified by limited public transport and few youth services."
+      }
+    ],
+    "prevention": "Peninsula schools need data tools that look beyond visible distress signals. Many at-risk students in this region appear fine from the outside ΓÇö systematic wellbeing measurement catches the hidden deterioration before it becomes crisis."
+  },
+  {
+    "slug": "bendigo",
+    "name": "Bendigo & Central Victoria",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "region",
+    "population": "155,000",
+    "schools": "~120 schools",
+    "overview": "Bendigo is Victoria's third-largest city and a regional hub for central Victoria. Youth mental health services are in demand, with outer communities in Loddon-Mallee facing significant access gaps.",
+    "keyStats": [
+      {
+        "num": "Γåæ 40%",
+        "label": "headspace Bendigo presentations since 2021"
+      },
+      {
+        "num": "Limited",
+        "label": "CAMHS access in Loddon-Mallee outer areas"
+      },
+      {
+        "num": "High",
+        "label": "youth unemployment linked to disengagement"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Depression & Distress",
+        "severity": "high",
+        "stat": "headspace: Γåæ 40%",
+        "desc": "headspace Bendigo data shows a 40% increase in presentations since 2021, with depression and anxiety the dominant presenting issues. Year 9ΓÇô11 students are the most affected cohort."
+      },
+      {
+        "title": "Access Gaps in Outer Loddon",
+        "severity": "high",
+        "stat": "Mildura, Swan Hill focus",
+        "desc": "Students in Mildura, Swan Hill, and Kerang face extreme access deserts for specialist youth mental health, with families sometimes waiting 3ΓÇô6 months for an initial appointment."
+      },
+      {
+        "title": "School Disengagement",
+        "severity": "notable",
+        "stat": "Above Vic avg",
+        "desc": "Year 9ΓÇô10 disengagement rates in Bendigo region schools are above the Victorian average, particularly in schools serving lower socioeconomic communities."
+      }
+    ],
+    "prevention": "Bendigo schools that implement regular wellbeing measurement create a data trail that allows counsellors and wellbeing coordinators to identify declining students early ΓÇö before crisis forces reactive intervention."
+  },
+  {
+    "slug": "latrobe-valley",
+    "name": "Latrobe Valley & Gippsland",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "region",
+    "population": "260,000",
+    "schools": "~200 schools",
+    "overview": "The Latrobe Valley is one of Victoria's most economically challenged regions following the closure of brown coal power stations. Entrenched unemployment, family stress, and limited mental health services create severe wellbeing pressures on young people.",
+    "keyStats": [
+      {
+        "num": "Highest",
+        "label": "unemployment in Victoria ΓÇö documented economic transition"
+      },
+      {
+        "num": "Γåæ",
+        "label": "youth self-harm and suicide rates above state average"
+      },
+      {
+        "num": "Critical",
+        "label": "shortage of youth mental health specialists"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Economic Despair & Youth Suicide",
+        "severity": "critical",
+        "stat": "Above Vic avg suicide rate",
+        "desc": "The economic decline of the Latrobe Valley following power station closures has had documented mental health consequences for young people. Youth suicide rates in the region exceed the Victorian average."
+      },
+      {
+        "title": "Parental Mental Health Impact",
+        "severity": "critical",
+        "stat": "Unemployment cascade",
+        "desc": "Children of long-term unemployed parents in Morwell, Traralgon, and Moe show significantly elevated rates of anxiety, depression, and school disengagement ΓÇö a generational mental health cascade."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "high",
+        "stat": "Below Vic benchmark",
+        "desc": "Low belonging scores in Latrobe Valley schools reflect the broader community disconnection. Students who lack hope for future employment struggle to find meaning in school engagement."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Above state avg",
+        "desc": "Youth substance use ΓÇö particularly cannabis, methamphetamine, and alcohol ΓÇö is significantly above state averages in the Latrobe Valley, often linked to family exposure and lack of structured alternatives."
+      }
+    ],
+    "prevention": "Latrobe Valley schools are working in one of the toughest wellbeing environments in Victoria. Systematic data tools that identify at-risk students early give school staff the ability to act with precision, not just with hope."
+  },
+  {
+    "slug": "sunraysia",
+    "name": "Sunraysia & Mildura",
+    "state": "Victoria",
+    "stateSlug": "victoria",
+    "type": "region",
+    "population": "68,000",
+    "schools": "~55 schools",
+    "overview": "Sunraysia is a remote agricultural region on the Murray River. Mildura is its hub, but surrounding communities are deeply isolated. Indigenous youth, seasonal worker families, and rural access gaps make this one of Victoria's most challenging wellbeing environments.",
+    "keyStats": [
+      {
+        "num": "Remote",
+        "label": "classification ΓÇö 3+ hrs from Melbourne"
+      },
+      {
+        "num": "Elevated",
+        "label": "Indigenous youth risk in AIHW data"
+      },
+      {
+        "num": "Critical",
+        "label": "access gap for specialist mental health"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Indigenous Youth Distress",
+        "severity": "critical",
+        "stat": "AIHW elevated percentile",
+        "desc": "Sunraysia's significant Aboriginal community faces the compounding risk of remote location, economic disadvantage, and lack of culturally safe mental health services."
+      },
+      {
+        "title": "Extreme Access Gaps",
+        "severity": "critical",
+        "stat": "3+ hrs to Melbourne",
+        "desc": "Families requiring specialist child mental health support face a 3+ hour journey to Melbourne. Telehealth has partially addressed this but cannot substitute for in-person crisis support."
+      },
+      {
+        "title": "Seasonal Worker Family Instability",
+        "severity": "high",
+        "stat": "Harvest community mobility",
+        "desc": "Children of seasonal agricultural workers experience significant school disruption through repeated relocations, creating fragmented school histories and difficulty building social connections."
+      }
+    ],
+    "prevention": "Sunraysia schools need digital wellbeing tools that work effectively in remote settings. When specialist support is hours away, early data-led identification is not optional ΓÇö it is the only prevention strategy available."
+  },
+  {
+    "slug": "sunshine-coast",
+    "name": "Sunshine Coast",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "region",
+    "population": "370,000",
+    "schools": "~200 schools",
+    "overview": "The Sunshine Coast is one of Australia's fastest-growing regions, attracting sea-changers and interstate migrants. This rapid growth creates social fragmentation, new student isolation, and infrastructure that lags behind population demand.",
+    "keyStats": [
+      {
+        "num": "Γåæ 45%",
+        "label": "population growth since 2017 ΓÇö fastest in QLD"
+      },
+      {
+        "num": "High",
+        "label": "rates of new student social isolation"
+      },
+      {
+        "num": "Γåæ",
+        "label": "headspace Maroochydore presentations"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Social Fragmentation",
+        "severity": "high",
+        "stat": "High mobility region",
+        "desc": "The Sunshine Coast's population growth brings thousands of new families per year. Children new to the region struggle to establish social networks in schools that can barely keep up with enrolments."
+      },
+      {
+        "title": "Anxiety & School Refusal",
+        "severity": "high",
+        "stat": "Γåæ headspace data",
+        "desc": "headspace Maroochydore data shows significant increases in adolescent anxiety and school refusal presentations, concentrated in the Year 7 transition and Year 9ΓÇô10 cohorts."
+      },
+      {
+        "title": "Cyberbullying",
+        "severity": "notable",
+        "stat": "State average",
+        "desc": "Online harm mirrors Queensland state averages, with social hierarchies in new-growth school communities amplifying the intensity of cyberbullying incidents."
+      }
+    ],
+    "prevention": "Sunshine Coast schools need wellbeing tools that help new students integrate and help counsellors track social connection trends across rapidly growing cohorts."
+  },
+  {
+    "slug": "toowoomba",
+    "name": "Toowoomba & Darling Downs",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "region",
+    "population": "175,000",
+    "schools": "~140 schools",
+    "overview": "Toowoomba is Queensland's largest inland city, serving as a regional hub for the Darling Downs. It has a strong school sector but outer Darling Downs communities face significant access gaps and drought-driven family stress.",
+    "keyStats": [
+      {
+        "num": "Γåæ",
+        "label": "farm family mental health stress from drought cycles"
+      },
+      {
+        "num": "Limited",
+        "label": "specialist services in outer Darling Downs"
+      },
+      {
+        "num": "High",
+        "label": "boarding school population with isolation risk"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Drought & Rural Family Stress",
+        "severity": "high",
+        "stat": "Darling Downs drought cycles",
+        "desc": "Children of farming families on the Darling Downs carry the psychological weight of climate-driven agricultural stress. Financial anxiety, parental depression, and family breakdown are documented consequences."
+      },
+      {
+        "title": "Boarding School Isolation",
+        "severity": "high",
+        "stat": "Significant boarding population",
+        "desc": "Toowoomba's role as a regional education hub means many students board away from family. Homesickness, social hierarchy stress, and limited mental health oversight are documented risks."
+      },
+      {
+        "title": "Access Gaps in Outer Downs",
+        "severity": "notable",
+        "stat": "Roma, Dalby, Chinchilla",
+        "desc": "Students in outer Darling Downs communities face 2ΓÇô3 hour journeys to access specialist youth mental health support in Toowoomba."
+      }
+    ],
+    "prevention": "Toowoomba schools ΓÇö especially boarding schools ΓÇö need systematic wellbeing monitoring. Students far from home have fewer natural support networks. Data tools help school staff identify deterioration before it becomes a crisis without family nearby."
+  },
+  {
+    "slug": "townsville",
+    "name": "Townsville & North Queensland",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "city",
+    "population": "245,000",
+    "schools": "~130 schools",
+    "overview": "Townsville is North Queensland's major urban centre, with a significant defence community, large Indigenous population, and proximity to remote communities with acute wellbeing challenges. Youth crime, disadvantage, and mental health needs are high.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "youth crime and social disadvantage indicators"
+      },
+      {
+        "num": "Elevated",
+        "label": "Indigenous youth risk in AIHW mapping"
+      },
+      {
+        "num": "Γåæ",
+        "label": "emergency department presentations for youth mental health"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Disengagement & Crime",
+        "severity": "critical",
+        "stat": "QLD Youth Justice data",
+        "desc": "Townsville records some of Queensland's highest youth justice system contact rates. School disengagement and mental health challenges are primary drivers ΓÇö most youth offending begins with a wellbeing breakdown."
+      },
+      {
+        "title": "Indigenous Youth Wellbeing",
+        "severity": "critical",
+        "stat": "AIHW elevated percentile",
+        "desc": "Townsville's large Aboriginal and Torres Strait Islander youth population faces compounding risk factors including intergenerational trauma, housing instability, and limited culturally safe services."
+      },
+      {
+        "title": "Domestic Violence Impact",
+        "severity": "high",
+        "stat": "QLD DV data: elevated",
+        "desc": "Children in Townsville households affected by domestic violence face significantly elevated rates of PTSD, anxiety, and school disengagement. Townsville has documented elevated DV rates."
+      },
+      {
+        "title": "Heat & Climate Wellbeing",
+        "severity": "notable",
+        "stat": "Documented impact",
+        "desc": "Extreme heat affects outdoor activity, sleep quality, and physical wellbeing in Townsville. Research links sustained heat exposure to increased irritability and emotional regulation difficulties in children."
+      }
+    ],
+    "prevention": "Townsville schools need culturally informed wellbeing tools that work for diverse student populations. Early identification of students affected by trauma, family violence, or disengagement is the key to prevention at scale."
+  },
+  {
+    "slug": "mackay",
+    "name": "Mackay & Whitsundays",
+    "state": "Queensland",
+    "stateSlug": "queensland",
+    "type": "region",
+    "population": "130,000",
+    "schools": "~90 schools",
+    "overview": "Mackay is Queensland's sugar and resources capital. Boom-bust economic cycles create family financial instability that directly impacts student wellbeing. The Whitsundays region adds a tourism-dependent community with unique youth challenges.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "boom-bust economic stress on families"
+      },
+      {
+        "num": "Γåæ",
+        "label": "anxiety in schools during resource sector downturns"
+      },
+      {
+        "num": "Limited",
+        "label": "specialist youth mental health outside Mackay city"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Economic Cycle Stress",
+        "severity": "high",
+        "stat": "Mining boom-bust documented",
+        "desc": "Resource sector boom-bust cycles create periods of intense family financial stress in Mackay. Children experience parental anxiety, job insecurity, and relocation disruption that manifests in school disengagement."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Above QLD avg",
+        "desc": "Youth alcohol and cannabis use is above Queensland state averages in Mackay, linked to fly-in fly-out family structures, unsupervised time, and peer norms in resource communities."
+      },
+      {
+        "title": "FIFO Family Impact",
+        "severity": "notable",
+        "stat": "Parental absence documented",
+        "desc": "Children of FIFO workers experience extended parental absence that increases loneliness, reduces supervision, and can elevate risk-taking behaviour during teenage years."
+      }
+    ],
+    "prevention": "Mackay schools need to track student wellbeing through economic cycles ΓÇö identifying which students are affected when local unemployment spikes. Data tools provide this longitudinal view that individual teacher observation cannot."
+  },
+  {
+    "slug": "port-augusta",
+    "name": "Port Augusta & Spencer Gulf",
+    "state": "South Australia",
+    "stateSlug": "south-australia",
+    "type": "region",
+    "population": "55,000",
+    "schools": "~45 schools",
+    "overview": "Port Augusta is a regional hub for South Australia's outback communities, with a large Aboriginal population and significant socioeconomic disadvantage. It is one of SA's most challenging wellbeing environments for young people.",
+    "keyStats": [
+      {
+        "num": "Critical",
+        "label": "Indigenous youth disadvantage ΓÇö multiple domains"
+      },
+      {
+        "num": "Elevated",
+        "label": "AIHW self-harm data for regional SA"
+      },
+      {
+        "num": "Limited",
+        "label": "culturally safe mental health services"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Indigenous Youth Self-Harm",
+        "severity": "critical",
+        "stat": "AIHW: elevated SA regional",
+        "desc": "AIHW Atlas data places Spencer Gulf SA3 regions in elevated percentile bands for youth self-harm. Aboriginal youth in Port Augusta face compounding risk ΓÇö intergenerational trauma, poverty, and service gaps."
+      },
+      {
+        "title": "Domestic Violence Exposure",
+        "severity": "critical",
+        "stat": "SA DFSV data: elevated",
+        "desc": "Children in Port Augusta communities experience elevated exposure to domestic violence, creating PTSD presentations, hypervigilance, and profound school disengagement."
+      },
+      {
+        "title": "School Attendance",
+        "severity": "high",
+        "stat": "Below SA state avg",
+        "desc": "Attendance in several Port Augusta schools is well below the SA state average, with chronic absence concentrated among Aboriginal students whose families are managing multiple crises."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Petrol sniffing documented historically",
+        "desc": "Spencer Gulf communities have historically documented youth substance use including petrol and solvent sniffing. While prevalence has declined, alcohol and cannabis remain significant concerns."
+      }
+    ],
+    "prevention": "Port Augusta schools require culturally safe, community-designed wellbeing tools. Data platforms must be co-designed with Aboriginal communities and used to advocate for resources rather than as surveillance instruments."
+  },
+  {
+    "slug": "mount-gambier",
+    "name": "Mount Gambier & Limestone Coast",
+    "state": "South Australia",
+    "stateSlug": "south-australia",
+    "type": "region",
+    "population": "55,000",
+    "schools": "~50 schools",
+    "overview": "Mount Gambier is SA's second-largest city, anchoring the Limestone Coast region. While the community has a strong agricultural and forestry economy, youth mental health services are significantly under-resourced.",
+    "keyStats": [
+      {
+        "num": "Limited",
+        "label": "CAMHS services in Limestone Coast"
+      },
+      {
+        "num": "Γåæ",
+        "label": "school refusal post-COVID"
+      },
+      {
+        "num": "High",
+        "label": "youth service demand relative to provision"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Mental Health Access Gaps",
+        "severity": "high",
+        "stat": "4+ hr drive to Adelaide CAMHS",
+        "desc": "Children requiring specialist mental health support in Mount Gambier face a 4+ hour journey to Adelaide. Telehealth partially addresses this but cannot meet the full range of clinical need."
+      },
+      {
+        "title": "School Refusal",
+        "severity": "high",
+        "stat": "Γåæ Post-COVID",
+        "desc": "Mount Gambier schools report increased school refusal post-COVID, particularly in Year 7 and Year 8. Local services are insufficient to meet demand."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "notable",
+        "stat": "Regional SA avg",
+        "desc": "Youth cannabis and alcohol use in the Limestone Coast mirrors regional SA averages, with limited structured youth activities contributing to risk."
+      }
+    ],
+    "prevention": "Mount Gambier schools need wellbeing monitoring tools that reduce their dependence on overstretched remote specialist services. Early identification allows school staff to intervene with what they have, rather than waiting for appointments that are months away."
+  },
+  {
+    "slug": "kimberley",
+    "name": "Kimberley Region",
+    "state": "Western Australia",
+    "stateSlug": "western-australia",
+    "type": "region",
+    "population": "40,000",
+    "schools": "~55 schools",
+    "overview": "The Kimberley is one of Australia's most remote and most beautiful regions ΓÇö and the site of the country's most acute youth wellbeing crisis. Aboriginal communities across the Kimberley face catastrophic levels of youth self-harm, suicide, and school disengagement.",
+    "keyStats": [
+      {
+        "num": "Highest",
+        "label": "national youth self-harm rates ΓÇö AIHW Atlas"
+      },
+      {
+        "num": "~50%",
+        "label": "average school attendance in remote communities"
+      },
+      {
+        "num": "Critical",
+        "label": "shortage of culturally safe mental health services"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Suicide Crisis",
+        "severity": "critical",
+        "stat": "Highest national rates ΓÇö AIHW",
+        "desc": "The Kimberley consistently records Australia's highest rates of youth suicide and self-harm. This is a declared national emergency. Aboriginal youth, particularly young males, are catastrophically overrepresented."
+      },
+      {
+        "title": "School Attendance Collapse",
+        "severity": "critical",
+        "stat": "~50% remote avg",
+        "desc": "Attendance in remote Kimberley communities averages around 50%, with some schools below 40%. Every missed day compounds educational disadvantage and removes a protective factor against mental health crisis."
+      },
+      {
+        "title": "Intergenerational Trauma",
+        "severity": "critical",
+        "stat": "Compound generational risk",
+        "desc": "The Kimberley's communities carry the layered trauma of colonisation, forced removals, mission systems, and ongoing structural violence. This intergenerational trauma is the deep context for every individual student's risk."
+      },
+      {
+        "title": "Service Access Void",
+        "severity": "high",
+        "stat": "No CAMHS locally",
+        "desc": "There is no child and adolescent mental health service based in the Kimberley. Crisis responses rely on fly-in teams and telehealth, which cannot substitute for sustained therapeutic relationships."
+      }
+    ],
+    "prevention": "The Kimberley requires a fundamentally different approach: community-designed, culturally grounded, and sustained over decades. Data tools must be used to advocate for resources, not to surveil communities. Schools need the tools and the mandate to act early, not just report."
+  },
+  {
+    "slug": "pilbara",
+    "name": "Pilbara Region",
+    "state": "Western Australia",
+    "stateSlug": "western-australia",
+    "type": "region",
+    "population": "62,000",
+    "schools": "~45 schools",
+    "overview": "The Pilbara is WA's resource powerhouse, generating enormous national wealth while its remote Aboriginal communities face catastrophic wellbeing gaps. FIFO work culture, extreme isolation, and inadequate services create a complex youth mental health landscape.",
+    "keyStats": [
+      {
+        "num": "Elevated",
+        "label": "AIHW youth self-harm data for Pilbara SA3s"
+      },
+      {
+        "num": "High",
+        "label": "FIFO family absence impact on children"
+      },
+      {
+        "num": "Critical",
+        "label": "Indigenous youth service gap"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Indigenous Youth Self-Harm",
+        "severity": "critical",
+        "stat": "AIHW: elevated SA3 bands",
+        "desc": "AIHW Youth Self-Harm Atlas data places Pilbara SA3 regions in elevated national percentile bands. Remote Aboriginal communities face the same devastating convergence of risk factors as the Kimberley."
+      },
+      {
+        "title": "FIFO Family Disruption",
+        "severity": "high",
+        "stat": "WA FIFO research documented",
+        "desc": "Pilbara mining communities have large FIFO workforces. Research documents the impact on children: elevated loneliness, reduced parental supervision, disrupted routines, and increased emotional and behavioural difficulties."
+      },
+      {
+        "title": "Extreme Access Gaps",
+        "severity": "high",
+        "stat": "Nearest CAMHS: Perth (1,700km)",
+        "desc": "Specialist child mental health services are effectively inaccessible for Pilbara families. The distance to Perth makes regular therapeutic support impossible for most."
+      }
+    ],
+    "prevention": "Pilbara schools ΓÇö particularly those serving remote Aboriginal communities ΓÇö need simple, culturally safe wellbeing tools that work in low-connectivity environments and support school staff to act on what they observe every day."
+  },
+  {
+    "slug": "goldfields",
+    "name": "Goldfields & Kalgoorlie",
+    "state": "Western Australia",
+    "stateSlug": "western-australia",
+    "type": "region",
+    "population": "60,000",
+    "schools": "~50 schools",
+    "overview": "The Goldfields region is centred on Kalgoorlie-Boulder, Western Australia's gold mining capital. Boom-bust economic cycles, extreme remoteness, and significant Indigenous populations create a complex and challenging wellbeing environment.",
+    "keyStats": [
+      {
+        "num": "Elevated",
+        "label": "Indigenous youth risk ΓÇö AIHW Goldfields data"
+      },
+      {
+        "num": "Remote",
+        "label": "classification ΓÇö 600km from Perth"
+      },
+      {
+        "num": "High",
+        "label": "substance use linked to mining culture"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Indigenous Youth Distress",
+        "severity": "critical",
+        "stat": "AIHW elevated bands",
+        "desc": "Aboriginal youth in the Goldfields face compounding risk: extreme remoteness, poverty, family disruption, and a near-complete absence of culturally safe mental health services."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "high",
+        "stat": "Mining culture linked",
+        "desc": "Kalgoorlie's mining culture normalises high alcohol use. Youth alcohol and cannabis rates in the Goldfields exceed WA state averages, with early initiation among teens documented."
+      },
+      {
+        "title": "Service Isolation",
+        "severity": "high",
+        "stat": "600km from Perth",
+        "desc": "The Goldfields is 600km from Perth. Specialist youth mental health services are essentially inaccessible. School counsellors carry enormous caseloads with minimal backup."
+      }
+    ],
+    "prevention": "Goldfields schools need data-led wellbeing systems that reduce their isolation from expertise. When specialist support is 600km away, having clear data on which students need urgent attention is a life-saving capability."
+  },
+  {
+    "slug": "launceston",
+    "name": "Launceston & Northern Tasmania",
+    "state": "Tasmania",
+    "stateSlug": "tasmania",
+    "type": "city",
+    "population": "115,000",
+    "schools": "~100 schools",
+    "overview": "Launceston is Tasmania's second city, anchoring the island's north. It faces significant disadvantage in outer suburbs, limited youth mental health services, and the pervasive impact of Tasmania's structural socioeconomic challenges.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "disadvantage in outer Launceston suburbs"
+      },
+      {
+        "num": "Γåæ",
+        "label": "youth self-harm presentations at LGH"
+      },
+      {
+        "num": "Limited",
+        "label": "CAMHS waiting lists 3ΓÇô6 months"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Socioeconomic Disadvantage",
+        "severity": "critical",
+        "stat": "Lowest SEIFA nationally",
+        "desc": "Launceston's outer suburbs ΓÇö including Ravenswood, Rocherlea, and Newnham ΓÇö record some of Australia's lowest SEIFA scores. The structural disadvantage flowing through these communities shapes every child's wellbeing challenge."
+      },
+      {
+        "title": "Youth Self-Harm",
+        "severity": "critical",
+        "stat": "Γåæ LGH presentations",
+        "desc": "Launceston General Hospital emergency data shows increasing youth self-harm presentations, concentrated in younger teens from outer disadvantaged suburbs."
+      },
+      {
+        "title": "School Belonging",
+        "severity": "high",
+        "stat": "Below national benchmark",
+        "desc": "Low belonging scores in Launceston schools are linked to high staff turnover in disadvantaged schools and limited extracurricular opportunities for students without family financial support."
+      },
+      {
+        "title": "Substance Use",
+        "severity": "notable",
+        "stat": "Above Tas avg in outer suburbs",
+        "desc": "Youth substance use in outer Launceston suburbs exceeds Tasmanian averages, with cannabis in particular serving as a coping mechanism for untreated anxiety and depression."
+      }
+    ],
+    "prevention": "Launceston schools in disadvantaged areas need wellbeing data tools that help their overstretched counsellors prioritise. With 3ΓÇô6 month CAMHS wait times, early identification is the only way to get ahead of crisis."
+  },
+  {
+    "slug": "devonport",
+    "name": "Devonport & Northwest Tasmania",
+    "state": "Tasmania",
+    "stateSlug": "tasmania",
+    "type": "region",
+    "population": "90,000",
+    "schools": "~80 schools",
+    "overview": "Northwest Tasmania stretches from Devonport to Burnie, encompassing a mix of coastal towns and rural communities. Youth mental health is significantly under-resourced, and the region's cold winters compound seasonal depression risks.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "seasonal depression indicators in winter months"
+      },
+      {
+        "num": "Limited",
+        "label": "specialist youth mental health services"
+      },
+      {
+        "num": "Γåæ",
+        "label": "school refusal post-COVID"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Seasonal Depression",
+        "severity": "high",
+        "stat": "Winter climate documented",
+        "desc": "Northwest Tasmania's cold, dark winters compound pre-existing depression and anxiety in young people. Seasonal affective patterns are underrecognised in Tasmanian school wellbeing planning."
+      },
+      {
+        "title": "School Refusal",
+        "severity": "high",
+        "stat": "Γåæ Post-COVID",
+        "desc": "Devonport and Burnie schools report elevated school refusal post-COVID, with limited local services to support families managing anxious young people."
+      },
+      {
+        "title": "Rural Isolation",
+        "severity": "notable",
+        "stat": "Outer NW communities",
+        "desc": "Students in outer northwest communities including Smithton and Stanley face limited social and extracurricular options, amplifying isolation and limiting protective social factors."
+      }
+    ],
+    "prevention": "Northwest Tasmania schools need affordable tools that give them data on student emotional wellbeing through the year ΓÇö particularly tracking seasonal dips that are predictable but easily missed without systematic monitoring."
+  },
+  {
+    "slug": "alice-springs",
+    "name": "Alice Springs & Central Australia",
+    "state": "Northern Territory",
+    "stateSlug": "northern-territory",
+    "type": "city",
+    "population": "28,000",
+    "schools": "~35 schools",
+    "overview": "Alice Springs is at the centre of Australia's most acute youth wellbeing crisis. Extreme disadvantage, youth crime, domestic violence, and the near-total collapse of school attendance in some communities create an emergency that demands urgent systemic response.",
+    "keyStats": [
+      {
+        "num": "Critical",
+        "label": "youth crime and social emergency declared 2023ΓÇô24"
+      },
+      {
+        "num": "< 40%",
+        "label": "attendance in some remote Central Australia schools"
+      },
+      {
+        "num": "Highest",
+        "label": "per-capita rates of DV affecting children ΓÇö NT data"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Youth Crisis & Social Emergency",
+        "severity": "critical",
+        "stat": "Declared emergency 2023ΓÇô24",
+        "desc": "The Northern Territory Government and Federal Government have both recognised Alice Springs as facing a social emergency, with youth crime, self-harm, and community breakdown at unprecedented levels in 2023ΓÇô24."
+      },
+      {
+        "title": "Domestic Violence & Child Trauma",
+        "severity": "critical",
+        "stat": "NT highest per-capita DV rate",
+        "desc": "Children in Alice Springs face Australia's highest per-capita rates of exposure to domestic violence. The resulting PTSD, anxiety, and hypervigilance make school engagement profoundly difficult."
+      },
+      {
+        "title": "Attendance Collapse",
+        "severity": "critical",
+        "stat": "< 40% in remote schools",
+        "desc": "Some remote schools around Alice Springs record attendance below 40%. Without access to school, children lose their most important daily protective factor against mental health deterioration."
+      },
+      {
+        "title": "Substance Exposure",
+        "severity": "high",
+        "stat": "NT alcohol data",
+        "desc": "Children in Alice Springs communities are disproportionately exposed to alcohol abuse, with documented links to developmental harm, emotional dysregulation, and school disengagement."
+      }
+    ],
+    "prevention": "Alice Springs requires emergency-level, community-designed responses. Data tools must be co-designed with Aboriginal community leaders and used to direct resources ΓÇö not as bureaucratic compliance mechanisms. Every week of delay costs lives."
+  },
+  {
+    "slug": "belconnen",
+    "name": "Belconnen & Gungahlin",
+    "state": "Australian Capital Territory",
+    "stateSlug": "australian-capital-territory",
+    "type": "region",
+    "population": "210,000",
+    "schools": "~60 schools",
+    "overview": "Belconnen and Gungahlin are Canberra's fastest-growing districts, with significant new migrant and multicultural communities. Academic pressure is high, and the hidden wellbeing challenges of high-achieving multicultural students are often overlooked.",
+    "keyStats": [
+      {
+        "num": "High",
+        "label": "academic pressure in new migrant families"
+      },
+      {
+        "num": "Γåæ",
+        "label": "culturally specific mental health presentations"
+      },
+      {
+        "num": "Hidden",
+        "label": "distress among high-achieving students"
+      }
+    ],
+    "issues": [
+      {
+        "title": "Cultural Academic Pressure",
+        "severity": "high",
+        "stat": "Multicultural community focus",
+        "desc": "Students from Chinese, Korean, Indian, and South Asian backgrounds in Belconnen and Gungahlin face intense family academic expectations compounded by immigration-related pressure to succeed. Distress is frequently hidden behind strong results."
+      },
+      {
+        "title": "Hidden High-Achiever Distress",
+        "severity": "high",
+        "stat": "PISA data paradox",
+        "desc": "ACT's highest-performing students often report the deepest anxiety. The absence of visible failure masks wellbeing deterioration until it reaches crisis point."
+      },
+      {
+        "title": "Belonging in New Communities",
+        "severity": "notable",
+        "stat": "New migrant integration",
+        "desc": "Gungahlin's rapid growth and diverse new migrant population means many students are navigating cultural identity, language, and social belonging simultaneously ΓÇö a significant stress burden."
+      }
+    ],
+    "prevention": "Schools in Belconnen and Gungahlin need wellbeing tools that detect distress behind high academic performance. For many students in these communities, grades are not a proxy for wellbeing ΓÇö they are a mask for it."
+  }
+]

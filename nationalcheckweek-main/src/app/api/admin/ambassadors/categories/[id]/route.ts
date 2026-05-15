@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { adminClient } from '@/lib/adminClient';
+import { requireAdmin } from '@/lib/auth';
+import { AmbassadorCategoryPatchSchema, parseBody } from '@/lib/adminSchemas';
+
+export const runtime = 'edge';
+
+type RouteCtx = { params: Promise<{ id: string }> };
+
+export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
+  const { id } = await ctx!.params;
+  const raw = await req.json().catch(() => null);
+  if (!raw) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+
+  const parsed = parseBody(AmbassadorCategoryPatchSchema, raw);
+  if (!parsed.ok) return parsed.response;
+
+  const patch = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
+  if (Object.keys(patch).length === 0)
+    return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+
+  const sb = adminClient();
+  const { data, error } = await sb
+    .from('ambassador_categories')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ category: data });
+});
+
+export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+  const { id } = await ctx!.params;
+  const sb = adminClient();
+  const { error } = await sb.from('ambassador_categories').delete().eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+});

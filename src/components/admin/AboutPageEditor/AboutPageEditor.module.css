@@ -1,0 +1,60 @@
+/**
+ * CSS Module for AboutPageEditor
+ * Extracted from inline styles for better maintainability
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.arrayContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.arrayItem {
+  padding: 16px;
+  background: var(--color-bg);
+  border-radius: 8px;
+}
+
+.arrayItemLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-faint);
+  margin-bottom: 12px;
+}
+
+.arrayItemFields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.beliefItemRow {
+  display: flex;
+  gap: 12px;
+}
+
+.beliefIconColumn {
+  flex: 0 0 80px;
+}
+
+.beliefTextColumn {
+  flex: 1;
+}

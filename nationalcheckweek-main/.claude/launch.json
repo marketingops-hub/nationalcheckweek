@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Next.js (main app)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "Vite – home1test-main",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "homes/home1test-main", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "Vite – home2",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "homes/home2", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

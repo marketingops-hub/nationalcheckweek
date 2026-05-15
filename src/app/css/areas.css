@@ -1,0 +1,217 @@
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   AREAS PAGE
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+.area-hero {
+  background: linear-gradient(150deg, #E6F7FD 0%, #F8F4F7 60%, #FFFFFF 100%);
+  padding: 80px 48px 56px;
+  border-bottom: 2px solid var(--border);
+}
+.area-breadcrumb {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.area-breadcrumb a { color: var(--primary); text-decoration: none; }
+.area-breadcrumb a:hover { color: var(--primary-dark); }
+.area-hero h1 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  margin-bottom: 12px;
+  color: var(--dark);
+}
+.area-hero-sub {
+  font-size: 1rem;
+  color: var(--text-mid);
+  max-width: 600px;
+  line-height: 1.75;
+}
+.area-tag {
+  display: inline-block;
+  font-family: var(--font-body);
+  background: rgba(41,184,232,0.10);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(41,184,232,0.25);
+  margin-bottom: 14px;
+}
+.area-stats-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+.area-stat-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 22px;
+  min-width: 160px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.area-stat-num {
+  font-family: var(--font-body);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1.1;
+}
+.area-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.area-body {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+.area-section {
+  margin-bottom: 40px;
+}
+.area-section h2 {
+  font-family: var(--font-body);
+  font-size: 1.4rem;
+  color: var(--dark);
+  font-weight: 800;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.area-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.area-issue-card {
+  background: var(--primary-light);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+.area-issue-card.critical { border-left-color: var(--red); }
+.area-issue-card.high     { border-left-color: var(--amber); }
+.area-issue-card.notable  { border-left-color: var(--green); }
+.area-issue-title {
+  font-family: var(--font-body);
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+.area-issue-stat {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+.area-issue-desc {
+  font-size: 0.875rem;
+  color: var(--text-mid);
+  line-height: 1.6;
+}
+.area-issue-cta {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+a:has(> .area-issue-card--linked),
+a > .area-issue-card--linked {
+  display: block;
+  text-decoration: none;
+}
+a > .area-issue-card--linked {
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+a:hover > .area-issue-card--linked {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(41,184,232,0.12);
+  transform: translateY(-2px);
+}
+/* â”€â”€ Area Severity Badge â”€â”€ */
+.area-sev-badge {
+  display: inline-block; padding: 1px 8px; border-radius: 4px;
+  font-size: 0.72rem; font-weight: 700; margin-right: 8px;
+}
+.area-sev-badge--critical { background: #FEE2E2; color: #B91C1C; }
+.area-sev-badge--high     { background: #FEF3C7; color: #B45309; }
+.area-sev-badge--notable  { background: #DCFCE7; color: #15803D; }
+
+/* â”€â”€ Area Prevention Callout â”€â”€ */
+.area-prevention {
+  background: linear-gradient(135deg, #E6F7FD 0%, #F8F4F7 100%);
+  border: 1px solid rgba(41,184,232,0.20);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-lg); padding: 28px 32px;
+}
+.area-prevention__eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.72rem; font-weight: 700; color: var(--primary);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px;
+}
+.area-prevention p {
+  color: var(--text-mid); line-height: 1.75; font-size: 0.975rem;
+}
+.area-prevention__cta {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 18px;
+  background: var(--primary); color: #fff;
+  font-family: var(--font-body); font-weight: 700; font-size: 0.85rem;
+  padding: 10px 22px; border-radius: var(--radius-pill); text-decoration: none;
+  transition: background 0.15s;
+}
+.area-prevention__cta:hover { background: var(--primary-dark); }
+
+/* â”€â”€ Related Areas Grid â”€â”€ */
+.area-related-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+}
+.area-related-card {
+  display: block; background: var(--gray-50); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px; text-decoration: none;
+  transition: border-color 0.15s;
+}
+.area-related-card:hover { border-color: var(--primary); }
+.area-related-card__name { font-family: var(--font-body); font-weight: 800; color: var(--dark); font-size: 0.9rem; }
+.area-related-card__meta { font-size: 0.75rem; color: var(--text-light); margin-top: 4px; }
+
+/* â”€â”€ Back Nav Row â”€â”€ */
+.area-back-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+
+.area-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-light);
+  color: var(--dark);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  margin-top: 32px;
+  border: 1px solid var(--border);
+  transition: background 0.15s, border-color 0.15s;
+}
+.area-back-btn:hover { background: var(--border); border-color: var(--primary); color: var(--primary); }
+
+@media (max-width: 768px) {
+  .area-body { padding: 36px 20px 60px; }
+  .area-prevention { padding: 22px 20px; }
+  .area-related-grid { grid-template-columns: 1fr; }
+  .area-back-row { flex-direction: column; }
+  .area-back-btn { text-align: center; justify-content: center; }
+}
