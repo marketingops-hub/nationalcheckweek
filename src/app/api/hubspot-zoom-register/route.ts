@@ -167,22 +167,8 @@ export async function POST(request: NextRequest) {
     });
 
     const results: any = {
-      hubspot: null,
       zoom: [],
     };
-
-    // Submit to HubSpot
-    try {
-      console.log('[HubSpot-Zoom] Submitting to HubSpot form:', hubspot_form_id);
-      results.hubspot = await submitToHubSpot(hubspot_form_id, fields, context || {});
-      console.log('[HubSpot-Zoom] HubSpot submission successful');
-    } catch (error: any) {
-      console.error('[HubSpot-Zoom] HubSpot submission failed:', error.message);
-      return NextResponse.json(
-        { error: 'HubSpot submission failed', details: error.message },
-        { status: 500 }
-      );
-    }
 
     // Register for Zoom webinars if provided
     if (zoom_webinar_ids && Array.isArray(zoom_webinar_ids) && zoom_webinar_ids.length > 0) {

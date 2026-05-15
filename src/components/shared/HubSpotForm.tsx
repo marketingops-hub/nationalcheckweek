@@ -67,7 +67,9 @@ export default function HubSpotForm({
       region,
       target: `#${targetId}`,
       onFormReady: ($form: HTMLFormElement) => markReady($form),
-      onFormSubmit: onFormSubmit as HubSpotFormConfig['onFormSubmit'],
+      onFormSubmit: ($form: HTMLFormElement, data: Record<string, unknown>) => {
+        if (onFormSubmit) setTimeout(() => onFormSubmit($form, data), 0);
+      },
     });
   }, [portalId, formId, region, targetId, markReady, onFormSubmit]);
 
