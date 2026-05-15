@@ -79,8 +79,12 @@ async function registerForZoomWebinar(
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Zoom registration failed: ${error}`);
+    const errorText = await response.text();
+    let errorDetail: unknown = errorText;
+    try { errorDetail = JSON.parse(errorText); } catch { /* keep raw text */ }
+    const err = new Error(`Zoom registration failed (HTTP ${response.status})`);
+    (err as any).zoomError = errorDetail;
+    throw err;
   }
 
   return await response.json();
@@ -204,11 +208,12 @@ export async function POST(request: NextRequest) {
             });
             console.log(`[HubSpot-Zoom] Successfully registered for webinar: ${webinarId}`);
           } catch (error: any) {
-            console.error(`[HubSpot-Zoom] Failed to register for webinar ${webinarId}:`, error.message);
+            console.error(`[HubSpot-Zoom] Failed to register for webinar ${webinarId}:`, error.message, error.zoomError ?? '');
             results.zoom.push({
               webinar_id: webinarId,
               success: false,
               error: error.message,
+              zoom_error_detail: error.zoomError ?? null,
             });
           }
         }
