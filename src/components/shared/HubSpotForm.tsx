@@ -73,6 +73,28 @@ export default function HubSpotForm({
     });
   }, [portalId, formId, region, targetId, markReady, onFormSubmit]);
 
+  // HubSpot iframes communicate via postMessage — this is the reliable
+  // cross-iframe mechanism that fires even when onFormSubmit doesn't.
+  useEffect(() => {
+    if (!onFormSubmit) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        typeof event.data === 'object' &&
+        event.data !== null &&
+        event.data.type === 'hsFormCallback' &&
+        event.data.eventName === 'onFormSubmit' &&
+        event.data.id === formId
+      ) {
+        const data: Array<{ name: string; value: string }> = event.data.data ?? [];
+        onFormSubmit(null as unknown as HTMLFormElement, data as unknown as Record<string, unknown>);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [formId, onFormSubmit]);
+
   // Fallback: watch for HubSpot injecting content into the target div
   // in case onFormReady doesn't fire (observed in production).
   useEffect(() => {
