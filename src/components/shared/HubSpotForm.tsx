@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-const HUBSPOT_SCRIPT_URL = '//js-ap1.hsforms.net/forms/embed/v2.js';
+// Classic forms library — supports v1, v2 & v3 forms and renders inline
+// (the newer /embed/v2.js only handles v2/v3 and uses iframes).
+const HUBSPOT_SCRIPT_URL = '//js-ap1.hsforms.net/forms/v2.js';
 
 interface HubSpotFormProps {
   portalId: string;
