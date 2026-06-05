@@ -7,9 +7,7 @@ import AreaSchoolStatsPanel from "@/components/AreaSchoolStatsPanel";
 import { SourcesList } from "@/components/SourcesList";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { buildIssueSlugMap } from "@/lib/geo-utils";
-
-interface AreaIssue { title: string; severity: string; stat: string; desc: string; slug?: string; }
-interface KeyStat { num: string; label: string; }
+import { parseAreaIssues, parseKeyStats } from "@/lib/schemas/geo";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -62,6 +60,8 @@ export default async function AreaPage({ params }: Props) {
   const relatedAreas = relatedData ?? [];
 
   const issueSlugByTitle = buildIssueSlugMap(dbIssues ?? []);
+  const areaIssues = parseAreaIssues(area.issues);
+  const keyStats = parseKeyStats(area.key_stats);
 
 
   return (
@@ -96,7 +96,7 @@ export default async function AreaPage({ params }: Props) {
             <div className="area-stat-num">{area.schools}</div>
             <div className="area-stat-label">Approximate schools</div>
           </div>
-          {((area.key_stats ?? []) as KeyStat[]).map((s, i) => (
+          {keyStats.map((s, i) => (
             <div key={i} className="area-stat-box">
               <div className="area-stat-num">{s.num}</div>
               <div className="area-stat-label">{s.label}</div>
@@ -112,7 +112,7 @@ export default async function AreaPage({ params }: Props) {
         <div className="area-section">
           <h2>Priority Wellbeing Issues</h2>
           <div className="area-issues-list">
-            {((area.issues ?? []) as AreaIssue[]).map((issue, i) => {
+            {areaIssues.map((issue, i) => {
               const issueSlug = issue.slug ?? issueSlugByTitle[issue.title.toLowerCase()];
               const card = (
                 <div className={`area-issue-card ${issue.severity}${issueSlug ? " area-issue-card--linked" : ""}`}>

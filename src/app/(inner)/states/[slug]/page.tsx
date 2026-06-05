@@ -7,6 +7,7 @@ import InfoNote from "@/components/InfoNote";
 import PreventionBridge from "@/components/PreventionBridge";
 import PrevNextNav from "@/components/PrevNextNav";
 import { buildIssueSlugMap } from "@/lib/geo-utils";
+import { parseStateIssues } from "@/lib/schemas/geo";
 
 const BADGE_KEY: Record<string, keyof typeof SEVERITY> = {
   "badge-critical": "critical",
@@ -74,6 +75,8 @@ export default async function StatePage({ params }: Props) {
   const stateAreas = areas ?? [];
   const issueSlugByTitle = buildIssueSlugMap(dbIssues ?? []);
 
+  const stateIssues = parseStateIssues(state.issues);
+
   const currentIdx = stateList.findIndex((s) => s.slug === slug);
   const prevState = currentIdx > 0 ? stateList[currentIdx - 1] : null;
   const nextState = currentIdx !== -1 && currentIdx < stateList.length - 1 ? stateList[currentIdx + 1] : null;
@@ -110,7 +113,7 @@ export default async function StatePage({ params }: Props) {
         </p>
 
         <div className="stack stack--gap-md stack--mb-lg">
-          {((state.issues ?? []) as { name: string; badge: string; stat: string; desc: string; slug?: string }[]).map((issue, i) => {
+          {stateIssues.map((issue, i) => {
             const sevKey = BADGE_KEY[issue.badge] ?? "notable";
             const sev = SEVERITY[sevKey];
             const issueSlug = issue.slug ?? issueSlugByTitle[issue.name.toLowerCase()];

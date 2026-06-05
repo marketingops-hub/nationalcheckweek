@@ -9,6 +9,7 @@ import PreventionBridge from "@/components/PreventionBridge";
 import CitedText from "@/components/CitedText";
 import PrevNextNav from "@/components/PrevNextNav";
 import { adminClient } from "@/lib/adminClient";
+import { parseImpacts, parseGroups, parseSourceStrings } from "@/lib/schemas/geo";
 
 interface DbSource {
   id: string; num: number; title: string; url: string;
@@ -99,6 +100,10 @@ export default async function IssuePage({ params }: Props) {
 
   const sev = SEVERITY[issue.severity as keyof typeof SEVERITY];
 
+  const impacts = parseImpacts(issue.impacts);
+  const groups = parseGroups(issue.groups);
+  const legacySources = parseSourceStrings(issue.sources);
+
   return (
     <>
       {/* HERO HEADER */}
@@ -157,7 +162,7 @@ export default async function IssuePage({ params }: Props) {
         <section className="inner-section">
           <h2 className="section-heading section-heading--md">Key Impact Areas</h2>
           <div className="impact-grid">
-            {((issue.impacts ?? []) as { title: string; text: string }[]).map((imp) => (
+            {impacts.map((imp) => (
               <div key={imp.title} className="impact-card">
                 <div className="impact-card__title" style={{ color: sev?.color }}>{imp.title}</div>
                 <p className="impact-card__body">{imp.text}</p>
@@ -169,7 +174,7 @@ export default async function IssuePage({ params }: Props) {
         <section className="inner-section">
           <h2 className="section-heading section-heading--md">Groups Most at Risk</h2>
           <div className="risk-pills">
-            {((issue.groups ?? []) as string[]).map((g) => (
+            {groups.map((g) => (
               <span key={g} className="risk-pill">{g}</span>
             ))}
           </div>
@@ -232,15 +237,15 @@ export default async function IssuePage({ params }: Props) {
             </div>
           )}
 
-          {!issueSources.length && (issue.sources as string[])?.length > 0 && (
+          {!issueSources.length && legacySources.length > 0 && (
             <div>
-              {(issue.sources as string[]).map((s) => (
+              {legacySources.map((s) => (
                 <div key={s} className="source-legacy">📄 {s}</div>
               ))}
             </div>
           )}
 
-          {issueSources.length === 0 && !(issue.sources as string[])?.length && (
+          {issueSources.length === 0 && legacySources.length === 0 && (
             <p className="source-empty">Sources will be added as this content is verified.</p>
           )}
         </section>
