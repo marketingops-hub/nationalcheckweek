@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { createClient as createBrowserClient } from "@supabase/supabase-js";
+import { createClient, createStaticClient } from "@/lib/supabase/server";
 import { SEVERITY } from "@/lib/colors";
 import SchoolStatsPanel from "@/components/SchoolStatsPanel";
 
@@ -12,16 +11,38 @@ const BADGE_KEY: Record<string, keyof typeof SEVERITY> = {
 };
 
 export async function generateStaticParams() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return [];
-  const sb = createBrowserClient(url, key);
+  const sb = createStaticClient();
+  if (!sb) return [];
   const { data } = await sb.from("states").select("slug");
   return (data ?? []).map((s) => ({ slug: s.slug }));
 }
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  const sb = createStaticClient();
+  if (!sb) return { title: "State Wellbeing Data" };
+  const { data } = await sb
+    .from("states")
+    .select("name, subtitle, seo_title, seo_desc, og_image")
+    .eq("slug", slug)
+    .single();
+  if (!data) return { title: "State Not Found" };
+  const title = data.seo_title ?? `${data.name} — Student Wellbeing Data`;
+  const description = data.seo_desc ?? data.subtitle ?? `Explore student wellbeing priorities, data, and prevention insights for ${data.name}.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(data.og_image ? { images: [{ url: data.og_image }] } : {}),
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export default async function StatePage({ params }: Props) {
