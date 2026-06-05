@@ -5,6 +5,8 @@ import { SEVERITY } from "@/lib/colors";
 import SchoolStatsPanel from "@/components/SchoolStatsPanel";
 import InfoNote from "@/components/InfoNote";
 import PreventionBridge from "@/components/PreventionBridge";
+import PrevNextNav from "@/components/PrevNextNav";
+import { buildIssueSlugMap } from "@/lib/geo-utils";
 
 const BADGE_KEY: Record<string, keyof typeof SEVERITY> = {
   "badge-critical": "critical",
@@ -34,7 +36,10 @@ export async function generateMetadata({ params }: Props) {
     .single();
   if (!data) return { title: "State Not Found" };
   const title = data.seo_title ?? `${data.name} — Student Wellbeing Data`;
-  const description = data.seo_desc ?? data.subtitle ?? `Explore student wellbeing priorities, data, and prevention insights for ${data.name}.`;
+  const description =
+    data.seo_desc ??
+    data.subtitle ??
+    `Explore student wellbeing priorities, data, and prevention insights for ${data.name}.`;
   return {
     title,
     description,
@@ -51,33 +56,27 @@ export default async function StatePage({ params }: Props) {
   const { slug } = await params;
   const sb = await createClient();
 
-  const { data: state } = await sb
-    .from("states")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  // All four queries are independent — run in parallel
+  const [
+    { data: state },
+    { data: allStates },
+    { data: areas },
+    { data: dbIssues },
+  ] = await Promise.all([
+    sb.from("states").select("*").eq("slug", slug).single(),
+    sb.from("states").select("slug, name").order("name"),
+    sb.from("areas").select("slug, name, type, population, issues").eq("state_slug", slug),
+    sb.from("issues").select("title, slug"),
+  ]);
   if (!state) notFound();
 
-  const { data: allStates } = await sb
-    .from("states")
-    .select("slug, name")
-    .order("name");
   const stateList = allStates ?? [];
-  const currentIdx = stateList.findIndex((s) => s.slug === slug);
-  const prevSlug = currentIdx > 0 ? stateList[currentIdx - 1].slug : null;
-  const nextSlug = currentIdx < stateList.length - 1 ? stateList[currentIdx + 1].slug : null;
-
-  const { data: areas } = await sb
-    .from("areas")
-    .select("slug, name, type, population, issues")
-    .eq("state_slug", slug);
   const stateAreas = areas ?? [];
+  const issueSlugByTitle = buildIssueSlugMap(dbIssues ?? []);
 
-  const { data: dbIssues } = await sb.from("issues").select("title, slug");
-  const issueSlugByTitle: Record<string, string> = {};
-  for (const di of dbIssues ?? []) {
-    issueSlugByTitle[di.title.toLowerCase()] = di.slug;
-  }
+  const currentIdx = stateList.findIndex((s) => s.slug === slug);
+  const prevState = currentIdx > 0 ? stateList[currentIdx - 1] : null;
+  const nextState = currentIdx !== -1 && currentIdx < stateList.length - 1 ? stateList[currentIdx + 1] : null;
 
   return (
     <>
@@ -94,7 +93,10 @@ export default async function StatePage({ params }: Props) {
       {/* PREVENTION NOTE */}
       <InfoNote>
         <p>
-          <strong>Understanding regional data helps prevent harm.</strong> Each state faces a unique combination of challenges. When educators and communities understand their specific context, they can direct support to where it is needed most — before problems escalate.
+          <strong>Understanding regional data helps prevent harm.</strong> Each state faces a
+          unique combination of challenges. When educators and communities understand their
+          specific context, they can direct support to where it is needed most — before problems
+          escalate.
         </p>
       </InfoNote>
 
@@ -103,7 +105,8 @@ export default async function StatePage({ params }: Props) {
 
         <h2 className="section-heading">Priority Wellbeing Issues</h2>
         <p className="inner-lead">
-          The following issues are documented as the most significant wellbeing challenges for students in {state.name}, based on national and state-level Australian data.
+          The following issues are documented as the most significant wellbeing challenges for
+          students in {state.name}, based on national and state-level Australian data.
         </p>
 
         <div className="stack stack--gap-md stack--mb-lg">
@@ -122,9 +125,7 @@ export default async function StatePage({ params }: Props) {
                 </div>
                 <div className="issue-detail-card__body">
                   <p>{issue.desc}</p>
-                  {issueSlug && (
-                    <span className="issue-detail-card__cta">Read deep dive →</span>
-                  )}
+                  {issueSlug && <span className="issue-detail-card__cta">Read deep dive →</span>}
                 </div>
               </div>
             );
@@ -140,160 +141,105 @@ export default async function StatePage({ params }: Props) {
         {/* AREAS / CITIES */}
         {stateAreas.length > 0 && (
           <section className="inner-section">
-              <h2 className="section-heading">Cities &amp; Regions in {state.name}</h2>
-              <p className="inner-lead inner-lead--tight">
-                Select a city or region to explore a detailed wellbeing report for that specific area, including local data, priority issues, and prevention insights.
-              </p>
-              <div className="grid-auto-fill">
-                {stateAreas.map((area: { slug: string; name: string; type: string; population: string; issues: unknown[] }) => (
-                  <Link key={area.slug} href={`/areas/${area.slug}`} className="area-link-card">
-                    <div className="area-link-card__type">
-                      {area.type === "city" ? "City" : area.type === "lga" ? "LGA" : "Region"}
-                    </div>
-                    <div className="area-link-card__name">{area.name}</div>
-                    <div className="area-link-card__meta">
-                      {area.population} · {area.issues.length} priority issues
-                    </div>
-                    <div className="area-link-card__cta">View report →</div>
-                  </Link>
-                ))}
-              </div>
-            </section>
+            <h2 className="section-heading">Cities &amp; Regions in {state.name}</h2>
+            <p className="inner-lead inner-lead--tight">
+              Select a city or region to explore a detailed wellbeing report for that specific
+              area, including local data, priority issues, and prevention insights.
+            </p>
+            <div className="grid-auto-fill">
+              {stateAreas.map((area: { slug: string; name: string; type: string; population: string; issues: unknown[] }) => (
+                <Link key={area.slug} href={`/areas/${area.slug}`} className="area-link-card">
+                  <div className="area-link-card__type">
+                    {area.type === "city" ? "City" : area.type === "lga" ? "LGA" : "Region"}
+                  </div>
+                  <div className="area-link-card__name">{area.name}</div>
+                  <div className="area-link-card__meta">
+                    {area.population} · {area.issues.length} priority issues
+                  </div>
+                  <div className="area-link-card__cta">View report →</div>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
 
-        {/* DATA → PREVENTION BRIDGE */}
         <PreventionBridge
           heading={`The challenge schools in ${state.name} face`}
           ctaText="Explore data-led wellbeing tools ↗"
           ctaHref="https://www.lifeskillsgroup.com.au"
         >
           <p>
-            Schools across {state.name} are doing their best with the resources and information they have. But wellbeing challenges like anxiety, disengagement, and self-harm are often invisible until they become urgent. Teachers and principals are not mental health specialists — and without systematic data, they are working without a map.
+            Schools across {state.name} are doing their best with the resources and information
+            they have. But wellbeing challenges like anxiety, disengagement, and self-harm are
+            often invisible until they become urgent. Teachers and principals are not mental
+            health specialists — and without systematic data, they are working without a map.
           </p>
           <p>
-            When schools measure student emotional readiness to learn regularly and systematically, the warning signs become visible weeks before a crisis. That window is where prevention lives.
+            When schools measure student emotional readiness to learn regularly and
+            systematically, the warning signs become visible weeks before a crisis. That window
+            is where prevention lives.
           </p>
         </PreventionBridge>
 
         {/* SOURCES */}
         <section className="inner-section">
-          <h2 className="section-heading section-heading--sm">Sources & References</h2>
+          <h2 className="section-heading section-heading--sm">Sources &amp; References</h2>
           <p className="inner-lead inner-lead--tight" style={{ marginBottom: "24px" }}>
-            The data presented on this page is sourced from reputable Australian government and research organisations.
+            The data presented on this page is sourced from reputable Australian government and
+            research organisations.
           </p>
-          <div style={{
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            padding: "24px",
-          }}>
-            <ul style={{
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}>
-              <li style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ color: "#29B8E8", fontSize: "1.2rem", flexShrink: 0 }}>📊</span>
-                <div>
-                  <strong style={{ color: "#1a1a2e", fontWeight: 600 }}>Australian Bureau of Statistics (ABS)</strong>
-                  <br />
-                  <a 
-                    href="https://www.abs.gov.au" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ color: "#29B8E8", fontSize: "0.9rem", textDecoration: "none" }}
-                  >
-                    www.abs.gov.au ↗
-                  </a>
-                </div>
-              </li>
-              <li style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ color: "#29B8E8", fontSize: "1.2rem", flexShrink: 0 }}>🏥</span>
-                <div>
-                  <strong style={{ color: "#1a1a2e", fontWeight: 600 }}>Australian Institute of Health and Welfare (AIHW)</strong>
-                  <br />
-                  <a 
-                    href="https://www.aihw.gov.au" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ color: "#29B8E8", fontSize: "0.9rem", textDecoration: "none" }}
-                  >
-                    www.aihw.gov.au ↗
-                  </a>
-                </div>
-              </li>
-              <li style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ color: "#29B8E8", fontSize: "1.2rem", flexShrink: 0 }}>🎓</span>
-                <div>
-                  <strong style={{ color: "#1a1a2e", fontWeight: 600 }}>Department of Education</strong>
-                  <br />
-                  <a 
-                    href="https://www.education.gov.au" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ color: "#29B8E8", fontSize: "0.9rem", textDecoration: "none" }}
-                  >
-                    www.education.gov.au ↗
-                  </a>
-                </div>
-              </li>
-              <li style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ color: "#29B8E8", fontSize: "1.2rem", flexShrink: 0 }}>📚</span>
-                <div>
-                  <strong style={{ color: "#1a1a2e", fontWeight: 600 }}>State and Territory Education Departments</strong>
-                  <br />
-                  <span style={{ color: "#64748b", fontSize: "0.9rem" }}>
-                    Regional data from state-specific education authorities
-                  </span>
-                </div>
-              </li>
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "24px" }}>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
+              {[
+                { icon: "📊", name: "Australian Bureau of Statistics (ABS)", href: "https://www.abs.gov.au", domain: "www.abs.gov.au" },
+                { icon: "🏥", name: "Australian Institute of Health and Welfare (AIHW)", href: "https://www.aihw.gov.au", domain: "www.aihw.gov.au" },
+                { icon: "🎓", name: "Department of Education", href: "https://www.education.gov.au", domain: "www.education.gov.au" },
+                { icon: "📚", name: "State and Territory Education Departments", href: null, domain: "Regional data from state-specific education authorities" },
+              ].map(({ icon, name, href, domain }) => (
+                <li key={name} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                  <span style={{ color: "#29B8E8", fontSize: "1.2rem", flexShrink: 0 }}>{icon}</span>
+                  <div>
+                    <strong style={{ color: "#1a1a2e", fontWeight: 600 }}>{name}</strong>
+                    <br />
+                    {href ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "#29B8E8", fontSize: "0.9rem", textDecoration: "none" }}>
+                        {domain} ↗
+                      </a>
+                    ) : (
+                      <span style={{ color: "#64748b", fontSize: "0.9rem" }}>{domain}</span>
+                    )}
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
         </section>
 
         {/* EXPLORE OTHER STATES */}
         <section className="inner-section">
-          <h2 className="section-heading section-heading--sm">
-            Explore Other States & Territories
-          </h2>
+          <h2 className="section-heading section-heading--sm">Explore Other States &amp; Territories</h2>
           <div className="pill-nav">
             {stateList.map((s) => (
-              <Link key={s.slug} href={`/states/${s.slug}`}
-                className={`pill-nav__item ${s.slug === slug ? "pill-nav__item--active" : ""}`}>
+              <Link
+                key={s.slug}
+                href={`/states/${s.slug}`}
+                className={`pill-nav__item ${s.slug === slug ? "pill-nav__item--active" : ""}`}
+              >
                 {s.name}
               </Link>
             ))}
           </div>
         </section>
 
-        {/* PREV / NEXT */}
-        <div className="prev-next-nav">
-          <div>
-            {prevSlug && (
-              <Link href={`/states/${prevSlug}`} className="prev-next-nav__link">
-                <span className="prev-next-nav__dir">← Previous</span>
-                <span className="prev-next-nav__label">{stateList.find(s => s.slug === prevSlug)?.name}</span>
-              </Link>
-            )}
-          </div>
-          <div>
-            {nextSlug && (
-              <Link href={`/states/${nextSlug}`} className="prev-next-nav__link prev-next-nav__link--right">
-                <span className="prev-next-nav__dir">Next →</span>
-                <span className="prev-next-nav__label">{stateList.find(s => s.slug === nextSlug)?.name}</span>
-              </Link>
-            )}
-          </div>
-        </div>
+        <PrevNextNav
+          prev={prevState ? { href: `/states/${prevState.slug}`, label: prevState.name } : null}
+          next={nextState ? { href: `/states/${nextState.slug}`, label: nextState.name } : null}
+        />
 
         <div className="text-center mt-48">
           <Link href="/#map" className="back-link">← Back to the map</Link>
         </div>
       </main>
-
     </>
   );
 }
