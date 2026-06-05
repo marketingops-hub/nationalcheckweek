@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient, createStaticClient } from "@/lib/supabase/server";
 import { SEVERITY } from "@/lib/colors";
 import SchoolStatsPanel from "@/components/SchoolStatsPanel";
+import InfoNote from "@/components/InfoNote";
+import PreventionBridge from "@/components/PreventionBridge";
 
 const BADGE_KEY: Record<string, keyof typeof SEVERITY> = {
   "badge-critical": "critical",
@@ -90,14 +92,11 @@ export default async function StatePage({ params }: Props) {
       </div>
 
       {/* PREVENTION NOTE */}
-      <div className="info-note">
-        <div className="info-note__inner">
-          <span className="info-note__icon">💡</span>
-          <p>
-            <strong>Understanding regional data helps prevent harm.</strong> Each state faces a unique combination of challenges. When educators and communities understand their specific context, they can direct support to where it is needed most — before problems escalate.
-          </p>
-        </div>
-      </div>
+      <InfoNote>
+        <p>
+          <strong>Understanding regional data helps prevent harm.</strong> Each state faces a unique combination of challenges. When educators and communities understand their specific context, they can direct support to where it is needed most — before problems escalate.
+        </p>
+      </InfoNote>
 
       {/* MAIN */}
       <main id="main-content" className="inner-content">
@@ -163,23 +162,18 @@ export default async function StatePage({ params }: Props) {
         )}
 
         {/* DATA → PREVENTION BRIDGE */}
-        <section className="prevention-bridge">
-          <div className="eyebrow-tag">From Data to Prevention</div>
-          <h3 className="prevention-bridge__heading">
-            The challenge schools in {state.name} face
-          </h3>
-          <div className="prevention-bridge__body">
-            <p>
-              Schools across {state.name} are doing their best with the resources and information they have. But wellbeing challenges like anxiety, disengagement, and self-harm are often invisible until they become urgent. Teachers and principals are not mental health specialists — and without systematic data, they are working without a map.
-            </p>
-            <p>
-              When schools measure student emotional readiness to learn regularly and systematically, the warning signs become visible weeks before a crisis. That window is where prevention lives.
-            </p>
-          </div>
-          <a href="https://www.lifeskillsgroup.com.au" target="_blank" rel="noopener noreferrer" className="prevention-bridge__cta">
-            Explore data-led wellbeing tools ↗
-          </a>
-        </section>
+        <PreventionBridge
+          heading={`The challenge schools in ${state.name} face`}
+          ctaText="Explore data-led wellbeing tools ↗"
+          ctaHref="https://www.lifeskillsgroup.com.au"
+        >
+          <p>
+            Schools across {state.name} are doing their best with the resources and information they have. But wellbeing challenges like anxiety, disengagement, and self-harm are often invisible until they become urgent. Teachers and principals are not mental health specialists — and without systematic data, they are working without a map.
+          </p>
+          <p>
+            When schools measure student emotional readiness to learn regularly and systematically, the warning signs become visible weeks before a crisis. That window is where prevention lives.
+          </p>
+        </PreventionBridge>
 
         {/* SOURCES */}
         <section className="inner-section">

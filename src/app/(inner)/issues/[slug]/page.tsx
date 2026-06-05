@@ -5,6 +5,8 @@ import { SEVERITY, SEVERITY_ICON } from "@/lib/colors";
 import React from "react";
 import VoteFeedback from "@/components/VoteFeedback";
 import VoiceBlock, { VOICE_DEFAULTS, type VoiceBlockData } from "@/components/VoiceBlock";
+import InfoNote from "@/components/InfoNote";
+import PreventionBridge from "@/components/PreventionBridge";
 import { adminClient } from "@/lib/adminClient";
 
 interface DbSource {
@@ -152,16 +154,11 @@ export default async function IssuePage({ params }: Props) {
       </div>
 
       {/* PREVENTION CALLOUT */}
-      <div className="info-note info-note--snug">
-        <div className="info-note__inner">
-          <span className="info-note__icon">💡</span>
-          <div>
-            <p>
-              <strong>Why this matters for prevention:</strong> Schools cannot be expected to solve challenges they cannot see. When student wellbeing data is measured systematically, patterns like {issue.title.toLowerCase()} become visible weeks before they become a crisis — giving educators, counsellors and families the chance to act.
-            </p>
-          </div>
-        </div>
-      </div>
+      <InfoNote snug>
+        <p>
+          <strong>Why this matters for prevention:</strong> Schools cannot be expected to solve challenges they cannot see. When student wellbeing data is measured systematically, patterns like {issue.title.toLowerCase()} become visible weeks before they become a crisis — giving educators, counsellors and families the chance to act.
+        </p>
+      </InfoNote>
 
       {/* MAIN CONTENT */}
       <main id="main-content" className="inner-content">
@@ -210,23 +207,18 @@ export default async function IssuePage({ params }: Props) {
         </section>
 
         {/* DATA PREVENTION BRIDGE */}
-        <section className="prevention-bridge">
-          <div className="eyebrow-tag">From Data to Prevention</div>
-          <h3 className="prevention-bridge__heading">
-            How regular wellbeing measurement changes outcomes
-          </h3>
-          <div className="prevention-bridge__body">
-            <p>
-              When schools systematically measure student emotional readiness and wellbeing, early warning signals for issues like {issue.title.toLowerCase()} become visible. A student whose data shows declining engagement, rising anxiety scores, or social isolation can receive a targeted check-in — before the situation becomes a clinical emergency.
-            </p>
-            <p>
-              This is the difference between reactive crisis response and proactive prevention. Data doesn&apos;t replace the human relationship between a teacher and a student — it makes that relationship more informed, more timely, and more effective.
-            </p>
-          </div>
-          <a href="https://www.lifeskillsgroup.com.au" target="_blank" rel="noopener noreferrer" className="prevention-bridge__cta">
-            Learn about data-led wellbeing tools ↗
-          </a>
-        </section>
+        <PreventionBridge
+          heading="How regular wellbeing measurement changes outcomes"
+          ctaText="Learn about data-led wellbeing tools ↗"
+          ctaHref="https://www.lifeskillsgroup.com.au"
+        >
+          <p>
+            When schools systematically measure student emotional readiness and wellbeing, early warning signals for issues like {issue.title.toLowerCase()} become visible. A student whose data shows declining engagement, rising anxiety scores, or social isolation can receive a targeted check-in — before the situation becomes a clinical emergency.
+          </p>
+          <p>
+            This is the difference between reactive crisis response and proactive prevention. Data doesn&apos;t replace the human relationship between a teacher and a student — it makes that relationship more informed, more timely, and more effective.
+          </p>
+        </PreventionBridge>
 
         {/* VOTE FEEDBACK */}
         <VoteFeedback
