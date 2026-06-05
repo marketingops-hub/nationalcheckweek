@@ -43,6 +43,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchSlugs("blog_posts", { column: "published", value: true }),
   ]);
 
+  // Combinatorial geo×issue routes: /states/[stateSlug]/issues/[issueSlug]
+  const geoIssueRoutes: SitemapEntry[] = states.flatMap((state) =>
+    issues.map((issue) => ({
+      url: `${BASE}/states/${state.slug}/issues/${issue.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }))
+  );
+
   return [
     { url: BASE, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/issues`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
@@ -59,5 +69,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...states.map((r) => toEntry("/states", r, { changeFrequency: "monthly", priority: 0.8 }, now)),
     ...areas.map((r) => toEntry("/areas", r, { changeFrequency: "monthly", priority: 0.6 }, now)),
     ...blog.map((r) => toEntry("/blog", r, { changeFrequency: "monthly", priority: 0.7 }, now)),
+    ...geoIssueRoutes,
   ];
 }
