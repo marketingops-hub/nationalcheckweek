@@ -3,17 +3,10 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import type { Block, BlockType } from "@/components/admin/pageEditorTypes";
+import { BLOCK_EDITORS } from "@/components/admin/blockTypes";
 import WysiwygBlock from "./WysiwygBlock";
 import AddBlockButton from "./AddBlockButton";
 import WysiwygErrorBoundary from "./WysiwygErrorBoundary";
-import HeadingBlock from "./blocks/HeadingBlock";
-import ParagraphBlock from "./blocks/ParagraphBlock";
-import ImageBlock from "./blocks/ImageBlock";
-import CtaBlock from "./blocks/CtaBlock";
-import CalloutBlock from "./blocks/CalloutBlock";
-import TwoColBlock from "./blocks/TwoColBlock";
-import DividerBlock from "./blocks/DividerBlock";
-import HtmlBlock from "./blocks/HtmlBlock";
 
 interface Props {
   /** Current ordered list of page blocks from usePageEditor. */
@@ -28,24 +21,18 @@ interface Props {
   onReorder: (from: number, to: number) => void;
 }
 
-/** Renders the appropriate block component for the given block type. */
+/** Renders the appropriate block component for the given block type via the
+ *  central block registry (see blockTypes.tsx). */
 const BlockContent = React.memo(function BlockContent({ block, onChange, isSelected }: {
   block: Block;
   onChange: (b: Block) => void;
   isSelected: boolean;
 }) {
-  switch (block.type) {
-    case "heading":   return <HeadingBlock block={block} onChange={onChange} isSelected={isSelected} />;
-    case "paragraph": return <ParagraphBlock block={block} onChange={onChange} />;
-    case "image":     return <ImageBlock block={block} onChange={onChange} />;
-    case "cta":       return <CtaBlock block={block} onChange={onChange} isSelected={isSelected} />;
-    case "callout":   return <CalloutBlock block={block} onChange={onChange} isSelected={isSelected} />;
-    case "two-col":   return <TwoColBlock block={block} onChange={onChange} />;
-    case "divider":   return <DividerBlock />;
-    case "html":      return <HtmlBlock block={block} onChange={onChange} isSelected={isSelected} />;
-    default:
-      return <div style={{ padding: "12px 16px", fontSize: 13, color: "var(--admin-text-muted)" }}>Unknown block: {block.type}</div>;
+  const Editor = BLOCK_EDITORS[block.type];
+  if (!Editor) {
+    return <div style={{ padding: "12px 16px", fontSize: 13, color: "var(--admin-text-muted)" }}>Unknown block: {block.type}</div>;
   }
+  return <Editor block={block} onChange={onChange} isSelected={isSelected} />;
 });
 
 /** Root WYSIWYG canvas: manages selected-block state, drag-and-drop reorder, and inline block insertion. */
