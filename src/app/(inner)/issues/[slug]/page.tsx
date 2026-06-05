@@ -1,49 +1,24 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { createClient as createBrowserClient } from "@supabase/supabase-js";
+import { createClient, createStaticClient } from "@/lib/supabase/server";
 import { SEVERITY, SEVERITY_ICON } from "@/lib/colors";
-import React from "react";
 import VoteFeedback from "@/components/VoteFeedback";
 import VoiceBlock, { VOICE_DEFAULTS, type VoiceBlockData } from "@/components/VoiceBlock";
+import InfoNote from "@/components/InfoNote";
+import PreventionBridge from "@/components/PreventionBridge";
+import CitedText from "@/components/CitedText";
+import PrevNextNav from "@/components/PrevNextNav";
 import { adminClient } from "@/lib/adminClient";
+import { parseImpacts, parseGroups, parseSourceStrings } from "@/lib/schemas/geo";
 
 interface DbSource {
   id: string; num: number; title: string; url: string;
   publisher: string; year: string; verified: boolean;
 }
 
-/** Renders text with inline (N) markers as anchor links to #source-N */
-function CitedText({ text, sources }: { text: string; sources: DbSource[] }) {
-  if (!sources.length) return <>{text}</>;
-  const nums = new Set(sources.map(s => s.num));
-  // Match (1), (2), (3) etc.
-  const parts = text.split(/(\(\d+\))/);
-  return (
-    <>
-      {parts.map((part, i) => {
-        const match = part.match(/^\((\d+)\)$/);
-        if (match && nums.has(Number(match[1]))) {
-          const num = match[1];
-          return (
-            <a key={i} href={`#source-${num}`}
-              style={{ color: "var(--teal)", fontWeight: 600, fontSize: "0.8em", textDecoration: "none", verticalAlign: "super" }}
-              title={`Source ${num}`}>
-              ({num})
-            </a>
-          );
-        }
-        return <React.Fragment key={i}>{part}</React.Fragment>;
-      })}
-    </>
-  );
-}
-
 export async function generateStaticParams() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return [];
-  const sb = createBrowserClient(url, key);
+  const sb = createStaticClient();
+  if (!sb) return [];
   const { data } = await sb.from("issues").select("slug").order("rank");
   return (data ?? []).map((i) => ({ slug: i.slug }));
 }
@@ -52,18 +27,49 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  const sb = createStaticClient();
+  if (!sb) return { title: "Wellbeing Issue" };
+  const { data } = await sb
+    .from("issues")
+    .select("title, short_desc, seo_title, seo_desc, og_image")
+    .eq("slug", slug)
+    .single();
+  if (!data) return { title: "Issue Not Found" };
+  const title = data.seo_title ?? `${data.title} — Student Wellbeing in Australia`;
+  const description =
+    data.seo_desc ??
+    data.short_desc ??
+    `Explore Australian data, impacts, and prevention insights for ${data.title}.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(data.og_image ? { images: [{ url: data.og_image }] } : {}),
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
+
 export default async function IssuePage({ params }: Props) {
   const { slug } = await params;
   const sb = await createClient();
 
-  const { data: issue } = await sb
-    .from("issues")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  // Round 1 — three independent queries in parallel
+  const [{ data: issue }, { data: siblings }, { data: voiceSettings }] = await Promise.all([
+    sb.from("issues").select("*").eq("slug", slug).single(),
+    sb.from("issues").select("slug, icon, title, rank").order("rank"),
+    adminClient()
+      .from("site_settings")
+      .select("key, value")
+      .in("key", ["voice_heading", "voice_body", "voice_cta_text", "voice_cta_url", "voice_enabled"]),
+  ]);
   if (!issue) notFound();
 
-  // Fetch structured sources from DB
+  // Round 2 — sources need issue.id from round 1
   const { data: dbSources } = await sb
     .from("issue_sources")
     .select("id, num, title, url, publisher, year, verified")
@@ -71,30 +77,19 @@ export default async function IssuePage({ params }: Props) {
     .order("num");
   const issueSources: DbSource[] = dbSources ?? [];
 
-  const { data: prevData } = await sb
-    .from("issues")
-    .select("slug, icon, title")
-    .eq("rank", issue.rank - 1)
-    .single();
-  const { data: nextData } = await sb
-    .from("issues")
-    .select("slug, icon, title")
-    .eq("rank", issue.rank + 1)
-    .single();
+  // Derive prev / next / total from the ordered siblings list
+  const totalIssues = siblings?.length ?? 15;
+  const currentIdx = siblings?.findIndex((s) => s.slug === slug) ?? -1;
+  const prevIssue = currentIdx > 0 ? siblings![currentIdx - 1] : null;
+  const nextIssue =
+    currentIdx !== -1 && currentIdx < (siblings?.length ?? 0) - 1
+      ? siblings![currentIdx + 1]
+      : null;
 
-  const { data: allIssues } = await sb.from("issues").select("rank").order("rank");
-  const totalIssues = allIssues?.length ?? 15;
-
-  const prev = prevData ?? null;
-  const next = nextData ?? null;
-
-  // Fetch voice block settings via service role to bypass any RLS on site_settings
-  const { data: voiceSettings } = await adminClient()
-    .from("site_settings")
-    .select("key, value")
-    .in("key", ["voice_heading", "voice_body", "voice_cta_text", "voice_cta_url", "voice_enabled"]);
   const voiceMap: Record<string, string> = {};
-  (voiceSettings ?? []).forEach((r: { key: string; value: string }) => { voiceMap[r.key] = r.value; });
+  (voiceSettings ?? []).forEach((r: { key: string; value: string }) => {
+    voiceMap[r.key] = r.value;
+  });
   const voiceData: Partial<VoiceBlockData> = {
     heading:  voiceMap.voice_heading  || VOICE_DEFAULTS.heading,
     body:     voiceMap.voice_body     || VOICE_DEFAULTS.body,
@@ -104,6 +99,10 @@ export default async function IssuePage({ params }: Props) {
   };
 
   const sev = SEVERITY[issue.severity as keyof typeof SEVERITY];
+
+  const impacts = parseImpacts(issue.impacts);
+  const groups = parseGroups(issue.groups);
+  const legacySources = parseSourceStrings(issue.sources);
 
   return (
     <>
@@ -118,12 +117,8 @@ export default async function IssuePage({ params }: Props) {
             </span>
           </div>
           <div className="page-hero__icon">{issue.icon}</div>
-          <h1 className="page-hero__title page-hero__title--detail">
-            {issue.title}
-          </h1>
-          <p className="page-hero__subtitle page-hero__subtitle--detail">
-            {issue.short_desc}
-          </p>
+          <h1 className="page-hero__title page-hero__title--detail">{issue.title}</h1>
+          <p className="page-hero__subtitle page-hero__subtitle--detail">{issue.short_desc}</p>
           <div className="page-hero__anchor-stat" style={{ color: sev?.color }}>
             <p>📊 {issue.anchor_stat}</p>
           </div>
@@ -131,83 +126,78 @@ export default async function IssuePage({ params }: Props) {
       </div>
 
       {/* PREVENTION CALLOUT */}
-      <div className="info-note info-note--snug">
-        <div className="info-note__inner">
-          <span className="info-note__icon">💡</span>
-          <div>
-            <p>
-              <strong>Why this matters for prevention:</strong> Schools cannot be expected to solve challenges they cannot see. When student wellbeing data is measured systematically, patterns like {issue.title.toLowerCase()} become visible weeks before they become a crisis — giving educators, counsellors and families the chance to act.
-            </p>
-          </div>
-        </div>
-      </div>
+      <InfoNote snug>
+        <p>
+          <strong>Why this matters for prevention:</strong> Schools cannot be expected to solve
+          challenges they cannot see. When student wellbeing data is measured systematically,
+          patterns like {issue.title.toLowerCase()} become visible weeks before they become a
+          crisis — giving educators, counsellors and families the chance to act.
+        </p>
+      </InfoNote>
 
       {/* MAIN CONTENT */}
       <main id="main-content" className="inner-content">
 
-        {/* WHAT IS IT */}
         <section className="inner-section">
           <h2 className="section-heading section-heading--tight">What Is It?</h2>
-          <p className="body-text"><CitedText text={issue.definition} sources={issueSources} /></p>
+          <p className="body-text">
+            <CitedText text={issue.definition} sources={issueSources} />
+          </p>
         </section>
 
-        {/* AUSTRALIAN DATA */}
         <section className="inner-section">
           <h2 className="section-heading section-heading--tight">What the Australian Data Shows</h2>
-          <p className="body-text"><CitedText text={issue.australian_data} sources={issueSources} /></p>
+          <p className="body-text">
+            <CitedText text={issue.australian_data} sources={issueSources} />
+          </p>
         </section>
 
-        {/* HOW IT AFFECTS LEARNING */}
         <section className="inner-section">
-          <h2 className="section-heading section-heading--tight">How It Affects Learning & Development</h2>
-          <p className="body-text"><CitedText text={issue.mechanisms} sources={issueSources} /></p>
+          <h2 className="section-heading section-heading--tight">How It Affects Learning &amp; Development</h2>
+          <p className="body-text">
+            <CitedText text={issue.mechanisms} sources={issueSources} />
+          </p>
         </section>
 
-        {/* IMPACT AREAS */}
         <section className="inner-section">
           <h2 className="section-heading section-heading--md">Key Impact Areas</h2>
           <div className="impact-grid">
-            {((issue.impacts ?? []) as { title: string; text: string }[]).map((imp) => (
+            {impacts.map((imp) => (
               <div key={imp.title} className="impact-card">
-                <div className="impact-card__title" style={{ color: sev?.color }}>
-                  {imp.title}
-                </div>
+                <div className="impact-card__title" style={{ color: sev?.color }}>{imp.title}</div>
                 <p className="impact-card__body">{imp.text}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* MOST AT RISK */}
         <section className="inner-section">
           <h2 className="section-heading section-heading--md">Groups Most at Risk</h2>
           <div className="risk-pills">
-            {((issue.groups ?? []) as string[]).map((g) => (
+            {groups.map((g) => (
               <span key={g} className="risk-pill">{g}</span>
             ))}
           </div>
         </section>
 
-        {/* DATA PREVENTION BRIDGE */}
-        <section className="prevention-bridge">
-          <div className="eyebrow-tag">From Data to Prevention</div>
-          <h3 className="prevention-bridge__heading">
-            How regular wellbeing measurement changes outcomes
-          </h3>
-          <div className="prevention-bridge__body">
-            <p>
-              When schools systematically measure student emotional readiness and wellbeing, early warning signals for issues like {issue.title.toLowerCase()} become visible. A student whose data shows declining engagement, rising anxiety scores, or social isolation can receive a targeted check-in — before the situation becomes a clinical emergency.
-            </p>
-            <p>
-              This is the difference between reactive crisis response and proactive prevention. Data doesn&apos;t replace the human relationship between a teacher and a student — it makes that relationship more informed, more timely, and more effective.
-            </p>
-          </div>
-          <a href="https://www.lifeskillsgroup.com.au" target="_blank" rel="noopener noreferrer" className="prevention-bridge__cta">
-            Learn about data-led wellbeing tools ↗
-          </a>
-        </section>
+        <PreventionBridge
+          heading="How regular wellbeing measurement changes outcomes"
+          ctaText="Learn about data-led wellbeing tools ↗"
+          ctaHref="https://www.lifeskillsgroup.com.au"
+        >
+          <p>
+            When schools systematically measure student emotional readiness and wellbeing, early
+            warning signals for issues like {issue.title.toLowerCase()} become visible. A student
+            whose data shows declining engagement, rising anxiety scores, or social isolation can
+            receive a targeted check-in — before the situation becomes a clinical emergency.
+          </p>
+          <p>
+            This is the difference between reactive crisis response and proactive prevention.
+            Data doesn&apos;t replace the human relationship between a teacher and a student —
+            it makes that relationship more informed, more timely, and more effective.
+          </p>
+        </PreventionBridge>
 
-        {/* VOTE FEEDBACK */}
         <VoteFeedback
           entitySlug={issue.slug}
           entityType="issue"
@@ -215,14 +205,12 @@ export default async function IssuePage({ params }: Props) {
           sourcesHref="/sources"
         />
 
-        {/* YOUR VOICE CTA */}
         <VoiceBlock data={voiceData} />
 
         {/* SOURCES */}
         <section id="sources" className="inner-section">
           <h2 className="section-heading section-heading--tight">Sources &amp; References</h2>
 
-          {/* Structured DB sources */}
           {issueSources.length > 0 && (
             <div className="section-heading--md">
               {issueSources.map((src) => (
@@ -239,7 +227,9 @@ export default async function IssuePage({ params }: Props) {
                     </div>
                     <div className="source-meta">
                       {src.publisher}{src.publisher && src.year && " · "}{src.year}
-                      {src.url && <a href={src.url} target="_blank" rel="noopener noreferrer">↗ View source</a>}
+                      {src.url && (
+                        <a href={src.url} target="_blank" rel="noopener noreferrer">↗ View source</a>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -247,46 +237,28 @@ export default async function IssuePage({ params }: Props) {
             </div>
           )}
 
-          {/* Legacy JSONB sources fallback */}
-          {(!issueSources.length && (issue.sources as string[])?.length > 0) && (
+          {!issueSources.length && legacySources.length > 0 && (
             <div>
-              {(issue.sources as string[]).map((s) => (
+              {legacySources.map((s) => (
                 <div key={s} className="source-legacy">📄 {s}</div>
               ))}
             </div>
           )}
 
-          {issueSources.length === 0 && !(issue.sources as string[])?.length && (
+          {issueSources.length === 0 && legacySources.length === 0 && (
             <p className="source-empty">Sources will be added as this content is verified.</p>
           )}
         </section>
 
-        {/* PREV / NEXT */}
-        <div className="prev-next-nav">
-          <div>
-            {prev && (
-              <Link href={`/issues/${prev.slug}`} className="prev-next-nav__link">
-                <span className="prev-next-nav__dir">← Previous</span>
-                <span className="prev-next-nav__label">{prev.icon} {prev.title}</span>
-              </Link>
-            )}
-          </div>
-          <div>
-            {next && (
-              <Link href={`/issues/${next.slug}`} className="prev-next-nav__link prev-next-nav__link--right">
-                <span className="prev-next-nav__dir">Next →</span>
-                <span className="prev-next-nav__label">{next.icon} {next.title}</span>
-              </Link>
-            )}
-          </div>
-        </div>
+        <PrevNextNav
+          prev={prevIssue ? { href: `/issues/${prevIssue.slug}`, label: <>{prevIssue.icon} {prevIssue.title}</> } : null}
+          next={nextIssue ? { href: `/issues/${nextIssue.slug}`, label: <>{nextIssue.icon} {nextIssue.title}</> } : null}
+        />
 
-        {/* BACK LINK */}
         <div className="text-center mt-48">
           <Link href="/#issues" className="back-link">← Back to all issues</Link>
         </div>
       </main>
-
     </>
   );
 }

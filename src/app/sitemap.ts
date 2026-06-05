@@ -1,78 +1,74 @@
 import { MetadataRoute } from "next";
-import { ISSUES } from "@/lib/issues";
-import { AREAS } from "@/lib/areas";
 import { createStaticClient } from "@/lib/supabase/server";
 
 const BASE = "https://nationalcheckinweek.com";
 
-const STATE_SLUGS = [
-  "new-south-wales",
-  "victoria",
-  "queensland",
-  "south-australia",
-  "western-australia",
-  "tasmania",
-  "northern-territory",
-  "australian-capital-territory",
-];
+type SitemapEntry = MetadataRoute.Sitemap[number];
+
+async function fetchSlugs(
+  table: string,
+  filter?: { column: string; value: unknown },
+  orderBy?: string
+): Promise<{ slug: string; updated_at?: string | null }[]> {
+  const sb = createStaticClient();
+  if (!sb) return [];
+  let q = sb.from(table).select("slug, updated_at");
+  if (filter) q = q.eq(filter.column, filter.value) as typeof q;
+  if (orderBy) q = q.order(orderBy) as typeof q;
+  const { data } = await q;
+  return data ?? [];
+}
+
+function toEntry(
+  path: string,
+  row: { slug: string; updated_at?: string | null },
+  opts: { changeFrequency: SitemapEntry["changeFrequency"]; priority: number },
+  now: Date
+): SitemapEntry {
+  return {
+    url: `${BASE}${path}/${row.slug}`,
+    lastModified: row.updated_at ? new Date(row.updated_at) : now,
+    changeFrequency: opts.changeFrequency,
+    priority: opts.priority,
+  };
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  // Blog — every published post, pulled live. Falls back to empty on
-  // build-time DB unavailability so the sitemap still renders.
-  const sb = createStaticClient();
-  let blogRoutes: MetadataRoute.Sitemap = [];
-  if (sb) {
-    const { data } = await sb
-      .from("blog_posts")
-      .select("slug, updated_at, published_at")
-      .eq("published", true);
-    blogRoutes = (data ?? []).map((p) => ({
-      url: `${BASE}/blog/${p.slug}`,
-      lastModified: new Date(p.updated_at ?? p.published_at ?? now),
+  const [issues, states, areas, blog] = await Promise.all([
+    fetchSlugs("issues", undefined, "rank"),
+    fetchSlugs("states", undefined, "name"),
+    fetchSlugs("areas"),
+    fetchSlugs("blog_posts", { column: "published", value: true }),
+  ]);
+
+  // Combinatorial geo×issue routes: /states/[stateSlug]/issues/[issueSlug]
+  const geoIssueRoutes: SitemapEntry[] = states.flatMap((state) =>
+    issues.map((issue) => ({
+      url: `${BASE}/states/${state.slug}/issues/${issue.slug}`,
+      lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.7,
-    }));
-  }
-
-  const stateRoutes = STATE_SLUGS.map((slug) => ({
-    url: `${BASE}/states/${slug}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: 0.8,
-  }));
-
-  const issueRoutes = ISSUES.map((issue) => ({
-    url: `${BASE}/issues/${issue.slug}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  }));
-
-  const areaRoutes = AREAS.map((area) => ({
-    url: `${BASE}/areas/${area.slug}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }));
+    }))
+  );
 
   return [
-    {
-      url: BASE,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${BASE}/blog`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    ...blogRoutes,
-    ...stateRoutes,
-    ...issueRoutes,
-    ...areaRoutes,
+    { url: BASE, lastModified: now, changeFrequency: "weekly", priority: 1 },
+    { url: `${BASE}/issues`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/states`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE}/ambassadors`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/events`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE}/resources`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/partners`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${BASE}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    ...issues.map((r) => toEntry("/issues", r, { changeFrequency: "monthly", priority: 0.8 }, now)),
+    ...states.map((r) => toEntry("/states", r, { changeFrequency: "monthly", priority: 0.8 }, now)),
+    ...areas.map((r) => toEntry("/areas", r, { changeFrequency: "monthly", priority: 0.6 }, now)),
+    ...blog.map((r) => toEntry("/blog", r, { changeFrequency: "monthly", priority: 0.7 }, now)),
+    ...geoIssueRoutes,
   ];
 }
