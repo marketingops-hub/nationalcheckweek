@@ -27,61 +27,12 @@ import { NextRequest } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import { requireAdmin } from '@/lib/auth';
 import { ok, err, pgError, readParams } from '@/lib/content-creator/api-helpers';
+import { slugify, reserveSlug, deriveExcerpt } from '@/lib/content-creator/publish-utils';
 import { stripHashHeadings } from '@/lib/content-creator/length';
 
 export const runtime = 'nodejs';
 
 type Ctx = { params: Promise<{ id: string }> };
-
-/** Turn an arbitrary title into a kebab-case, URL-safe slug. Same rules
- *  as the blogPostCreateSchema regex: a-z0-9-. */
-function slugify(title: string): string {
-  return (title ?? '')
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')         // strip combining accents
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 100)
-    || 'untitled';
-}
-
-/** Find an unused slug. If `base` is free, returns it unchanged; otherwise
- *  appends `-2`, `-3`, … until one is free or we give up at 50. Excludes
- *  the row we're about to update (so re-publishing the same draft doesn't
- *  fight itself for its own slug). */
-async function reserveSlug(
-  sb: ReturnType<typeof adminClient>,
-  base: string,
-  excludeId: string | null,
-): Promise<string> {
-  for (let i = 0; i < 50; i++) {
-    const candidate = i === 0 ? base : `${base}-${i + 1}`;
-    let q = sb.from('blog_posts').select('id').eq('slug', candidate).limit(1);
-    if (excludeId) q = q.neq('id', excludeId);
-    const { data } = await q;
-    if (!data || data.length === 0) return candidate;
-  }
-  // Pathological: 50 collisions. Fall back to a timestamp suffix which is
-  // practically guaranteed unique. Better than throwing.
-  return `${base}-${Date.now()}`;
-}
-
-/** Build the excerpt from the body — first 300 chars of the first
- *  non-empty paragraph, stripped of markdown emphasis chars. Respects
- *  the schema's 500-char cap comfortably. */
-function deriveExcerpt(body: string): string {
-  const firstPara = body
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .find((p) => p.length > 0 && !p.startsWith('---'));
-  if (!firstPara) return '';
-  return firstPara
-    .replace(/\*\*([^*]+)\*\*/g, '$1')   // bold
-    .replace(/[_*`~]/g, '')
-    .slice(0, 300)
-    .trim();
-}
 
 export const POST = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await readParams(ctx);
@@ -132,7 +83,7 @@ export const POST = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
   // was a tautology that locked the slug forever.
   const targetSlug = existing && existing.slug === desiredSlug
     ? existing.slug
-    : await reserveSlug(sb, desiredSlug, existing?.id ?? null);
+    : await reserveSlug(sb, 'blog_posts', desiredSlug, existing?.id ?? null);
 
   // Apply the final body transformation — legacy '#' headings promoted to
   // bold so the CMS renders them cleanly (Apr-2026 admin rule).

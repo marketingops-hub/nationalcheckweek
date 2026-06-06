@@ -102,7 +102,9 @@ export class OpenAIService {
           reject(new OpenAIError(
             'OpenAI request timed out',
             'TIMEOUT',
-            { statusCode: 408 }
+            // 504 Gateway Timeout — an upstream provider timed out, matching
+            // the Anthropic leg so the client sees one code for this case.
+            { statusCode: 504 }
           ));
         }, timeout);
       });

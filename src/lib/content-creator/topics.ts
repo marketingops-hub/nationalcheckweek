@@ -9,6 +9,7 @@
 
 import { z } from 'zod';
 import { adminFetch } from '@/lib/adminFetch';
+import { asJson } from './http';
 import type { AIMetadata } from './types';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -71,14 +72,6 @@ export type PatchTopicInput = z.infer<typeof PatchTopicSchema>;
 /* ─── Client wrappers ───────────────────────────────────────────────────── */
 
 const BASE = '/api/admin/content-creator/topics';
-
-async function asJson<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 export interface ListTopicsFilters {
   status?:         TopicStatus | 'all';

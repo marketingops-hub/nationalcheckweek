@@ -150,6 +150,16 @@ export async function callEdge(
         body: { error: 'Edge fn returned non-JSON.', preview: raw.slice(0, 300) },
       };
     }
+    // A successful stage must return a JSON object envelope (e.g. { ideas },
+    // { draft }, { verdict }). A bare scalar/array/null means the edge fn
+    // changed shape or errored without our envelope — surface as 502 rather
+    // than letting downstream `data.ideas?.[0]` silently read undefined.
+    if (res.ok && (typeof data !== 'object' || data === null || Array.isArray(data))) {
+      return {
+        status: 502,
+        body: { error: 'Edge fn returned an unexpected response shape.', preview: raw.slice(0, 300) },
+      };
+    }
     return { status: res.ok ? 200 : res.status, body: data };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
