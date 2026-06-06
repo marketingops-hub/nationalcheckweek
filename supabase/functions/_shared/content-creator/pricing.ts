@@ -37,7 +37,19 @@ const PRICES: Record<string, ModelPrice> = {
   'gpt-4.1':           { inputPer1M: 2.00,  outputPer1M: 8.00  },
   'gpt-4.1-mini':      { inputPer1M: 0.40,  outputPer1M: 1.60  },
 
-  // Anthropic
+  // Anthropic — current 4.x family (the models the pipeline actually calls).
+  // Keyed by bare alias; estimateCost() also prefix-matches dated snapshots
+  // (e.g. claude-sonnet-4-6-20251101) back to these entries.
+  'claude-opus-4-8':   { inputPer1M: 5.00,  outputPer1M: 25.00 },
+  'claude-opus-4-7':   { inputPer1M: 5.00,  outputPer1M: 25.00 },
+  'claude-opus-4-6':   { inputPer1M: 5.00,  outputPer1M: 25.00 },
+  'claude-opus-4-5':   { inputPer1M: 5.00,  outputPer1M: 25.00 },
+  'claude-opus-4-1':   { inputPer1M: 15.00, outputPer1M: 75.00 },
+  'claude-sonnet-4-6': { inputPer1M: 3.00,  outputPer1M: 15.00 },
+  'claude-sonnet-4-5': { inputPer1M: 3.00,  outputPer1M: 15.00 },
+  'claude-haiku-4-5':  { inputPer1M: 1.00,  outputPer1M: 5.00  },
+
+  // Anthropic — legacy 3.x (kept so cost shows for drafts generated pre-bump).
   'claude-3-5-sonnet-20241022': { inputPer1M: 3.00,  outputPer1M: 15.00 },
   'claude-3-5-sonnet-latest':   { inputPer1M: 3.00,  outputPer1M: 15.00 },
   'claude-3-5-haiku-20241022':  { inputPer1M: 0.80,  outputPer1M: 4.00  },
@@ -64,7 +76,17 @@ export function estimateCost(
   tokens: { prompt?: number; completion?: number } | undefined,
 ): number | null {
   if (!model || !tokens) return null;
-  const p = PRICES[norm(model)];
+  let p = PRICES[norm(model)];
+  if (!p) {
+    // The provider returns the resolved snapshot id (e.g.
+    // claude-sonnet-4-6-20251101) while the table is keyed by bare alias.
+    // Fall back to the longest known key that prefixes the model id.
+    const key = norm(model);
+    const hit = Object.keys(PRICES)
+      .filter((k) => key.startsWith(k))
+      .sort((a, b) => b.length - a.length)[0];
+    if (hit) p = PRICES[hit];
+  }
   if (!p) return null;
   const input  = (tokens.prompt     ?? 0) * (p.inputPer1M  / 1_000_000);
   const output = (tokens.completion ?? 0) * (p.outputPer1M / 1_000_000);

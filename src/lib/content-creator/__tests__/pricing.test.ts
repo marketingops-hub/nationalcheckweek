@@ -35,6 +35,21 @@ describe('estimateCost', () => {
     // gpt-4o-mini: 0.15/1M in. 1M prompt = 0.15
     expect(estimateCost('gpt-4o-mini', { prompt: 1_000_000 })).toBeCloseTo(0.15, 4);
   });
+
+  it('prices current 4.x models', () => {
+    // sonnet-4-6: 3/1M in, 15/1M out → 1M+1M = 18
+    expect(estimateCost('claude-sonnet-4-6', { prompt: 1_000_000, completion: 1_000_000 }))
+      .toBeCloseTo(18, 4);
+    // opus-4-8: 5/1M in, 25/1M out → 1M+1M = 30
+    expect(estimateCost('claude-opus-4-8', { prompt: 1_000_000, completion: 1_000_000 }))
+      .toBeCloseTo(30, 4);
+  });
+
+  it('prefix-matches a dated snapshot back to the bare alias', () => {
+    // The API returns e.g. claude-sonnet-4-6-20251101; should price as 4-6.
+    expect(estimateCost('claude-sonnet-4-6-20251101', { prompt: 1_000_000, completion: 0 }))
+      .toBeCloseTo(3, 4);
+  });
 });
 
 describe('sumCosts', () => {

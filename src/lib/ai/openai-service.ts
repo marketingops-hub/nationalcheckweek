@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { OpenAIError } from './errors';
+import { estimateCost, formatUsd } from '@/lib/content-creator/pricing';
 
 /**
  * Configuration for OpenAI content generation
@@ -175,13 +176,13 @@ export class OpenAIService {
     totalTokens: number;
     duration: number;
   }): void {
-    // Calculate approximate cost (GPT-4o pricing as of 2024)
-    const inputCostPer1k = 0.005; // $5 per 1M tokens
-    const outputCostPer1k = 0.015; // $15 per 1M tokens
-    
-    const inputCost = (usage.promptTokens / 1000) * inputCostPer1k;
-    const outputCost = (usage.completionTokens / 1000) * outputCostPer1k;
-    const totalCost = inputCost + outputCost;
+    // Cost from the shared pricing table (single source of truth, kept in
+    // sync with the edge fn). null when the model isn't priced — logged as
+    // "—" rather than a misleading fake.
+    const cost = estimateCost(usage.model, {
+      prompt: usage.promptTokens,
+      completion: usage.completionTokens,
+    });
 
     console.log('[OpenAI Usage]', {
       model: usage.model,
@@ -190,11 +191,7 @@ export class OpenAIService {
         completion: usage.completionTokens,
         total: usage.totalTokens,
       },
-      cost: {
-        input: `$${inputCost.toFixed(4)}`,
-        output: `$${outputCost.toFixed(4)}`,
-        total: `$${totalCost.toFixed(4)}`,
-      },
+      cost: cost == null ? '—' : formatUsd(cost),
       duration: `${usage.duration}ms`,
       timestamp: new Date().toISOString(),
     });

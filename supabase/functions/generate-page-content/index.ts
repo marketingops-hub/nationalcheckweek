@@ -116,9 +116,9 @@ Deno.serve(async (req: Request) => {
 
     // Model mapping for Anthropic fallback
     const modelMapping: Record<string, string> = {
-      "gpt-4o": "claude-sonnet-4-5-20250929",
-      "gpt-4o-mini": "claude-haiku-4-5-20251001",
-      "gpt-4": "claude-opus-4-1-20250805",
+      "gpt-4o": "claude-sonnet-4-6",
+      "gpt-4o-mini": "claude-haiku-4-5",
+      "gpt-4": "claude-opus-4-8",
     };
 
     for (const tpl of templates) {
@@ -209,7 +209,7 @@ Deno.serve(async (req: Request) => {
 
         // Fallback to Anthropic (or use as primary if no OpenAI key)
         if (anthropic) {
-          const anthropicModel = modelMapping[tpl.model || "gpt-4o"] || "claude-sonnet-4-5-20250929";
+          const anthropicModel = modelMapping[tpl.model || "gpt-4o"] || "claude-sonnet-4-6";
           const enhancedSystem = systemPrompt.includes("JSON") || systemPrompt.includes("json")
             ? `${systemPrompt}\n\nIMPORTANT: Return ONLY valid JSON. No markdown, no code fences, no explanation.`
             : systemPrompt;

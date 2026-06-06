@@ -30,10 +30,10 @@ export interface AnthropicResult {
 }
 
 export async function callAnthropic(opts: AnthropicOpts): Promise<AnthropicResult> {
-  // Claude Sonnet 4.5 — current flagship as of 2025-09-29. The previous
-  // default (claude-3-5-sonnet-20241022) was retired by Anthropic and
-  // started returning 404 "not_found_error".
-  const model = opts.model ?? "claude-sonnet-4-5-20250929";
+  // Claude Sonnet 4.6 — best speed/intelligence balance for high-volume
+  // content generation. Bare alias resolves to the current snapshot; the
+  // pricing table prefix-matches whatever dated id the API returns.
+  const model = opts.model ?? "claude-sonnet-4-6";
   const timeoutMs = opts.timeoutMs ?? 60_000;
 
   let res: Response;
