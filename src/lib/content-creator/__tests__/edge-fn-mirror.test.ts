@@ -13,11 +13,12 @@
  *
  * ── What this test does ────────────────────────────────────────────────────
  *
- * Reads both source files off disk and compares the *exported top-level
- * function bodies* textually (after normalising `.ts` import suffixes and
- * surrounding whitespace). We don't care if comments differ — only the
- * implementations must match. Any function listed in FUNCTIONS_TO_CHECK
- * that diverges makes the test fail with a diff.
+ * Reads both source files off disk and compares the named top-level
+ * function bodies textually (after normalising `.ts` import suffixes and
+ * surrounding whitespace). Both `export function` and module-private
+ * `function` declarations are matched. We don't care if comments differ —
+ * only the implementations must match. Any function listed in
+ * FUNCTIONS_TO_CHECK that diverges makes the test fail with a diff.
  *
  * If you add a new shared helper, add its name to FUNCTIONS_TO_CHECK.
  * ═══════════════════════════════════════════════════════════════════════════ */
@@ -39,10 +40,13 @@ const FUNCTIONS_TO_CHECK: Array<{
   edgeFile: string;
   fns:      string[];
 }> = [
-  { srcFile: 'length.ts',  edgeFile: 'length.ts',  fns: ['wordTarget', 'countWords', 'stripHashHeadings', 'isOutsideTarget', 'buildLengthRetryDirective'] },
-  { srcFile: 'density.ts', edgeFile: 'density.ts', fns: ['densityTarget', 'evaluateDensity', 'densityPromptRule'] },
-  { srcFile: 'styles.ts',  edgeFile: 'styles.ts',  fns: ['buildStyleExamplesBlock'] },
-  { srcFile: 'logger.ts',  edgeFile: 'common.ts',  fns: ['newRequestId', 'createLogger'] },
+  { srcFile: 'length.ts',    edgeFile: 'length.ts',    fns: ['wordTarget', 'countWords', 'stripHashHeadings', 'isOutsideTarget', 'buildLengthRetryDirective'] },
+  { srcFile: 'density.ts',   edgeFile: 'density.ts',   fns: ['densityTarget', 'evaluateDensity', 'densityPromptRule'] },
+  { srcFile: 'styles.ts',    edgeFile: 'styles.ts',    fns: ['buildStyleExamplesBlock'] },
+  { srcFile: 'logger.ts',    edgeFile: 'common.ts',    fns: ['newRequestId', 'createLogger'] },
+  { srcFile: 'pricing.ts',       edgeFile: 'pricing.ts',       fns: ['estimateCost', 'sumCosts', 'formatUsd'] },
+  { srcFile: 'citations.ts',     edgeFile: 'citations.ts',     fns: ['formatCitations', 'hasTrailingSourcesBlock'] },
+  { srcFile: 'prompt-safety.ts', edgeFile: 'prompt-safety.ts', fns: ['sanitizeUserText', 'fenceField', 'untrustedDataGuard'] },
 ];
 
 /** Extract the source text of a single top-level `export function <name>`
@@ -58,7 +62,7 @@ const FUNCTIONS_TO_CHECK: Array<{
  *  such line after the signature. */
 function extractFunction(source: string, name: string): string | null {
   const lines = source.split('\n');
-  const signature = new RegExp(`^export\\s+function\\s+${name}\\b`);
+  const signature = new RegExp(`^(?:export\\s+)?function\\s+${name}\\b`);
   const start = lines.findIndex((l) => signature.test(l));
   if (start === -1) return null;
 
