@@ -7,6 +7,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { adminFetch } from '@/lib/adminFetch';
+import { asJson } from './http';
 import type {
   ContentDraft,
   ContentType,
@@ -28,14 +29,6 @@ const BASE = '/api/admin/content-creator';
  * spinner spinning forever.
  */
 export const AI_ROUND_TRIP_TIMEOUT_MS = 240_000;
-
-async function asJson<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 export interface ListFilters {
   status?: ContentStatus | 'all';

@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { AnthropicError } from './errors';
+import { estimateCost, formatUsd } from '@/lib/content-creator/pricing';
 
 /**
  * Configuration for Anthropic content generation
@@ -28,13 +29,13 @@ export interface AnthropicGeneratedContent {
 /**
  * Model mapping from OpenAI to Anthropic equivalents
  */
-// Updated 2026-04 — Anthropic retired the claude-3-5-* snapshots.
-// Claude 4.5 family (2025-09-29) is the current default.
+// Maps the OpenAI model name a caller passes to the Anthropic equivalent
+// used on the fallback leg. Bare aliases resolve to the current snapshot.
 const MODEL_MAPPING: Record<string, string> = {
-  'gpt-4o':        'claude-sonnet-4-5-20250929',
-  'gpt-4o-mini':   'claude-haiku-4-5-20251001',
-  'gpt-4':         'claude-opus-4-1-20250805',
-  'gpt-3.5-turbo': 'claude-haiku-4-5-20251001',
+  'gpt-4o':        'claude-sonnet-4-6',
+  'gpt-4o-mini':   'claude-haiku-4-5',
+  'gpt-4':         'claude-opus-4-8',
+  'gpt-3.5-turbo': 'claude-haiku-4-5',
 };
 
 /**
@@ -66,7 +67,7 @@ export class AnthropicService {
    * Map OpenAI model to Anthropic equivalent
    */
   private mapModel(openaiModel: string): string {
-    return MODEL_MAPPING[openaiModel] || 'claude-sonnet-4-5-20250929';
+    return MODEL_MAPPING[openaiModel] || 'claude-sonnet-4-6';
   }
 
   /**
@@ -204,13 +205,13 @@ export class AnthropicService {
     totalTokens: number;
     duration: number;
   }): void {
-    // Calculate approximate cost (Claude 3.5 Sonnet pricing as of 2024)
-    const inputCostPer1k = 0.003; // $3 per 1M tokens
-    const outputCostPer1k = 0.015; // $15 per 1M tokens
-    
-    const inputCost = (usage.inputTokens / 1000) * inputCostPer1k;
-    const outputCost = (usage.outputTokens / 1000) * outputCostPer1k;
-    const totalCost = inputCost + outputCost;
+    // Cost from the shared pricing table (single source of truth, kept in
+    // sync with the edge fn). null when the model isn't priced — logged as
+    // "—" rather than a misleading fake.
+    const cost = estimateCost(usage.model, {
+      prompt: usage.inputTokens,
+      completion: usage.outputTokens,
+    });
 
     console.log('[Anthropic Usage]', {
       model: usage.model,
@@ -219,11 +220,7 @@ export class AnthropicService {
         output: usage.outputTokens,
         total: usage.totalTokens,
       },
-      cost: {
-        input: `$${inputCost.toFixed(4)}`,
-        output: `$${outputCost.toFixed(4)}`,
-        total: `$${totalCost.toFixed(4)}`,
-      },
+      cost: cost == null ? '—' : formatUsd(cost),
       duration: `${usage.duration}ms`,
       timestamp: new Date().toISOString(),
     });

@@ -12,6 +12,7 @@
 
 import { densityPromptRule } from "./density.ts";
 import { wordTarget } from "./length.ts";
+import { fenceField, untrustedDataGuard } from "./prompt-safety.ts";
 
 // ── Platform constraints (mirrors src/lib/content-creator/platforms.ts — ────
 //    duplicated because edge fns can't import from src/) ─────────────────────
@@ -34,6 +35,8 @@ Every factual claim MUST be traceable to the VAULT block provided. If the vault
 does not support a claim, do not make it. You may add general framing, calls
 to action and opinion statements that do not contain statistics or factual
 assertions.
+
+${untrustedDataGuard()}
 `.trim();
 
 /* ─── STAGE 0: TOPIC GENERATION ─────────────────────────────────────────── */
@@ -82,7 +85,7 @@ Return STRICT JSON only:
 }`.trim();
 
   const seedLine = input.seed
-    ? `Admin seed (focus these topics around this angle): ${input.seed}`
+    ? `Admin seed (focus these topics around this angle):\n${fenceField("seed", input.seed)}`
     : `(no admin seed — pick the strongest distinct angles from the vault)`;
 
   const user = `SCOPE
@@ -145,10 +148,11 @@ Return STRICT JSON only:
 }`.trim();
 
   const user = `BRIEF
-topic:    ${input.brief.topic}
-tone:     ${input.brief.tone ?? "(default: evidence-based, accessible)"}
-audience: ${input.brief.audience ?? "(default: educators & parents)"}
-keywords: ${(input.brief.keywords ?? []).join(", ") || "(none)"}
+topic:
+${fenceField("topic", input.brief.topic)}
+tone:     ${input.brief.tone ? `\n${fenceField("tone", input.brief.tone)}` : "(default: evidence-based, accessible)"}
+audience: ${input.brief.audience ? `\n${fenceField("audience", input.brief.audience)}` : "(default: educators & parents)"}
+keywords: ${input.brief.keywords?.length ? `\n${fenceField("keywords", input.brief.keywords.join(", "))}` : "(none)"}
 
 VAULT (authoritative facts)
 ${input.vault_block}
@@ -268,11 +272,11 @@ Return STRICT JSON only:
   const prev     = input.previous_draft;
 
   const regenBlock = feedback
-    ? `\n\nADMIN FEEDBACK (address these notes — this is a rewrite, not a fresh draft)\n${feedback}`
+    ? `\n\nADMIN FEEDBACK (address these notes — this is a rewrite, not a fresh draft)\n${fenceField("feedback", feedback)}`
     : "";
 
   const prevBlock = prev
-    ? `\n\nPREVIOUS DRAFT (for reference — improve on this, don't regress)\n${prev.title ? `title: ${prev.title}\n` : ""}body:\n${prev.body}`
+    ? `\n\nPREVIOUS DRAFT (for reference — improve on this, don't regress)\n${prev.title ? `title: ${fenceField("previous_title", prev.title)}\n` : ""}body:\n${fenceField("previous_body", prev.body)}`
     : "";
 
   // GEO-only: the area's local issues/overview land as a dedicated block
@@ -283,13 +287,16 @@ Return STRICT JSON only:
     : "";
 
   const user = `APPROVED IDEA
-title:   ${input.idea.title}
-summary: ${input.idea.summary}
+title:
+${fenceField("idea_title", input.idea.title)}
+summary:
+${fenceField("idea_summary", input.idea.summary)}
 
 BRIEF
-topic:    ${input.brief.topic}
-tone:     ${input.brief.tone ?? "(default)"}
-audience: ${input.brief.audience ?? "(default)"}${regenBlock}${prevBlock}${areaBlock}
+topic:
+${fenceField("topic", input.brief.topic)}
+tone:     ${input.brief.tone ? `\n${fenceField("tone", input.brief.tone)}` : "(default)"}
+audience: ${input.brief.audience ? `\n${fenceField("audience", input.brief.audience)}` : "(default)"}${regenBlock}${prevBlock}${areaBlock}
 
 VAULT (authoritative facts — your ONLY allowed source of statistics/claims${isGeo ? ", alongside AREA CONTEXT above" : ""})
 ${input.vault_block}

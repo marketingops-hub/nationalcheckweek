@@ -3,20 +3,26 @@
  * Centralized prompts for consistency and easy maintenance
  */
 
+import { fenceField, untrustedDataGuard } from '@/lib/content-creator/prompt-safety';
+
 /**
  * System prompt for area content generation
  */
-export const AREA_SYSTEM_PROMPT = `You are an expert in Australian education policy, student wellbeing, and regional education data. 
+export const AREA_SYSTEM_PROMPT = `You are an expert in Australian education policy, student wellbeing, and regional education data.
 You provide accurate, evidence-based content with specific statistics where possible.
-Your responses are always in valid JSON format.`;
+Your responses are always in valid JSON format.
+
+${untrustedDataGuard()}`;
 
 /**
  * Generate user prompt for area content
  */
 export function getAreaPrompt(name: string, state: string, type: string): string {
-  return `Generate comprehensive content for a National Check-in Week area page about ${name}, ${state}.
+  return `Generate comprehensive content for a National Check-in Week area page about the area named in the data block below.
 
-Area Type: ${type}
+${fenceField('area_name', name)}
+${fenceField('state', state)}
+${fenceField('area_type', type)}
 
 Please provide:
 1. A compelling 2-3 paragraph overview about this area's education landscape and wellbeing challenges
@@ -36,9 +42,11 @@ Return as JSON with keys: overview, keyStats (array), localIssues (array)`;
 /**
  * System prompt for blog content generation
  */
-export const BLOG_SYSTEM_PROMPT = `You are an expert writer specializing in Australian education policy, student wellbeing, and mental health for National Check-in Week. 
+export const BLOG_SYSTEM_PROMPT = `You are an expert writer specializing in Australian education policy, student wellbeing, and mental health for National Check-in Week.
 You write engaging, evidence-based content that is accessible to educators, parents, and policy makers.
-Your responses are always in valid JSON format.`;
+Your responses are always in valid JSON format.
+
+${untrustedDataGuard()}`;
 
 /**
  * Style-specific writing instructions
@@ -70,7 +78,9 @@ export function getBlogPrompt(
   const stylePrompt = BLOG_STYLES[style] || BLOG_STYLES.professional;
   const wordCount = BLOG_LENGTHS[length] || BLOG_LENGTHS.medium;
 
-  return `Write a comprehensive blog post about: "${title}"
+  return `Write a comprehensive blog post about the title given in the data block below.
+
+${fenceField('blog_title', title)}
 
 Context: This is for National Check-in Week, focusing on student mental health, wellbeing, and education policy in Australia.
 

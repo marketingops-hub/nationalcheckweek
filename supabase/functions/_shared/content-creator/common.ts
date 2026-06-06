@@ -138,14 +138,37 @@ export function clearLastError<T extends Record<string, unknown>>(meta: T | null
   return base as T;
 }
 
+/** Constant-time string compare. Length difference short-circuits (the
+ *  length of a secret is not itself sensitive here); equal-length inputs
+ *  are compared without an early-exit so timing doesn't leak position of
+ *  the first mismatch. */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 /**
  * Shared auth gate. Every content-creator-* fn is called by a Next.js API
- * route that forwards the service-role key as `Authorization`, so we just
- * assert the header exists (Supabase already verifies the key).
+ * route that forwards the service-role key as `Authorization: Bearer <key>`.
+ *
+ * Supabase's gateway verifies the JWT *signature*, but that accepts ANY
+ * Supabase-issued token (anon key, a signed-in user's access token) — not
+ * specifically the service-role key. These functions must only ever be
+ * invoked by our trusted server route, so we assert the bearer equals the
+ * service-role key (constant-time) rather than merely checking the header
+ * exists.
  */
 export function requireAuth(req: Request): Response | null {
-  if (!req.headers.get("Authorization")) {
+  const header = req.headers.get("Authorization");
+  if (!header) {
     return json({ error: "Missing Authorization header." }, 401);
+  }
+  const token = header.replace(/^Bearer\s+/i, "").trim();
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!serviceKey || !timingSafeEqual(token, serviceKey)) {
+    return json({ error: "Unauthorized." }, 401);
   }
   return null;
 }

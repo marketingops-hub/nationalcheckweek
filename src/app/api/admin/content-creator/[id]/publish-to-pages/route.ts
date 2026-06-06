@@ -21,6 +21,7 @@ import { NextRequest } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import { requireAdmin } from '@/lib/auth';
 import { ok, err, pgError, readParams } from '@/lib/content-creator/api-helpers';
+import { reserveSlug, deriveExcerpt } from '@/lib/content-creator/publish-utils';
 import { stripHashHeadings } from '@/lib/content-creator/length';
 
 export const runtime = 'nodejs';
@@ -116,38 +117,6 @@ function buildSlug(areaSlug: string, issueSlug: string): string {
   return `${areaSlug}-${issueSlug}`;
 }
 
-/** Same collision-resolution pattern as publish-to-blog. Excludes the
- *  row we're about to update so a no-op re-publish doesn't fight itself
- *  for its own slug. */
-async function reserveSlug(
-  sb: ReturnType<typeof adminClient>,
-  base: string,
-  excludeId: string | null,
-): Promise<string> {
-  for (let i = 0; i < 50; i++) {
-    const candidate = i === 0 ? base : `${base}-${i + 1}`;
-    let q = sb.from('pages').select('id').eq('slug', candidate).limit(1);
-    if (excludeId) q = q.neq('id', excludeId);
-    const { data } = await q;
-    if (!data || data.length === 0) return candidate;
-  }
-  return `${base}-${Date.now()}`;
-}
-
-/** First non-empty paragraph, markdown-stripped, capped for meta_desc. */
-function deriveExcerpt(body: string): string {
-  const firstPara = body
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .find((p) => p.length > 0 && !p.startsWith('---') && !/^\*\*.+\*\*$/.test(p));
-  if (!firstPara) return '';
-  return firstPara
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/[_*`~]/g, '')
-    .slice(0, 300)
-    .trim();
-}
-
 /* ─── Route ─────────────────────────────────────────────────────────────── */
 
 export const POST = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
@@ -193,10 +162,10 @@ export const POST = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
   const desiredSlug = buildSlug(areaSlug, issueSlug);
   const targetSlug = existing && existing.slug === desiredSlug
     ? existing.slug
-    : await reserveSlug(sb, desiredSlug, existing?.id ?? null);
+    : await reserveSlug(sb, 'pages', desiredSlug, existing?.id ?? null);
 
   const cleanBody = stripHashHeadings(body);
-  const excerpt   = deriveExcerpt(cleanBody);
+  const excerpt   = deriveExcerpt(cleanBody, { skipHeadings: true });
   const blocks    = markdownToBlocks(cleanBody);
 
   // `pages` table schema (see 053_create_pages_table.sql): content jsonb,
