@@ -189,7 +189,7 @@ export default function SimpleContentPage() {
           <button
             onClick={handleSuggestTitles}
             disabled={loading || !prompt.trim()}
-            style={primaryBtn}
+            style={{ ...primaryBtn, opacity: (loading || !prompt.trim()) ? 0.55 : 1, cursor: (loading || !prompt.trim()) ? 'not-allowed' : 'pointer' }}
           >
             {loading ? <Spinner /> : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>lightbulb</span> Suggest titles</>}
           </button>
@@ -238,7 +238,7 @@ export default function SimpleContentPage() {
 
           <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
             <button onClick={reset} style={ghostBtn}>← Start over</button>
-            <button onClick={handleGenerate} disabled={loading || !picked.trim()} style={primaryBtn}>
+            <button onClick={handleGenerate} disabled={loading || !picked.trim()} style={{ ...primaryBtn, opacity: (loading || !picked.trim()) ? 0.55 : 1, cursor: (loading || !picked.trim()) ? 'not-allowed' : 'pointer' }}>
               {loading ? <Spinner /> : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_awesome</span> Generate</>}
             </button>
           </div>
@@ -283,7 +283,7 @@ export default function SimpleContentPage() {
             >
               ← Back to titles
             </button>
-            <button onClick={handleApprove} disabled={loading} style={primaryBtn}>
+            <button onClick={handleApprove} disabled={loading} style={{ ...primaryBtn, opacity: loading ? 0.55 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
               {loading ? <Spinner /> : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>save</span> Approve &amp; save as blog draft</>}
             </button>
           </div>

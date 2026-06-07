@@ -83,7 +83,7 @@ Return 4 title options now. JSON only.`;
     temperature: 0.7,
   });
 
-  const parsed = safeParseJson<{ titles?: unknown; vault_ids?: unknown }>(result.content);
+  const parsed = safeParseJson<{ titles?: unknown; vault_ids?: unknown }>(result.content, "Claude title suggestions");
   const titles = Array.isArray(parsed?.titles)
     ? (parsed.titles as unknown[]).filter((t): t is string => typeof t === "string").slice(0, 4)
     : [];
@@ -143,7 +143,7 @@ Write the blog post now. Return JSON only.`;
     temperature: 0.5,
   });
 
-  const parsed = safeParseJson<{ body?: unknown; vault_ids_used?: unknown }>(result.content);
+  const parsed = safeParseJson<{ body?: unknown; vault_ids_used?: unknown }>(result.content, "Claude blog post");
   const rawBody = typeof parsed?.body === "string" ? parsed.body : result.content;
   const usedIds = Array.isArray(parsed?.vault_ids_used)
     ? (parsed.vault_ids_used as unknown[]).filter((id): id is string => typeof id === "string")
@@ -151,7 +151,7 @@ Write the blog post now. Return JSON only.`;
 
   // Post-process [vault:<uuid>] → [Source N] and append Sources list,
   // exactly as the full content pipeline does.
-  const processedBody = formatCitations(rawBody, vault, "blog");
+  const { body: processedBody } = formatCitations(rawBody, vault, "blog");
 
   return { title: title.trim(), body: processedBody, vault_ids: usedIds };
 }
@@ -179,6 +179,7 @@ Deno.serve(async (req: Request) => {
   const action = body.action;
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
   if (!prompt) return json({ error: "prompt is required." }, 400);
+  if (prompt.length > 2000) return json({ error: "prompt must be 2000 characters or fewer." }, 400);
 
   try {
     if (action === "suggest_titles") {
@@ -189,6 +190,7 @@ Deno.serve(async (req: Request) => {
     if (action === "generate") {
       const title = typeof body.title === "string" ? body.title.trim() : "";
       if (!title) return json({ error: "title is required for action=generate." }, 400);
+      if (title.length > 200) return json({ error: "title must be 200 characters or fewer." }, 400);
       const result = await generateContent(prompt, title, ctx as typeof ctx & { anthropicKey: string });
       return json(result);
     }

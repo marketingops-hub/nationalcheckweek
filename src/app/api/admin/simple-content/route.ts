@@ -13,7 +13,10 @@ import { requireAdmin } from '@/lib/auth';
 export const runtime     = 'nodejs';
 export const maxDuration = 120;
 
-const TIMEOUT_MS = 110_000;
+// 115s: enough headroom inside the 120s Vercel maxDuration so the handler
+// can still serialize and return the timeout error before the process is
+// killed. Title suggestion is fast (~5-10s); generation is the slow leg (~30-60s).
+const TIMEOUT_MS = 115_000;
 
 async function proxyEdge(payload: Record<string, unknown>) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,6 +43,10 @@ async function proxyEdge(payload: Record<string, unknown>) {
     try { data = raw ? JSON.parse(raw) : {}; } catch {
       return { status: 502, body: { error: 'Edge fn returned non-JSON.', preview: raw.slice(0, 200) } };
     }
+    // A successful response must be a JSON object envelope — a bare
+    // scalar/array/null means the edge fn changed shape or errored without
+    // our envelope. Only apply to 2xx so error bodies (which can be any
+    // shape) pass through unchanged.
     if (res.ok && (typeof data !== 'object' || data === null || Array.isArray(data))) {
       return { status: 502, body: { error: 'Unexpected response shape from edge fn.' } };
     }

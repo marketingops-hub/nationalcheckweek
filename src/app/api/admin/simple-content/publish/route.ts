@@ -37,7 +37,9 @@ export const POST = requireAdmin(async (req: NextRequest) => {
   const desiredSlug = slugify(title);
   const targetSlug  = await reserveSlug(sb, 'blog_posts', desiredSlug, null);
   const cleanBody   = stripHashHeadings(content);
-  const excerpt     = deriveExcerpt(cleanBody);
+  // Fall back to title when the body has no usable prose paragraph (e.g.
+  // malformed model output) so meta_desc is never blank.
+  const excerpt     = deriveExcerpt(cleanBody) || title.slice(0, 300);
 
   const { data, error } = await sb
     .from('blog_posts')
