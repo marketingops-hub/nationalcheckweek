@@ -10,14 +10,17 @@
  *
  * action = "generate"
  *   Fetches Vault context, writes a full blog post with vault citations,
- *   runs the citation post-processor.
- *   Returns: { title: string, body: string }
+ *   runs the citation post-processor, saves a history entry.
+ *   Returns: { title: string, body: string, history_id: string, vault_refs: VaultRef[] }
  *
- * Body: { action: "suggest_titles" | "generate", prompt: string, title?: string }
+ * Body:
+ *   { action: "suggest_titles", prompt: string }
+ *   { action: "generate", prompt: string, title: string, feedback?: string, history_id?: string }
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
+import { adminClient } from '@/lib/adminClient';
 import { AnthropicService } from '@/lib/ai/anthropic-service';
 import { fetchVaultContext, formatVaultContext } from '@/lib/content-creator/vault';
 import { formatCitations } from '@/lib/content-creator/citations';
@@ -30,6 +33,12 @@ export const maxDuration = 120;
 const VAULT_LIMIT = 12;
 
 const anthropic = new AnthropicService();
+
+export interface VaultRef {
+  id:    string;
+  title: string;
+  source: string;
+}
 
 const MISSION = `You are writing for "National Check-in Week" — an Australian student wellbeing
 and mental-health awareness campaign. Your audience is school principals, teachers,
@@ -88,7 +97,12 @@ Return 4 title options now. JSON only.`;
 
 /* ─── generate ───────────────────────────────────────────────────────────── */
 
-async function generate(prompt: string, title: string): Promise<NextResponse> {
+async function generate(
+  prompt: string,
+  title: string,
+  feedback: string | null,
+  historyId: string | null,
+): Promise<NextResponse> {
   const vault = await fetchVaultContext({ topic: `${title}. ${prompt}`, limit: VAULT_LIMIT });
 
   if (vault.length === 0) {
@@ -97,6 +111,10 @@ async function generate(prompt: string, title: string): Promise<NextResponse> {
       { status: 422 },
     );
   }
+
+  const feedbackSection = feedback
+    ? `\nEDITOR FEEDBACK ON PREVIOUS DRAFT (address these points in this version)\n${fenceField('feedback', feedback)}\n`
+    : '';
 
   const system = `${MISSION}
 
@@ -117,7 +135,7 @@ ${fenceField('title', title)}
 
 CONTEXT (the original admin prompt)
 ${fenceField('prompt', prompt)}
-
+${feedbackSection}
 VAULT (authoritative facts — your ONLY allowed source of statistics/claims)
 ${formatVaultContext(vault)}
 
@@ -130,14 +148,42 @@ Write the blog post now. Return JSON only.`;
     timeout:     90_000,
   });
 
-  const parsed  = safeParseJson<{ body?: unknown }>(result.content, 'Claude blog post');
+  const parsed  = safeParseJson<{ body?: unknown; vault_ids_used?: unknown }>(result.content, 'Claude blog post');
   const rawBody = typeof parsed?.body === 'string' ? parsed.body : null;
   if (!rawBody) {
     return NextResponse.json({ error: 'Claude returned an unexpected response format. Please try again.' }, { status: 502 });
   }
-  const { body }  = formatCitations(rawBody, vault, 'blog');
 
-  return NextResponse.json({ title: title.trim(), body });
+  const usedIds: string[] = Array.isArray(parsed?.vault_ids_used)
+    ? (parsed.vault_ids_used as unknown[]).filter((id): id is string => typeof id === 'string')
+    : [];
+
+  const { body } = formatCitations(rawBody, vault, 'blog');
+
+  // Build vault refs for UI display — only entries actually cited
+  const citedSet = new Set(usedIds);
+  const vaultRefs: VaultRef[] = vault
+    .filter(e => citedSet.has(e.id))
+    .map(e => ({ id: e.id, title: e.title, source: e.source }));
+
+  // Persist (upsert) history entry
+  const sb = adminClient();
+  let savedHistoryId = historyId;
+  if (historyId) {
+    await sb
+      .from('simple_content_history')
+      .update({ title, body, feedback: feedback ?? null, vault_ids: usedIds })
+      .eq('id', historyId);
+  } else {
+    const { data } = await sb
+      .from('simple_content_history')
+      .insert({ prompt, title, body, feedback: feedback ?? null, vault_ids: usedIds })
+      .select('id')
+      .single();
+    savedHistoryId = (data as { id?: string } | null)?.id ?? null;
+  }
+
+  return NextResponse.json({ title: title.trim(), body, history_id: savedHistoryId, vault_refs: vaultRefs });
 }
 
 /* ─── Route handler ──────────────────────────────────────────────────────── */
@@ -148,12 +194,15 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  const { action, prompt: rawPrompt, title: rawTitle } =
-    (payload as { action?: unknown; prompt?: unknown; title?: unknown }) ?? {};
+  const { action, prompt: rawPrompt, title: rawTitle, feedback: rawFeedback, history_id: rawHistoryId } =
+    (payload as { action?: unknown; prompt?: unknown; title?: unknown; feedback?: unknown; history_id?: unknown }) ?? {};
 
   const prompt = typeof rawPrompt === 'string' ? rawPrompt.trim() : '';
   if (!prompt)               return NextResponse.json({ error: 'prompt is required.' },          { status: 400 });
   if (prompt.length > 2000)  return NextResponse.json({ error: 'prompt must be ≤ 2000 chars.' }, { status: 400 });
+
+  const feedback  = typeof rawFeedback  === 'string' ? rawFeedback.trim()  : null;
+  const historyId = typeof rawHistoryId === 'string' ? rawHistoryId.trim() : null;
 
   try {
     if (action === 'suggest_titles') {
@@ -164,7 +213,8 @@ export const POST = requireAdmin(async (req: NextRequest) => {
       const title = typeof rawTitle === 'string' ? rawTitle.trim() : '';
       if (!title)             return NextResponse.json({ error: 'title is required for action=generate.' }, { status: 400 });
       if (title.length > 200) return NextResponse.json({ error: 'title must be ≤ 200 chars.' },            { status: 400 });
-      return await generate(prompt, title);
+      if (feedback && feedback.length > 1000) return NextResponse.json({ error: 'feedback must be ≤ 1000 chars.' }, { status: 400 });
+      return await generate(prompt, title, feedback || null, historyId);
     }
 
     return NextResponse.json({ error: `Unknown action: ${String(action)}` }, { status: 400 });

@@ -5,7 +5,7 @@
  * into `blog_posts` as an UNPUBLISHED draft. The admin flips it live from
  * /admin/blog exactly as they would for any other piece.
  *
- * Body: { title: string, body: string }
+ * Body: { title: string, body: string, history_id?: string }
  * Response: { post: BlogPost, created: boolean }
  * ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -24,11 +24,12 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     return err('Invalid JSON body.', 400);
   }
 
-  const { title: rawTitle, body: rawBody } =
-    (body as { title?: unknown; body?: unknown }) ?? {};
+  const { title: rawTitle, body: rawBody, history_id: rawHistoryId } =
+    (body as { title?: unknown; body?: unknown; history_id?: unknown }) ?? {};
 
-  const title = typeof rawTitle === 'string' ? rawTitle.trim() : '';
-  const content = typeof rawBody  === 'string' ? rawBody.trim()  : '';
+  const title     = typeof rawTitle     === 'string' ? rawTitle.trim()     : '';
+  const content   = typeof rawBody      === 'string' ? rawBody.trim()      : '';
+  const historyId = typeof rawHistoryId === 'string' ? rawHistoryId.trim() : null;
 
   if (!title)            return err('title is required.', 400);
   if (content.length < 50) return err('body is too short (< 50 chars).', 400);
@@ -61,5 +62,15 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     .single();
 
   if (error) return pgError(error);
+
+  // Link the history entry to the published post (best-effort, non-blocking)
+  if (historyId && data) {
+    await sb
+      .from('simple_content_history')
+      .update({ published_post_id: (data as { id?: string }).id })
+      .eq('id', historyId)
+      .then(() => undefined, () => undefined);
+  }
+
   return ok({ post: data, created: true });
 });
