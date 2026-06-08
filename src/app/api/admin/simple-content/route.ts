@@ -45,6 +45,13 @@ ${untrustedDataGuard()}`.trim();
 async function suggestTitles(prompt: string): Promise<NextResponse> {
   const vault = await fetchVaultContext({ topic: prompt, limit: VAULT_LIMIT, allow_broad_sample: true });
 
+  if (vault.length === 0) {
+    return NextResponse.json(
+      { error: 'No vault content matched your prompt. Add relevant content to the Vault first, or broaden your prompt.' },
+      { status: 422 },
+    );
+  }
+
   const system = `${MISSION}
 
 Task: propose exactly 4 compelling blog-post title options for the topic the admin
@@ -65,6 +72,7 @@ Return 4 title options now. JSON only.`;
     model:       'gpt-4o',   // maps to claude-sonnet-4-6 via MODEL_MAPPING
     temperature: 0.7,
     maxTokens:   512,
+    timeout:     90_000,
   });
 
   const parsed = safeParseJson<{ titles?: unknown }>(result.content, 'Claude title suggestions');
@@ -82,6 +90,13 @@ Return 4 title options now. JSON only.`;
 
 async function generate(prompt: string, title: string): Promise<NextResponse> {
   const vault = await fetchVaultContext({ topic: `${title}. ${prompt}`, limit: VAULT_LIMIT });
+
+  if (vault.length === 0) {
+    return NextResponse.json(
+      { error: 'No vault content matched this topic. Add relevant content to the Vault first, or try a different title.' },
+      { status: 422 },
+    );
+  }
 
   const system = `${MISSION}
 
@@ -112,10 +127,14 @@ Write the blog post now. Return JSON only.`;
     model:       'gpt-4o',
     temperature: 0.5,
     maxTokens:   2000,
+    timeout:     90_000,
   });
 
-  const parsed    = safeParseJson<{ body?: unknown }>(result.content, 'Claude blog post');
-  const rawBody   = typeof parsed?.body === 'string' ? parsed.body : result.content;
+  const parsed  = safeParseJson<{ body?: unknown }>(result.content, 'Claude blog post');
+  const rawBody = typeof parsed?.body === 'string' ? parsed.body : null;
+  if (!rawBody) {
+    return NextResponse.json({ error: 'Claude returned an unexpected response format. Please try again.' }, { status: 502 });
+  }
   const { body }  = formatCitations(rawBody, vault, 'blog');
 
   return NextResponse.json({ title: title.trim(), body });
