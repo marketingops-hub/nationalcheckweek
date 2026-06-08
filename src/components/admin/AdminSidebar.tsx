@@ -46,6 +46,7 @@ const SECTIONS = [
     items: [
       { label: 'Vault library',  href: '/admin/vault/sources',   ms: 'lock' },
       { label: 'Vault upload',   href: '/admin/vault/upload',    ms: 'upload' },
+      { label: 'Quick Content',  href: '/admin/simple-content',  ms: 'bolt' },
       { label: 'Content pipeline', href: '/admin/content-creator',          ms: 'dashboard' },
       { label: 'Topics',           href: '/admin/content-creator/topics',   ms: 'lightbulb' },
       { label: 'Styles',           href: '/admin/content-creator/styles',   ms: 'brush' },
