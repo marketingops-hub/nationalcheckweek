@@ -120,7 +120,9 @@ export async function adminFetch(
         try {
           const errorData = await response.clone().json();
           if (errorData.error) {
-            errorMessage = errorData.error;
+            errorMessage = typeof errorData.error === 'string'
+              ? errorData.error
+              : (errorData.error?.message ?? JSON.stringify(errorData.error));
           }
         } catch {
           // If response is not JSON, use status text
