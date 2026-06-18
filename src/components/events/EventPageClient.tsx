@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -19,6 +19,14 @@ const FORMAT_ICON: Record<string, string> = {
   workshop: "🛠️", conference: "🎤",
 };
 
+// Fixed HubSpot form that gates access to past-webinar recordings.
+const RECORDING_GATE_PORTAL = '4596264';
+const RECORDING_GATE_FORM   = 'ec82365a-7028-487c-8d6d-8d34eefc00ee';
+
+function recordingLsKey(slug: string) {
+  return `ncw_rec_unlocked_${slug}`;
+}
+
 interface EventPageClientProps {
   event: EventRecord;
   speakers: Speaker[];
@@ -31,8 +39,27 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
   const stsBadge = STATUS_BADGE[event.status ?? 'upcoming'] ?? { bg: "#F9FAFB", color: "#374151" };
   const hasHubSpotForm = Boolean(!isPast && event.hubspot_form_id && event.hubspot_portal_id);
 
+  // Registration form state (upcoming events)
   const [formReady, setFormReady] = useState(false);
   const handleFormReady = useCallback(() => setFormReady(true), []);
+
+  // Recording gate state (past events)
+  const [recordingUnlocked, setRecordingUnlocked] = useState(false);
+  const [gateReady, setGateReady] = useState(false);
+
+  // Read localStorage after mount (avoids SSR mismatch)
+  useEffect(() => {
+    if (isPast && event.recording_url) {
+      setRecordingUnlocked(
+        localStorage.getItem(recordingLsKey(event.slug)) === '1',
+      );
+    }
+  }, [isPast, event.recording_url, event.slug]);
+
+  const handleRecordingFormSubmit = useCallback(() => {
+    localStorage.setItem(recordingLsKey(event.slug), '1');
+    setRecordingUnlocked(true);
+  }, [event.slug]);
 
   const handleFormSubmit = useCallback(
     (_$form: HTMLFormElement, data: Record<string, unknown>) => {
@@ -49,19 +76,15 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
           fields[f.name] = f.value;
         });
       }
-      console.log('[Zoom] Parsed fields:', fields);
 
       const webinarIds: string[] = [];
       const rawWebinarField = fields.bulk_zoom_registration;
-      console.log('[Zoom] bulk_zoom_registration value:', rawWebinarField);
 
       if (typeof rawWebinarField === 'string') {
         webinarIds.push(...rawWebinarField.split(/[;,]/).map((id) => id.trim()).filter(Boolean));
       } else if (Array.isArray(rawWebinarField)) {
         webinarIds.push(...(rawWebinarField as string[]));
       }
-
-      console.log('[Zoom] Webinar IDs to register:', webinarIds);
 
       if (webinarIds.length === 0) {
         console.warn('[Zoom] No webinar IDs found — skipping Zoom registration');
@@ -75,25 +98,14 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
           hubspot_form_id: event.hubspot_form_id,
           zoom_webinar_ids: webinarIds,
           fields,
-          context: {
-            pageUri: window.location.href,
-            pageName: document.title,
-          },
+          context: { pageUri: window.location.href, pageName: document.title },
         }),
       })
-        .then((res) => {
-          console.log('[Zoom] API response status:', res.status);
-          return res.json();
-        })
+        .then((res) => res.json())
         .then((result) => {
-          console.log('[Zoom] API response body:', JSON.stringify(result, null, 2));
-          if (!result.success) {
-            console.error('[Zoom] Registration failed:', result);
-          }
+          if (!result.success) console.error('[Zoom] Registration failed:', result);
         })
-        .catch((err) => {
-          console.error('[Zoom] Fetch error:', err);
-        });
+        .catch((err) => console.error('[Zoom] Fetch error:', err));
     },
     [event.hubspot_form_id],
   );
@@ -103,12 +115,10 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
       {/* ── HERO ── */}
       <div className="page-hero" style={{ paddingBottom: 0 }}>
         <div className="page-hero__inner" style={{ maxWidth: 1000, margin: "0 auto" }}>
-          {/* Breadcrumb */}
           <div className="page-hero__breadcrumb">
             <Link href="/events">Events</Link> / {event.title}
           </div>
 
-          {/* Badges */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
             <BadgePill {...fmtBadge} label={FORMAT_LABEL[event.format ?? ''] ?? event.format ?? 'Event'} />
             {isLive  && <BadgePill bg="#FEF2F2" color="#DC2626" label="● Live now" />}
@@ -122,7 +132,6 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
             <p className="page-hero__subtitle" style={{ maxWidth: 740 }}>{event.tagline}</p>
           )}
 
-          {/* Meta bar */}
           {(event.event_date || event.event_time || event.format) && (
             <div className="event-hero-meta">
               {event.event_date && (
@@ -148,7 +157,6 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                 </div>
               )}
 
-              {/* Jump-to-form CTA — always visible in hero */}
               {hasHubSpotForm && (
                 <a href="#event-hubspot-form-container" className="event-hero-register-cta">
                   Register now ↓
@@ -157,6 +165,12 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
               {!hasHubSpotForm && !isPast && event.register_url && (
                 <a href={event.register_url} target="_blank" rel="noopener noreferrer" className="event-hero-register-cta">
                   {isLive ? "🔴 Join live" : "Register now →"}
+                </a>
+              )}
+              {/* Scroll-to-form CTA for past events with a gated recording */}
+              {isPast && event.recording_url && !recordingUnlocked && (
+                <a href="#recording-gate" className="event-hero-register-cta">
+                  🎬 Watch recording ↓
                 </a>
               )}
             </div>
@@ -170,14 +184,12 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
 
           {/* ── LEFT: Content ── */}
           <div>
-            {/* Feature image */}
             {event.feature_image && event.feature_image.trim() !== '' && (
               <div className="event-feature-image">
                 <Image src={event.feature_image} alt={event.title} fill style={{ objectFit: "contain" }} />
               </div>
             )}
 
-            {/* About the event */}
             {event.description && (
               <section className="event-section">
                 <div className="eyebrow-tag">About the event</div>
@@ -185,31 +197,56 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
               </section>
             )}
 
-            {/* Body content */}
             {event.body && (
               <section className="event-section">
                 <EventBodyRenderer content={event.body} />
               </section>
             )}
 
-            {/* Recording callout (past events) */}
+            {/* ── Recording section (past events) ── */}
             {isPast && event.recording_url && (
-              <div className="event-recording-callout">
+              <div id="recording-gate" className="event-recording-callout">
                 <div className="event-recording-callout__icon">🎬</div>
                 <div className="event-recording-callout__body">
-                  <div className="event-recording-callout__label">Recording available</div>
-                  <div className="event-recording-callout__title">Missed the live session?</div>
-                  <p className="event-recording-callout__text">
-                    Watch the full recording at your own pace. All the insights, none of the scheduling pressure.
-                  </p>
-                  <a
-                    href={event.recording_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="event-recording-callout__link"
-                  >
-                    ▶ Watch recording
-                  </a>
+                  {recordingUnlocked ? (
+                    /* Unlocked: show the recording link */
+                    <>
+                      <div className="event-recording-callout__label">Recording available</div>
+                      <div className="event-recording-callout__title">You&rsquo;re all set!</div>
+                      <p className="event-recording-callout__text">
+                        Watch the full recording at your own pace. All the insights, none of the scheduling pressure.
+                      </p>
+                      <a
+                        href={event.recording_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="event-recording-callout__link"
+                      >
+                        ▶ Watch recording
+                      </a>
+                    </>
+                  ) : (
+                    /* Locked: subscribe via HubSpot to unlock */
+                    <>
+                      <div className="event-recording-callout__label">Recording available</div>
+                      <div className="event-recording-callout__title">Missed the live session?</div>
+                      <p className="event-recording-callout__text">
+                        Enter your details below to get instant access to the full recording.
+                      </p>
+                      {!gateReady && (
+                        <div style={{ padding: '0.5rem 0 1rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+                          Loading form…
+                        </div>
+                      )}
+                      <HubSpotForm
+                        portalId={RECORDING_GATE_PORTAL}
+                        formId={RECORDING_GATE_FORM}
+                        containerId="recording-gate-form"
+                        onFormReady={() => setGateReady(true)}
+                        onFormSubmit={handleRecordingFormSubmit}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -242,9 +279,9 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
             )}
           </div>
 
-          {/* ── RIGHT: Registration Form or Sidebar ── */}
+          {/* ── RIGHT: Sidebar ── */}
           <div className="event-sidebar">
-            {/* HubSpot Form Embed - Matches /register page style */}
+            {/* Upcoming: HubSpot registration form */}
             {hasHubSpotForm && (
               <motion.div
                 className="event-hubspot-card"
@@ -273,10 +310,9 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
               </motion.div>
             )}
 
-            {/* Register Card - Only show if no HubSpot form */}
+            {/* Upcoming: plain register card (no HubSpot form) */}
             {!hasHubSpotForm && !isPast && (
               <div className="event-register-card">
-                {/* Header */}
                 <div className="event-register-card__header">
                   <div className="event-register-card__price">
                     {event.is_free ? "Free" : (event.price || "Paid")}
@@ -285,16 +321,12 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                     {event.is_free ? "No cost to attend" : "Per person"}
                   </div>
                 </div>
-
-                {/* Body */}
                 <div className="event-register-card__body">
-                  {/* Date/time */}
                   {(event.event_date || event.event_time) && (
                     <div className="event-register-card__date">
                       {event.event_date && (
                         <div className="event-register-card__date-row">
-                          <span>📅</span>
-                          <span>{formatDateShort(event.event_date)}</span>
+                          <span>📅</span><span>{formatDateShort(event.event_date)}</span>
                         </div>
                       )}
                       {event.event_time && (
@@ -305,8 +337,6 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                       )}
                     </div>
                   )}
-
-                  {/* CTA */}
                   {event.register_url && (
                     <a
                       href={event.register_url}
@@ -318,12 +348,8 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                     </a>
                   )}
                   {!event.register_url && (
-                    <div className="event-register-coming-soon">
-                      Registration opening soon
-                    </div>
+                    <div className="event-register-coming-soon">Registration opening soon</div>
                   )}
-
-                  {/* Meta */}
                   <div className="event-register-card__meta">
                     <div className="event-register-card__meta-row">
                       <span>{FORMAT_ICON[event.format ?? 'webinar'] ?? "📋"}</span>
@@ -347,19 +373,15 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                     )}
                   </div>
                 </div>
-
-                {/* Back link */}
-                <Link href="/events" className="event-register-card__back">
-                  ← All events
-                </Link>
+                <Link href="/events" className="event-register-card__back">← All events</Link>
               </div>
             )}
 
-            {/* Past Event Card */}
+            {/* Past event sidebar */}
             {isPast && (
               <div className="event-register-card">
                 <div className="event-register-card__body">
-                  {event.recording_url && (
+                  {event.recording_url && recordingUnlocked && (
                     <a
                       href={event.recording_url}
                       target="_blank"
@@ -369,13 +391,14 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                       ▶ Watch recording
                     </a>
                   )}
-                  {!event.recording_url && (
-                    <div className="event-register-coming-soon">
-                      Recording coming soon
-                    </div>
+                  {event.recording_url && !recordingUnlocked && (
+                    <a href="#recording-gate" className="event-register-btn event-register-btn--secondary">
+                      🔒 Access recording ↓
+                    </a>
                   )}
-
-                  {/* Meta */}
+                  {!event.recording_url && (
+                    <div className="event-register-coming-soon">Recording coming soon</div>
+                  )}
                   <div className="event-register-card__meta">
                     <div className="event-register-card__meta-row">
                       <span>{FORMAT_ICON[event.format ?? 'webinar'] ?? "📋"}</span>
@@ -389,10 +412,7 @@ export default function EventPageClient({ event, speakers }: EventPageClientProp
                     )}
                   </div>
                 </div>
-
-                <Link href="/events" className="event-register-card__back">
-                  ← All events
-                </Link>
+                <Link href="/events" className="event-register-card__back">← All events</Link>
               </div>
             )}
           </div>
