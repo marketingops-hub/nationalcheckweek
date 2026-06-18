@@ -55,6 +55,7 @@ const SECTIONS = [
       { label: 'Verified',         href: '/admin/content-creator/verified', ms: 'verified' },
       { label: 'Prompts',       href: '/admin/prompts',         ms: 'smart_toy' },
       { label: 'SEO',           href: '/admin/seo',             ms: 'travel_explore' },
+      { label: 'SEO Report',    href: '/admin/seo/report',      ms: 'analytics' },
     ],
   },
   {
