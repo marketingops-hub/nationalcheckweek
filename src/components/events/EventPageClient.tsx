@@ -33,8 +33,17 @@ interface EventPageClientProps {
 }
 
 export default function EventPageClient({ event, speakers }: EventPageClientProps) {
-  const isPast = event.status === "past";
-  const isLive = event.status === "live";
+  // Treat as past if status is explicitly "past" OR the event date has already passed.
+  const isPast = event.status === "past" || event.status === "cancelled" || (() => {
+    if (!event.event_date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const evDate = new Date(event.event_date);
+    evDate.setHours(0, 0, 0, 0);
+    return evDate < today;
+  })();
+  // Only treat as live if explicitly flagged — date alone can't confirm the session is running.
+  const isLive = !isPast && event.status === "live";
   const fmtBadge = FORMAT_BADGE[event.format ?? 'webinar'] ?? { bg: "#F9FAFB", color: "#374151" };
   const stsBadge = STATUS_BADGE[event.status ?? 'upcoming'] ?? { bg: "#F9FAFB", color: "#374151" };
   const hasHubSpotForm = Boolean(!isPast && event.hubspot_form_id && event.hubspot_portal_id);
