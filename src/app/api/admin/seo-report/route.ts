@@ -42,6 +42,7 @@ export const GET = requireAdmin(async (_req: NextRequest) => {
       excerpt:     p.excerpt      ?? '',
       hasAuthor:   Boolean(p.author),
       publishDate: p.published_at ?? null,
+      type:        'blog',
     });
     const ai = scoreAiSeo({
       title:       p.title     ?? '',
@@ -84,6 +85,7 @@ export const GET = requireAdmin(async (_req: NextRequest) => {
       excerpt:     e.description ?? '',
       hasAuthor:   false,
       publishDate: e.event_date  ?? null,
+      type:        'event',
     });
     const ai = scoreAiSeo({
       title:       e.title ?? '',
@@ -126,6 +128,7 @@ export const GET = requireAdmin(async (_req: NextRequest) => {
       excerpt:     p.description ?? '',
       hasAuthor:   false,
       publishDate: p.updated_at ?? null,
+      type:        'page',
     });
     const ai = scoreAiSeo({
       title:       p.title ?? '',

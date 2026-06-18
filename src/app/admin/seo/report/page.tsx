@@ -2,24 +2,14 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * /admin/seo/report — SEO + AISEO audit for every published page
- *
- * Two score columns per page:
- *   SEO   — traditional signals: meta tags, OG image, content length,
- *            heading structure, slug quality, excerpt.
- *   AISEO — LLM/AI-search readiness: factual density, author, freshness,
- *            entity clarity, sources, FAQ patterns, org name signals.
- *
- * Click any row to expand the full check breakdown.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { adminFetch } from '@/lib/adminFetch';
 import type { PageReport, SeoCheck, CheckStatus } from '@/lib/seo-analyzer';
 
-/* ─── Types ─────────────────────────────────────────────────────────────── */
-
-type FilterType = 'all' | 'blog' | 'event' | 'page';
+type FilterType = 'all' | 'blog' | 'event' | 'page' | 'critical';
 type SortKey    = 'seoScore' | 'aiScore' | 'title' | 'combined';
 
 /* ─── Score helpers ──────────────────────────────────────────────────────── */
@@ -61,6 +51,15 @@ function typeLabel(t: PageReport['type']) {
   );
 }
 
+/* ─── Top issues — sorted by most points missed ──────────────────────────── */
+
+function topIssues(checks: SeoCheck[], n = 2): SeoCheck[] {
+  return checks
+    .filter(c => c.status !== 'pass')
+    .sort((a, b) => (b.max - b.points) - (a.max - a.points))
+    .slice(0, n);
+}
+
 /* ─── Score badge ────────────────────────────────────────────────────────── */
 
 function ScoreBadge({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' }) {
@@ -79,22 +78,37 @@ function ScoreBadge({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' 
   );
 }
 
-/* ─── Top issues ─────────────────────────────────────────────────────────── */
+/* ─── Inline score bar ───────────────────────────────────────────────────── */
 
-function topIssues(checks: SeoCheck[]): SeoCheck[] {
-  return checks.filter(c => c.status !== 'pass').slice(0, 2);
+function ScoreBar({ score }: { score: number }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      <span style={{ fontSize: 14, fontWeight: 800, color: scoreColor(score) }}>{score}</span>
+      <div style={{ width: 52, height: 5, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${score}%`, background: scoreColor(score), borderRadius: 3, transition: 'width .3s' }} />
+      </div>
+      <span style={{ fontSize: 10, fontWeight: 700, color: scoreColor(score) }}>{grade(score)}</span>
+    </div>
+  );
 }
 
 /* ─── Checks breakdown panel ─────────────────────────────────────────────── */
 
 function ChecksTable({ checks, title }: { checks: SeoCheck[]; title: string }) {
+  // Sort: fails first, then warns, then passes — within each group by points missed desc
+  const sorted = [...checks].sort((a, b) => {
+    const order = { fail: 0, warn: 1, pass: 2 };
+    if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
+    return (b.max - b.points) - (a.max - a.points);
+  });
+
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted, #6b7280)', marginBottom: 8 }}>
         {title}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {checks.map(c => (
+        {sorted.map(c => (
           <div key={c.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 6, background: c.status === 'pass' ? '#f0fdf4' : c.status === 'warn' ? '#fffbeb' : '#fef2f2' }}>
             <span style={{ marginTop: 1, flexShrink: 0 }}>{statusIcon(c.status)}</span>
             <div style={{ flex: 1 }}>
@@ -111,6 +125,31 @@ function ChecksTable({ checks, title }: { checks: SeoCheck[]; title: string }) {
   );
 }
 
+/* ─── CSV export ─────────────────────────────────────────────────────────── */
+
+function exportCsv(pages: PageReport[]) {
+  const header = ['Title', 'Type', 'Slug', 'URL', 'SEO Score', 'SEO Grade', 'AISEO Score', 'AISEO Grade', 'Combined', 'Edit URL'];
+  const rows = pages.map(p => [
+    `"${p.title.replace(/"/g, '""')}"`,
+    p.type,
+    p.slug,
+    p.url,
+    p.seoScore,
+    grade(p.seoScore),
+    p.aiScore,
+    grade(p.aiScore),
+    Math.round((p.seoScore + p.aiScore) / 2),
+    p.editUrl,
+  ]);
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `seo-report-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 export default function SeoReportPage() {
@@ -123,7 +162,9 @@ export default function SeoReportPage() {
   const [expanded,  setExpanded]  = useState<string | null>(null);
   const [search,    setSearch]    = useState('');
 
-  useEffect(() => {
+  const loadReport = useCallback(() => {
+    setLoading(true);
+    setError('');
     adminFetch('/api/admin/seo-report')
       .then(r => r.json())
       .then((d: { pages: PageReport[]; generated_at: string }) => {
@@ -134,8 +175,15 @@ export default function SeoReportPage() {
       .catch(e => { setError(e.message); setLoading(false); });
   }, []);
 
+  useEffect(() => { loadReport(); }, [loadReport]);
+
   const filtered = useMemo(() => {
-    let list = filter === 'all' ? pages : pages.filter(p => p.type === filter);
+    let list = pages;
+    if (filter === 'critical') {
+      list = pages.filter(p => p.seoScore < 40 || p.aiScore < 40);
+    } else if (filter !== 'all') {
+      list = pages.filter(p => p.type === filter);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(p => p.title.toLowerCase().includes(q) || p.slug.includes(q));
@@ -148,22 +196,24 @@ export default function SeoReportPage() {
     });
   }, [pages, filter, sort, search]);
 
-  // Summary stats
   const stats = useMemo(() => {
-    const src = filter === 'all' ? pages : pages.filter(p => p.type === filter);
+    const src = pages;
     if (!src.length) return null;
-    const avgSeo = Math.round(src.reduce((s, p) => s + p.seoScore, 0) / src.length);
-    const avgAi  = Math.round(src.reduce((s, p) => s + p.aiScore,  0) / src.length);
+    const avgSeo  = Math.round(src.reduce((s, p) => s + p.seoScore, 0) / src.length);
+    const avgAi   = Math.round(src.reduce((s, p) => s + p.aiScore,  0) / src.length);
     const critical = src.filter(p => p.seoScore < 40 || p.aiScore < 40).length;
     const good     = src.filter(p => p.seoScore >= 75 && p.aiScore >= 75).length;
     return { total: src.length, avgSeo, avgAi, critical, good };
-  }, [pages, filter]);
+  }, [pages]);
+
+  const criticalCount = pages.filter(p => p.seoScore < 40 || p.aiScore < 40).length;
 
   const FILTERS: { key: FilterType; label: string; count: number }[] = [
-    { key: 'all',   label: 'All',    count: pages.length },
-    { key: 'blog',  label: 'Blog',   count: pages.filter(p => p.type === 'blog').length },
-    { key: 'event', label: 'Events', count: pages.filter(p => p.type === 'event').length },
-    { key: 'page',  label: 'Pages',  count: pages.filter(p => p.type === 'page').length },
+    { key: 'all',      label: 'All',      count: pages.length },
+    { key: 'blog',     label: 'Blog',     count: pages.filter(p => p.type === 'blog').length },
+    { key: 'event',    label: 'Events',   count: pages.filter(p => p.type === 'event').length },
+    { key: 'page',     label: 'Pages',    count: pages.filter(p => p.type === 'page').length },
+    { key: 'critical', label: '🔴 Critical', count: criticalCount },
   ];
 
   return (
@@ -180,10 +230,15 @@ export default function SeoReportPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          {!loading && pages.length > 0 && (
+            <button className="swa-btn" style={{ fontSize: 13 }} onClick={() => exportCsv(pages)}>
+              ↓ Export CSV
+            </button>
+          )}
           <Link href="/admin/seo" className="swa-btn" style={{ fontSize: 13 }}>
             ✨ SEO Generator →
           </Link>
-          <button className="swa-btn swa-btn--primary" onClick={() => { setLoading(true); setError(''); adminFetch('/api/admin/seo-report').then(r => r.json()).then((d: { pages: PageReport[]; generated_at: string }) => { setPages(d.pages ?? []); setGenAt(d.generated_at); setLoading(false); }).catch(e => { setError(e.message); setLoading(false); }); }}>
+          <button className="swa-btn swa-btn--primary" onClick={loadReport} disabled={loading}>
             ↻ Refresh
           </button>
         </div>
@@ -198,10 +253,15 @@ export default function SeoReportPage() {
             { label: 'Total pages', value: stats.total, sub: 'published' },
             { label: 'Avg SEO score', value: stats.avgSeo, sub: `Grade ${grade(stats.avgSeo)}`, color: scoreColor(stats.avgSeo) },
             { label: 'Avg AISEO score', value: stats.avgAi, sub: `Grade ${grade(stats.avgAi)}`, color: scoreColor(stats.avgAi) },
-            { label: 'Need attention', value: stats.critical, sub: 'score < 40', color: stats.critical > 0 ? '#dc2626' : '#16a34a' },
+            { label: 'Need attention', value: stats.critical, sub: 'score < 40', color: stats.critical > 0 ? '#dc2626' : '#16a34a', clickFilter: 'critical' as FilterType },
             { label: 'Fully optimised', value: stats.good, sub: 'both scores ≥ 75', color: '#16a34a' },
           ].map(s => (
-            <div key={s.label} className="swa-card" style={{ padding: '16px 18px' }}>
+            <div
+              key={s.label}
+              className="swa-card"
+              style={{ padding: '16px 18px', cursor: (s as { clickFilter?: FilterType }).clickFilter ? 'pointer' : undefined }}
+              onClick={(s as { clickFilter?: FilterType }).clickFilter ? () => setFilter((s as { clickFilter: FilterType }).clickFilter) : undefined}
+            >
               <div style={{ fontSize: 26, fontWeight: 800, color: (s as { color?: string }).color ?? 'var(--color-text-primary)', lineHeight: 1 }}>
                 {s.value}
               </div>
@@ -214,13 +274,12 @@ export default function SeoReportPage() {
 
       {/* ── Controls ── */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-        {/* Type tabs */}
         <div style={{ display: 'flex', gap: 2, background: '#f3f4f6', padding: 4, borderRadius: 10 }}>
           {FILTERS.map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} className="swa-btn" style={{
               padding: '5px 14px', fontSize: 12, borderRadius: 7,
               background:  filter === f.key ? '#fff' : 'transparent',
-              color:       filter === f.key ? 'var(--color-primary)' : 'var(--color-text-muted)',
+              color:       filter === f.key ? (f.key === 'critical' ? '#dc2626' : 'var(--color-primary)') : 'var(--color-text-muted)',
               fontWeight:  filter === f.key ? 700 : 500,
               boxShadow:   filter === f.key ? '0 1px 3px rgba(0,0,0,.1)' : 'none',
             }}>
@@ -229,7 +288,6 @@ export default function SeoReportPage() {
           ))}
         </div>
 
-        {/* Search */}
         <input
           type="search"
           placeholder="Search pages…"
@@ -238,7 +296,6 @@ export default function SeoReportPage() {
           style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--color-border)', fontSize: 13, width: 200, background: 'var(--color-bg-input, #fff)' }}
         />
 
-        {/* Sort */}
         <select value={sort} onChange={e => setSort(e.target.value as SortKey)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-border)', fontSize: 13, background: 'var(--color-bg-input, #fff)' }}>
           <option value="combined">Sort: Combined score</option>
           <option value="seoScore">Sort: SEO score</option>
@@ -293,13 +350,23 @@ export default function SeoReportPage() {
               {filtered.map(p => {
                 const isOpen = expanded === p.id;
                 const combined = Math.round((p.seoScore + p.aiScore) / 2);
-                const issues = [...topIssues(p.seoChecks), ...topIssues(p.aiChecks)].slice(0, 3);
+                // Highest-impact issues across both domains, deduplicated
+                const issues = [
+                  ...topIssues(p.seoChecks, 2),
+                  ...topIssues(p.aiChecks, 2),
+                ].sort((a, b) => (b.max - b.points) - (a.max - a.points)).slice(0, 3);
+                const isCritical = p.seoScore < 40 || p.aiScore < 40;
 
                 return [
                   <tr
                     key={p.id}
                     onClick={() => setExpanded(isOpen ? null : p.id)}
-                    style={{ cursor: 'pointer', background: isOpen ? 'var(--color-bg-subtle, #f9fafb)' : undefined }}
+                    style={{
+                      cursor: 'pointer',
+                      background: isOpen
+                        ? 'var(--color-bg-subtle, #f9fafb)'
+                        : isCritical ? '#fff5f5' : undefined,
+                    }}
                   >
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -330,6 +397,7 @@ export default function SeoReportPage() {
                             <div key={i.key} style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
                               {statusIcon(i.status)}
                               <span style={{ color: 'var(--color-text-body)' }}>{i.label}</span>
+                              <span style={{ color: 'var(--color-text-faint)', fontSize: 10 }}>−{i.max - i.points}pts</span>
                             </div>
                           ))}
                         </div>
@@ -390,23 +458,9 @@ export default function SeoReportPage() {
               {l}
             </span>
           ))}
-          <span style={{ marginLeft: 'auto', color: 'var(--color-text-faint)' }}>Click any row to expand checks · AISEO = LLM/AI-search readiness</span>
+          <span style={{ marginLeft: 'auto', color: 'var(--color-text-faint)' }}>Click any row to expand · AISEO = LLM/AI-search readiness</span>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ─── Inline score bar ───────────────────────────────────────────────────── */
-
-function ScoreBar({ score }: { score: number }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      <span style={{ fontSize: 14, fontWeight: 800, color: scoreColor(score) }}>{score}</span>
-      <div style={{ width: 52, height: 5, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${score}%`, background: scoreColor(score), borderRadius: 3, transition: 'width .3s' }} />
-      </div>
-      <span style={{ fontSize: 10, fontWeight: 700, color: scoreColor(score) }}>{grade(score)}</span>
     </div>
   );
 }

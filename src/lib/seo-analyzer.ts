@@ -4,11 +4,11 @@
  * Two scoring domains, each 0–100:
  *
  * SEO (traditional) — title/meta length, OG image, content depth, headings,
- *   slug quality, excerpt.
+ *   slug quality, excerpt, keyword coherence.
  *
  * AISEO (LLM / AI-search readiness) — factual density (numbers, stats),
- *   author attribution, publish date, heading structure, entity clarity,
- *   organization name signals, source references, FAQ-style content.
+ *   author attribution (blog only), freshness, heading structure, entity
+ *   clarity, organization name signals, source references, FAQ-style content.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 export type CheckStatus = 'pass' | 'warn' | 'fail';
@@ -42,29 +42,37 @@ function countWords(text: string): number {
 }
 
 function hasHeadings(text: string): boolean {
-  // Markdown headings, bold-only headings (** **), or HTML h tags
-  return /^#{1,4}\s|\*\*[^*]{4,80}\*\*|<h[1-4]/m.test(text);
+  // Markdown headings (##) or bold text used as a heading at the start of a line
+  return /^#{1,4}\s\S/m.test(text) ||
+         /^\*\*[^*]{4,80}\*\*\s*$/m.test(text) ||
+         /<h[1-4][^>]*>/i.test(text);
 }
 
 function hasNumbers(text: string): boolean {
-  // Statistics, percentages, numbered facts
-  return /\b\d+\s*%|\b\d{2,}\s*(students|schools|children|young people|percent|per cent|kids|teens|adolescents)/i.test(text) ||
-         /\b(one in|1 in)\s+\d+/i.test(text) ||
-         (/\b\d{3,}\b/.test(text) && /\b(survey|study|research|report|data|statistics|found|showed|indicates)/i.test(text));
+  // Percentages: "47%", "1 in 5"
+  if (/\b\d+(\.\d+)?\s*(%|per\s*cent)\b/i.test(text)) return true;
+  // Ratio patterns: "1 in 3", "one in five"
+  if (/\b(one|two|three|four|five|1|2|3|4|5)\s+in\s+(two|three|four|five|six|seven|eight|nine|ten|\d+)\b/i.test(text)) return true;
+  // Large numbers with context: "47 million", "3,000 schools", "12 students"
+  if (/\b\d[\d,]*\s+(million|thousand|hundred|students|schools|children|young people|kids|teens|adolescents|people|Australians)\b/i.test(text)) return true;
+  // Research-cited numbers: "study found 23", "data shows 4 in"
+  if (/\b(study|research|survey|report|data|statistics|found|showed|indicates|revealed)\b.{0,60}\b\d{2,}\b/i.test(text)) return true;
+  return false;
 }
 
 function hasSources(text: string): boolean {
-  return /\[Source|\bSource\s*\d|\baccording to\b|\bResearch by\b|\bData from\b|\bReport by\b/i.test(text);
+  return /\[Source|\bSource\s*\d|\baccording to\b|\bResearch by\b|\bData from\b|\bReport by\b|\bcited in\b|\bpublished by\b/i.test(text);
 }
 
 function hasFaq(text: string): boolean {
-  // Q&A patterns: a question followed by content
-  return /\?[\s\S]{10,300}[A-Z]/.test(text) ||
-         /\b(what|why|how|when|who|does|can|should|will)\b.{5,60}\?/i.test(text);
+  // A question on its own line or followed by a direct answer on the next line
+  return /^.{10,80}\?\s*\n{1,2}[A-Z]/m.test(text) ||
+         // Multiple short questions in the body (FAQ-style)
+         (text.match(/\b(what|why|how|when|who|does|can|should|will)\b[^?]{5,60}\?/gi) ?? []).length >= 2;
 }
 
 function hasOrganizationName(text: string): boolean {
-  return /national check[- ]?in week|national checkin|NCW\b|LifeSkills|beyondblue|beyond blue|Headspace|headspace/i.test(text);
+  return /national check[- ]?in week|national checkin|NCW\b|LifeSkills\s*Group|beyondblue|beyond blue|headspace|ReachOut|Kids\s*Helpline/i.test(text);
 }
 
 function hasProperNouns(text: string): boolean {
@@ -75,12 +83,24 @@ function hasProperNouns(text: string): boolean {
 }
 
 function titleIsSpecific(title: string): boolean {
-  if (!title) return false;
+  if (!title || title.length < 20) return false;
   const generic = /^(home|about|contact|services|page|post|event|article|news|blog)$/i;
   if (generic.test(title.trim())) return false;
-  if (title.length < 20) return false;
-  // Contains a number, organisation name, or specific descriptor
-  return /\d/.test(title) || /[A-Z]{2,}/.test(title) || title.split(/\s+/).length >= 4;
+  const words = title.split(/\s+/);
+  // Specific if: contains a number, an acronym, or has 4+ words with no generic overlap
+  return /\d/.test(title) || /\b[A-Z]{2,}\b/.test(title) || words.length >= 4;
+}
+
+function keywordCoherence(title: string, bodyText: string): boolean {
+  if (!title || !bodyText) return false;
+  // Extract meaningful words from title (skip stopwords)
+  const stop = new Set(['a','an','the','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','can']);
+  const titleWords = title.toLowerCase().split(/\W+/).filter(w => w.length > 3 && !stop.has(w));
+  if (!titleWords.length) return false;
+  const body = bodyText.toLowerCase();
+  // At least half the meaningful title words appear in the body
+  const hits = titleWords.filter(w => body.includes(w));
+  return hits.length >= Math.ceil(titleWords.length / 2);
 }
 
 /** Extract plain text from Supabase JSONB page blocks */
@@ -112,6 +132,7 @@ interface SeoInput {
   excerpt:     string;
   hasAuthor:   boolean;
   publishDate: string | null;
+  type?:       'blog' | 'event' | 'page';
 }
 
 export function scoreSeo(i: SeoInput): { score: number; checks: SeoCheck[] } {
@@ -128,9 +149,9 @@ export function scoreSeo(i: SeoInput): { score: number; checks: SeoCheck[] } {
   if (!mt) {
     check('meta_title', 'Meta title', 'fail', 'No meta title set', 0, 15);
   } else if (mt.length < 20) {
-    check('meta_title', 'Meta title', 'warn', `Too short — ${mt.length} chars (aim for 30–60)`, 8, 15);
+    check('meta_title', 'Meta title', 'warn', `Too short — ${mt.length} chars (aim for 30–60)`, 7, 15);
   } else if (mt.length > 65) {
-    check('meta_title', 'Meta title', 'warn', `Too long — ${mt.length} chars (aim for 30–60, max ~65)`, 8, 15);
+    check('meta_title', 'Meta title', 'warn', `Too long — ${mt.length} chars (truncated in search results, aim for 30–60)`, 7, 15);
   } else {
     check('meta_title', 'Meta title', 'pass', `Good length — ${mt.length} chars`, 15, 15);
   }
@@ -140,9 +161,9 @@ export function scoreSeo(i: SeoInput): { score: number; checks: SeoCheck[] } {
   if (!md) {
     check('meta_desc', 'Meta description', 'fail', 'No meta description set', 0, 15);
   } else if (md.length < 80) {
-    check('meta_desc', 'Meta description', 'warn', `Too short — ${md.length} chars (aim for 120–160)`, 8, 15);
+    check('meta_desc', 'Meta description', 'warn', `Too short — ${md.length} chars (aim for 120–160)`, 7, 15);
   } else if (md.length > 165) {
-    check('meta_desc', 'Meta description', 'warn', `Too long — ${md.length} chars (max ~160)`, 8, 15);
+    check('meta_desc', 'Meta description', 'warn', `Too long — ${md.length} chars (truncated after ~160)`, 7, 15);
   } else {
     check('meta_desc', 'Meta description', 'pass', `Good length — ${md.length} chars`, 15, 15);
   }
@@ -151,28 +172,29 @@ export function scoreSeo(i: SeoInput): { score: number; checks: SeoCheck[] } {
   if (i.ogImage) {
     check('og_image', 'Social image (OG)', 'pass', 'OG/feature image is set', 10, 10);
   } else {
-    check('og_image', 'Social image (OG)', 'fail', 'No OG or feature image — affects social previews', 0, 10);
+    check('og_image', 'Social image (OG)', 'fail', 'No OG or feature image — affects social previews and CTR', 0, 10);
   }
 
   // Slug
   const slugLen = i.slug.length;
   const slugClean = /^[a-z0-9-]+$/.test(i.slug);
   if (!slugClean) {
-    check('slug', 'URL slug', 'fail', 'Slug contains uppercase or special chars', 0, 10);
+    check('slug', 'URL slug', 'fail', 'Slug contains uppercase or special characters', 0, 10);
   } else if (slugLen > 60) {
     check('slug', 'URL slug', 'warn', `Slug is long (${slugLen} chars) — aim for under 60`, 5, 10);
   } else {
     check('slug', 'URL slug', 'pass', `Clean slug, ${slugLen} chars`, 10, 10);
   }
 
-  // Content length
+  // Content length — events have a lower threshold as they're naturally shorter
   const words = countWords(i.bodyText);
-  if (words < 100) {
-    check('content_length', 'Content length', 'fail', `Very thin — ${words} words. Aim for 300+`, 0, 20);
-  } else if (words < 300) {
-    check('content_length', 'Content length', 'warn', `${words} words — aim for 300+ for good coverage`, 8, 20);
-  } else if (words < 600) {
-    check('content_length', 'Content length', 'warn', `${words} words — 600+ is ideal for authority`, 13, 20);
+  const isEvent = i.type === 'event';
+  if (words < 80) {
+    check('content_length', 'Content length', 'fail', `Very thin — ${words} words. Aim for ${isEvent ? '150' : '300'}+`, 0, 20);
+  } else if (words < (isEvent ? 150 : 300)) {
+    check('content_length', 'Content length', 'warn', `${words} words — aim for ${isEvent ? '150' : '300'}+ for good coverage`, 8, 20);
+  } else if (words < (isEvent ? 300 : 600)) {
+    check('content_length', 'Content length', 'warn', `${words} words — ${isEvent ? '300' : '600'}+ is ideal for authority`, 13, 20);
   } else {
     check('content_length', 'Content length', 'pass', `${words} words — solid content depth`, 20, 20);
   }
@@ -191,8 +213,12 @@ export function scoreSeo(i: SeoInput): { score: number; checks: SeoCheck[] } {
     check('excerpt', 'Excerpt / description', 'warn', 'No excerpt set — used in cards and search snippets', 0, 5);
   }
 
-  // Missing author (blog only — event/pages don't always need one)
-  // (Handled in AISEO but counts slightly here too)
+  // Keyword coherence — do body keywords match the title?
+  if (keywordCoherence(i.title, i.bodyText)) {
+    check('keyword_coherence', 'Keyword coherence', 'pass', 'Title keywords appear in body text — reinforces topic relevance', 10, 10);
+  } else {
+    check('keyword_coherence', 'Keyword coherence', 'warn', 'Title keywords not found in body — align page content with the title', 0, 10);
+  }
 
   return { score: max > 0 ? Math.round((pts / max) * 100) : 0, checks };
 }
@@ -223,18 +249,20 @@ export function scoreAiSeo(i: AiSeoInput): { score: number; checks: SeoCheck[] }
     check('facts', 'Facts & statistics', 'fail', 'No specific statistics detected — LLMs prefer pages with concrete data', 0, 15);
   }
 
-  // Author attribution
-  if (i.hasAuthor) {
-    check('author', 'Author attribution', 'pass', 'Named author builds E-E-A-T and LLM trustworthiness', 10, 10);
-  } else {
-    check('author', 'Author attribution', 'warn', 'No author set — add a named author for E-E-A-T signals', 0, 10);
+  // Author attribution — only applies to blog posts; events/pages don't need one
+  if (i.type === 'blog') {
+    if (i.hasAuthor) {
+      check('author', 'Author attribution', 'pass', 'Named author builds E-E-A-T and LLM trustworthiness', 10, 10);
+    } else {
+      check('author', 'Author attribution', 'warn', 'No author set — add a named author for E-E-A-T signals', 0, 10);
+    }
   }
 
   // Publish / event date
   if (i.publishDate) {
     const age = (Date.now() - new Date(i.publishDate).getTime()) / (1000 * 60 * 60 * 24);
     if (age > 730) {
-      check('freshness', 'Content freshness', 'warn', `Published ${Math.round(age / 30)} months ago — consider updating`, 5, 10);
+      check('freshness', 'Content freshness', 'warn', `Published ${Math.round(age / 30)} months ago — consider a content refresh`, 5, 10);
     } else {
       check('freshness', 'Content freshness', 'pass', 'Recently published or updated', 10, 10);
     }
@@ -249,12 +277,13 @@ export function scoreAiSeo(i: AiSeoInput): { score: number; checks: SeoCheck[] }
     check('structure', 'Structured headings', 'fail', 'No headings — add section headings for better LLM parsing', 0, 10);
   }
 
-  // Content depth
+  // Content depth — events have a lower threshold
   const words = countWords(i.bodyText);
-  if (words >= 600) {
+  const depthThreshold = i.type === 'event' ? 300 : 600;
+  if (words >= depthThreshold) {
     check('depth', 'Content depth', 'pass', `${words} words — LLMs prefer comprehensive coverage`, 10, 10);
-  } else if (words >= 300) {
-    check('depth', 'Content depth', 'warn', `${words} words — 600+ words signals topic authority to LLMs`, 5, 10);
+  } else if (words >= Math.round(depthThreshold / 2)) {
+    check('depth', 'Content depth', 'warn', `${words} words — ${depthThreshold}+ words signals topic authority to LLMs`, 5, 10);
   } else {
     check('depth', 'Content depth', 'fail', `${words} words — too thin for LLM citation consideration`, 0, 10);
   }
@@ -284,7 +313,7 @@ export function scoreAiSeo(i: AiSeoInput): { score: number; checks: SeoCheck[] }
   if (hasFaq(i.bodyText)) {
     check('faq', 'Q&A / FAQ patterns', 'pass', 'Contains question-answer patterns — great for featured snippets and AI answers', 5, 5);
   } else {
-    check('faq', 'Q&A / FAQ patterns', 'warn', 'No Q&A patterns — consider adding FAQ sections', 0, 5);
+    check('faq', 'Q&A / FAQ patterns', 'warn', 'No Q&A patterns — consider adding an FAQ section', 0, 5);
   }
 
   // Source citations
