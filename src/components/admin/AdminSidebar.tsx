@@ -55,6 +55,9 @@ const SECTIONS = [
       { label: 'Verified',         href: '/admin/content-creator/verified', ms: 'verified' },
       { label: 'Prompts',       href: '/admin/prompts',         ms: 'smart_toy' },
       { label: 'SEO',           href: '/admin/seo',             ms: 'travel_explore' },
+      { label: 'SEO Report',    href: '/admin/seo/report',      ms: 'analytics' },
+      { label: 'LLM Optimiser', href: '/admin/seo/optimize',    ms: 'auto_awesome' },
+      { label: 'LLM Indexing',  href: '/admin/seo/llm',         ms: 'robot_2' },
     ],
   },
   {
@@ -64,6 +67,7 @@ const SECTIONS = [
       { label: 'Users',          href: '/admin/users',    ms: 'group' },
       { label: 'API Management', href: '/admin/api',      ms: 'code' },
       { label: 'Settings',       href: '/admin/settings', ms: 'settings' },
+      { label: 'Tutorial',       href: '/admin/tutorial', ms: 'school' },
     ],
   },
 ];
