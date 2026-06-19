@@ -105,7 +105,8 @@ async function fetchPage(
     return {
       id: data.id, type: 'event',
       title: data.title ?? '', slug: data.slug ?? '',
-      body: [(data.description as string) ?? '', (data.body as string) ?? ''].join('\n').trim(),
+      // Use body column only for optimization target — description is the excerpt field
+      body: (data.body as string) ?? (data.description as string) ?? '',
       excerpt: (data.description as string) ?? '',
       author: '', metaTitle: data.seo_title ?? '', metaDesc: data.seo_desc ?? '',
       ogImage: data.feature_image ?? '', publishDate: data.event_date ?? null,

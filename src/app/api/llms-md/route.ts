@@ -75,29 +75,27 @@ export async function GET(req: NextRequest) {
   /* ── Wellbeing issues ── */
   else if (section === 'issues' && slug) {
     const { data } = await sb.from('issues')
-      .select('title,slug,excerpt,content,meta_desc')
+      .select('title,slug,anchor_stat,severity,icon')
       .eq('slug', slug).single();
     if (data) {
       md = [
         `# ${data.title ?? ''}`,
-        data.meta_desc ? `\n> ${data.meta_desc}` : '',
+        data.anchor_stat ? `\n> ${data.anchor_stat}` : '',
         '\n---\n',
-        anyToMarkdown(data.content, data.excerpt as string),
+        data.anchor_stat ? anyToMarkdown(data.anchor_stat as string) : '',
       ].filter(Boolean).join('\n');
     }
   }
 
   /* ── Area / GEO pages ── */
   else if (section === 'areas' && slug) {
-    const { data } = await sb.from('content')
-      .select('name,slug,state,description,seo_title,seo_desc')
+    const { data } = await sb.from('areas')
+      .select('name,slug,state,seo_title')
       .eq('slug', slug).single();
     if (data) {
       md = [
         `# ${data.name ?? ''}${data.state ? `, ${data.state}` : ''}`,
-        data.seo_desc ? `\n> ${data.seo_desc}` : '',
-        '\n---\n',
-        data.description ? anyToMarkdown(data.description as string) : '',
+        data.seo_title ? `\n> ${data.seo_title}` : '',
       ].filter(Boolean).join('\n');
     }
   }

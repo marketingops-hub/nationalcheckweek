@@ -504,7 +504,7 @@ function OptimizeView({
                 disabled={acceptedCount === 0 || phase === 'applying'}
                 onClick={applyPatches}
               >
-                {phase === 'applying' ? 'Applying…' : `Apply ${acceptedCount} patch${acceptedCount !== 1 ? 'es' : ''} →`}
+                {phase === 'applying' ? 'Applying…' : acceptedCount > 0 ? `Apply ${acceptedCount} patch${acceptedCount !== 1 ? 'es' : ''} →` : 'Select patches above'}
               </button>
             </div>
           </div>

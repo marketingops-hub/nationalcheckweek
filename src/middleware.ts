@@ -71,33 +71,16 @@ function shouldSkip(pathname: string): boolean {
          pathname === '/';         // homepage — serve HTML (it's the brand landing page)
 }
 
-/* ─── Admin auth ─────────────────────────────────────────────────────────── */
-
-function hasAdminSession(req: NextRequest): boolean {
-  // Supabase sets sb-<project>-auth-token or uses a custom cookie
-  const cookies = req.cookies;
-  for (const [name] of Object.entries(cookies.getAll ? Object.fromEntries(cookies.getAll().map(c => [c.name, c.value])) : {})) {
-    if (name.includes('auth-token') || name.includes('supabase')) return true;
-  }
-  return false;
-}
-
 /* ─── Middleware ─────────────────────────────────────────────────────────── */
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  /* 1. Admin auth — protect /admin/* */
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login') && !pathname.startsWith('/admin/pages/register')) {
-    if (!hasAdminSession(req)) {
-      const login = new URL('/admin/login', req.url);
-      login.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(login);
-    }
-    return NextResponse.next();
-  }
+  // Admin routes are protected by the admin layout server component via
+  // supabase.auth.getUser() — no middleware auth needed here.
+  if (pathname.startsWith('/admin')) return NextResponse.next();
 
-  /* 2. AI-scraper interception — skip paths that shouldn't be rewritten */
+  /* AI-scraper interception — skip paths that shouldn't be rewritten */
   if (shouldSkip(pathname)) return NextResponse.next();
 
   // Don't rewrite if this is already an LLM-served response (avoid loops)

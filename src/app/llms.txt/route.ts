@@ -38,11 +38,11 @@ export async function GET() {
     { data: areas },
     { data: cmsPages },
   ] = await Promise.all([
-    sb.from('settings').select('key,value').in('key', ['site_name','site_description','contact_email']).limit(10),
+    sb.from('site_settings').select('key,value').in('key', ['site_name','site_description','contact_email']).limit(10),
     sb.from('blog_posts').select('title,slug,excerpt,published_at').eq('published', true).order('published_at', { ascending: false }).limit(30),
     sb.from('events').select('title,slug,description,event_date').eq('published', true).order('event_date', { ascending: false }).limit(30),
-    sb.from('issues').select('title,slug,excerpt').order('rank').limit(60),
-    sb.from('content').select('name,slug,state').order('name').limit(50),
+    sb.from('issues').select('title,slug,anchor_stat').order('rank').limit(60),
+    sb.from('areas').select('name,slug,state').order('name').limit(50),
     sb.from('pages').select('title,slug,description').eq('status', 'published').not('slug', 'in', '("privacy-policy","terms")').limit(20),
   ]);
 
@@ -122,7 +122,7 @@ export async function GET() {
     lines.push('> Each issue page contains Australian statistics, research citations, and school resources.');
     lines.push('');
     for (const i of issues) {
-      const excerpt = (i.excerpt as string)?.replace(/\n/g, ' ').slice(0, 100) ?? '';
+      const excerpt = (i.anchor_stat as string)?.replace(/\n/g, ' ').slice(0, 100) ?? '';
       lines.push(`- [${i.title}](${BASE}/issues/${i.slug})${excerpt ? `: ${excerpt}` : ''}`);
     }
     lines.push('');
