@@ -65,6 +65,7 @@ const SECTIONS = [
       { label: 'Users',          href: '/admin/users',    ms: 'group' },
       { label: 'API Management', href: '/admin/api',      ms: 'code' },
       { label: 'Settings',       href: '/admin/settings', ms: 'settings' },
+      { label: 'Tutorial',       href: '/admin/tutorial', ms: 'school' },
     ],
   },
 ];
