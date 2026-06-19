@@ -56,6 +56,7 @@ const SECTIONS = [
       { label: 'Prompts',       href: '/admin/prompts',         ms: 'smart_toy' },
       { label: 'SEO',           href: '/admin/seo',             ms: 'travel_explore' },
       { label: 'SEO Report',    href: '/admin/seo/report',      ms: 'analytics' },
+      { label: 'LLM Optimiser', href: '/admin/seo/optimize',    ms: 'auto_awesome' },
     ],
   },
   {

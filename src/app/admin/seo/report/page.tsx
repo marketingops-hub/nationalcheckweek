@@ -437,6 +437,11 @@ export default function SeoReportPage() {
                           <Link href={p.editUrl} className="swa-btn swa-btn--primary" style={{ fontSize: 12 }}>
                             ✏ Edit
                           </Link>
+                          {p.aiScore < 90 && (
+                            <Link href={`/admin/seo/optimize?id=${p.id}&type=${p.type}`} className="swa-btn" style={{ fontSize: 12, background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe' }}>
+                              🤖 AI Optimise
+                            </Link>
+                          )}
                         </div>
                       </td>
                     </tr>
