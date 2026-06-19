@@ -8,12 +8,48 @@ function makeStaticClient(url: string, key: string) {
   });
 }
 
+/* ─── AI bot interception (GEO — Generative Engine Optimization) ─────────── */
+
+const AI_BOT_SIGNATURES = [
+  'GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'Anthropic-AI', 'anthropic-ai',
+  'PerplexityBot', 'Perplexity-User', 'cohere-ai', 'CCBot', 'Googlebot-Extended',
+  'Google-Extended', 'Applebot-Extended', 'meta-externalagent', 'FacebookBot',
+  'Bytespider', 'Diffbot', 'YouBot', 'OAI-SearchBot',
+];
+
+// Paths that should NOT be rewritten to Markdown — serve HTML as normal
+const AI_SKIP_PREFIXES = ['/api/', '/admin', '/_next/', '/llms', '/sitemap', '/robots', '/favicon', '/icon', '/opengraph'];
+
+function isAiBot(ua: string): boolean {
+  const lower = ua.toLowerCase();
+  return AI_BOT_SIGNATURES.some(s => lower.includes(s.toLowerCase()));
+}
+
+function shouldSkipAiRewrite(pathname: string): boolean {
+  return AI_SKIP_PREFIXES.some(p => pathname.startsWith(p)) ||
+         pathname.includes('.') || // static assets
+         pathname === '/';         // homepage — brand landing, serve HTML
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Build new request headers that include x-pathname (readable by server layouts)
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
+
+  /* ── AI bot interception — runs before redirect + auth checks ── */
+  if (
+    !shouldSkipAiRewrite(pathname) &&
+    !request.headers.get('x-llm-source') &&
+    isAiBot(request.headers.get('user-agent') ?? '')
+  ) {
+    const mdUrl = new URL('/api/llms-md', request.url);
+    mdUrl.searchParams.set('path', pathname);
+    const resp = NextResponse.rewrite(mdUrl);
+    resp.headers.set('X-LLM-Intercepted', '1');
+    return resp;
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
