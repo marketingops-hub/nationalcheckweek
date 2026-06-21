@@ -67,6 +67,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${montserrat.variable} ${poppins.variable}`}>
       <head>
+        <meta name="google-site-verification" content="bLelZ2WVQ22K84QUeO06Pb-VD4E1jutReBSbl5onyMs" />
         {/* Preconnect to Google Fonts origins to eliminate DNS + TCP handshake latency */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
