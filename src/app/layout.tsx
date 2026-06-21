@@ -40,6 +40,9 @@ export const metadata: Metadata = {
     "school wellbeing data",
   ],
   metadataBase: new URL("https://nationalcheckinweek.com"),
+  verification: {
+    google: "bLelZ2WVQ22K84QUeO06Pb-VD4E1jutReBSbl5onyMs",
+  },
   openGraph: {
     type: "website",
     locale: "en_AU",
