@@ -141,14 +141,28 @@ export default function EditBlogPostPage() {
             Last updated: {new Date(post.updated_at).toLocaleString()}
           </p>
         </div>
-        <button
-          onClick={handleDelete}
-          className="swa-btn"
-          style={{ background: "#FEE2E2", color: "#DC2626", border: "1px solid #FCA5A5" }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
-          Delete Post
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {form.slug && (
+            <a
+              href={`/blog/${form.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="swa-btn"
+              style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
+              {form.published ? "View on site" : "Preview"}
+            </a>
+          )}
+          <button
+            onClick={handleDelete}
+            className="swa-btn"
+            style={{ background: "#FEE2E2", color: "#DC2626", border: "1px solid #FCA5A5" }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+            Delete Post
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -224,7 +238,7 @@ export default function EditBlogPostPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
         <button
           onClick={handleSave}
           disabled={saving || !form.title || !form.slug}
@@ -236,12 +250,24 @@ export default function EditBlogPostPage() {
           </span>
           {saving ? "Saving..." : "Save Changes"}
         </button>
+        {form.slug && (
+          <a
+            href={`/blog/${form.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="swa-btn"
+            style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
+            {form.published ? "View on site" : "Preview"}
+          </a>
+        )}
         <button
           onClick={() => router.push("/admin/blog")}
           className="swa-btn"
           style={{ background: "var(--color-card)", border: "1px solid var(--color-border)" }}
         >
-          Cancel
+          ← Back
         </button>
       </div>
     </div>
