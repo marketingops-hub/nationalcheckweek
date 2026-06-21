@@ -15,6 +15,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient, createStaticClient } from "@/lib/supabase/server";
 import { sanitizeHtml } from "@/lib/sanitize";
+import BlogBody from "@/components/blog/BlogBody";
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -170,7 +171,7 @@ export default async function BlogPostPage({ params }: Props) {
         )}
 
         {/* Body */}
-        <div className="blog-article__body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        <BlogBody html={bodyHtml} className="blog-article__body" />
 
         <footer className="blog-article__footer">
           <Link href="/blog" className="swa-btn">← Back to all articles</Link>
