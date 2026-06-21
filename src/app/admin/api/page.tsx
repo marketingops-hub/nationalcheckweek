@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { adminClient } from '@/lib/adminClient';
 import ApiKeysClient from "@/components/admin/ApiKeysClient";
+import type { AdminApiKey } from '@/components/admin/ui';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminApiPage() {
-  const sb = await createClient();
+  const sb = adminClient();
   const { data: keys, error } = await sb
     .from("api_keys")
     .select("id, label, provider, key_value, is_active, created_at")
@@ -28,7 +29,7 @@ export default async function AdminApiPage() {
         </div>
       )}
 
-      <ApiKeysClient initialKeys={keys ?? []} />
+      <ApiKeysClient initialKeys={(keys ?? []) as AdminApiKey[]} />
     </div>
   );
 }

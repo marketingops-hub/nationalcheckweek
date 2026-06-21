@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { adminFetch } from "@/lib/adminFetch";
 import { FormField, TextInput, Select, Button, Alert } from "@/components/shared/forms";
 import { useFormState, useAutoDismiss } from "@/hooks/shared";
 import { useValidation } from "@/hooks/shared/useValidation";
@@ -89,17 +89,23 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
       return;
     }
     setBusy(true); clearMessages();
-    const sb = createClient();
-    const patch: Partial<AdminApiKey> = {};
-    if (editLabel.trim()) patch.label = editLabel.trim();
-    if (editValue.trim()) patch.key_value = editValue.trim();
-    if (editProvider !== editKey.provider) patch.provider = editProvider;
+    const patch: Record<string, string> = {};
+    if (editLabel.trim())                  patch.label     = editLabel.trim();
+    if (editValue.trim())                  patch.key_value = editValue.trim();
+    if (editProvider !== editKey.provider) patch.provider  = editProvider;
     try {
-      const { error: err } = await sb.from("api_keys").update(patch).eq("id", editKey.id);
-      if (err) { setError(err.message); return; }
+      const res  = await adminFetch(`/api/admin/api-keys/${editKey.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? 'Failed to update key.'); return; }
       setKeys(k => k.map(k2 => k2.id === editKey.id ? { ...k2, ...patch } : k2));
       setSuccess(`Key "${patch.label ?? editKey.label}" updated.`);
       closeEditPanel();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update key.');
     } finally {
       setBusy(false);
     }
@@ -109,41 +115,50 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
     if (!validateForm(formData)) return;
 
     setBusy(true); clearMessages();
-    const sb = createClient();
     try {
-      const { data, error: err } = await sb
-        .from("api_keys")
-        .insert({ label: formData.label, provider: formData.provider, key_value: formData.keyValue, is_active: true })
-        .select()
-        .single();
-      if (err) { setError(err.message); return; }
-      setKeys(k => [data, ...k]);
-      setSuccess(`API key "${data.label}" added.`);
+      const res  = await adminFetch('/api/admin/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: formData.label, provider: formData.provider, key_value: formData.keyValue }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? 'Failed to add key.'); return; }
+      setKeys(k => [data.key, ...k]);
+      setSuccess(`API key "${data.key.label}" added.`);
       closeCreatePanel();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to add key.');
     } finally {
       setBusy(false);
     }
   }
 
   async function handleToggle(key: AdminApiKey) {
-    const sb = createClient();
-    const { error: err } = await sb
-      .from("api_keys")
-      .update({ is_active: !key.is_active })
-      .eq("id", key.id);
-    if (err) { setError(err.message); return; }
-    setKeys(k => k.map(k2 => k2.id === key.id ? { ...k2, is_active: !k2.is_active } : k2));
+    try {
+      const res  = await adminFetch(`/api/admin/api-keys/${key.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !key.is_active }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? 'Failed to toggle key.'); return; }
+      setKeys(k => k.map(k2 => k2.id === key.id ? { ...k2, is_active: !k2.is_active } : k2));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to toggle key.');
+    }
   }
 
   async function handleDelete(key: AdminApiKey) {
     setBusy(true); clearMessages();
-    const sb = createClient();
     try {
-      const { error: err } = await sb.from("api_keys").delete().eq("id", key.id);
-      if (err) { setError(err.message); return; }
+      const res  = await adminFetch(`/api/admin/api-keys/${key.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? 'Failed to delete key.'); setConfirmDelete(null); return; }
       setKeys(k => k.filter(k2 => k2.id !== key.id));
       setSuccess(`Key "${key.label}" deleted.`);
       setConfirmDelete(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete key.');
     } finally {
       setBusy(false);
     }
