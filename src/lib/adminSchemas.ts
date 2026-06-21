@@ -258,11 +258,14 @@ export const RegisterPagePatchSchema = z.object({
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 
+export const USER_ROLES = ['editor', 'admin', 'super_admin'] as const;
+
 export const UserPatchSchema = z.union([
   z.object({ send_reset: z.literal(true), email: z.string().email() }),
   z.object({
     email:    z.string().email().optional(),
     password: z.string().min(8).optional(),
+    role:     z.enum(USER_ROLES).optional(),
   }),
 ]);
 

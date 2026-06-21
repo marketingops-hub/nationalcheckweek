@@ -25,6 +25,10 @@ const PROVIDER_BADGE: Record<string, string> = {
 export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKey[] }) {
   const [keys, setKeys] = useState<AdminApiKey[]>(initialKeys);
   const [showCreate, setShowCreate] = useState(false);
+  const [editKey, setEditKey] = useState<AdminApiKey | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editValue, setEditValue] = useState("");
+  const [editProvider, setEditProvider] = useState("");
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,6 +65,44 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
     resetForm();
     clearErrors();
     clearMessages();
+  }
+
+  function openEditPanel(key: AdminApiKey) {
+    setEditKey(key);
+    setEditLabel(key.label);
+    setEditValue("");
+    setEditProvider(key.provider);
+    clearMessages();
+    setShowCreate(false);
+  }
+
+  function closeEditPanel() {
+    setEditKey(null);
+    setEditLabel(""); setEditValue(""); setEditProvider("");
+    clearMessages();
+  }
+
+  async function handleUpdate() {
+    if (!editKey) return;
+    if (!editLabel.trim() && !editValue.trim() && editProvider === editKey.provider) {
+      setError("Change at least one field.");
+      return;
+    }
+    setBusy(true); clearMessages();
+    const sb = createClient();
+    const patch: Partial<AdminApiKey> = {};
+    if (editLabel.trim()) patch.label = editLabel.trim();
+    if (editValue.trim()) patch.key_value = editValue.trim();
+    if (editProvider !== editKey.provider) patch.provider = editProvider;
+    try {
+      const { error: err } = await sb.from("api_keys").update(patch).eq("id", editKey.id);
+      if (err) { setError(err.message); return; }
+      setKeys(k => k.map(k2 => k2.id === editKey.id ? { ...k2, ...patch } : k2));
+      setSuccess(`Key "${patch.label ?? editKey.label}" updated.`);
+      closeEditPanel();
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleCreate() {
@@ -161,8 +203,60 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
       </div>
 
       {/* Global feedback */}
-      {!showCreate && error && <Alert variant="error" message={error} onDismiss={() => setError("")} />}
-      {!showCreate && success && <Alert variant="success" message={success} onDismiss={() => setSuccess("")} />}
+      {!showCreate && !editKey && error   && <Alert variant="error"   message={error}   onDismiss={() => setError("")} />}
+      {!showCreate && !editKey && success && <Alert variant="success" message={success} onDismiss={() => setSuccess("")} />}
+
+      {/* Edit Key panel */}
+      {editKey && (
+        <div className="swa-card" role="region" aria-label="Edit API key" style={{ marginBottom: 24 }}>
+          <FormPanelHeader
+            title="Edit API Key"
+            subtitle={<>Editing <strong>{editKey.label}</strong> — leave Key Value blank to keep the current key.</>}
+            onClose={closeEditPanel}
+            closeLabel="Close edit key form"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <FormField label="Label" htmlFor="edit-apikey-label">
+              <TextInput
+                id="edit-apikey-label"
+                name="editLabel"
+                value={editLabel}
+                onChange={e => setEditLabel(e.target.value)}
+                placeholder={editKey.label}
+              />
+            </FormField>
+            <FormField label="Provider" htmlFor="edit-apikey-provider">
+              <Select
+                id="edit-apikey-provider"
+                name="editProvider"
+                value={editProvider}
+                onChange={e => setEditProvider(e.target.value)}
+              >
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="google">Google</option>
+                <option value="firecrawl">Firecrawl</option>
+                <option value="other">Other</option>
+              </Select>
+            </FormField>
+            <FormField label="New Key Value (optional)" htmlFor="edit-apikey-value">
+              <TextInput
+                id="edit-apikey-value"
+                name="editValue"
+                type="password"
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                placeholder="Leave blank to keep current"
+              />
+            </FormField>
+          </div>
+          {error && <Alert variant="error" message={error} />}
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <Button onClick={handleUpdate} loading={busy} variant="primary">Save Changes</Button>
+            <Button onClick={closeEditPanel} variant="ghost">Cancel</Button>
+          </div>
+        </div>
+      )}
 
       {/* Add Key panel */}
       {showCreate && (
@@ -240,7 +334,7 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
       )}
 
       {/* Toolbar: Search + Add button */}
-      {!showCreate && (
+      {!showCreate && !editKey && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <input
@@ -367,6 +461,23 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
                           busy={busy}
                         />
                       ) : (
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <button
+                          onClick={() => openEditPanel(key)}
+                          title="Edit key"
+                          style={{
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            width: 34, height: 34, borderRadius: "var(--radius-sm)",
+                            background: "transparent", color: "var(--color-text-muted)",
+                            border: "1px solid transparent", cursor: "pointer",
+                          }}
+                          aria-label={`Edit ${key.label}`}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
                         <button
                           onClick={() => { setConfirmDelete(key.id); clearMessages(); }}
                           disabled={busy}
@@ -390,6 +501,7 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: AdminApiKe
                             <path d="M10 11v6"/><path d="M14 11v6"/>
                           </svg>
                         </button>
+                        </div>
                       )}
                     </td>
                   </tr>

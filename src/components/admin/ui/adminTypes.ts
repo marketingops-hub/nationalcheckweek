@@ -26,12 +26,15 @@ export interface AdminRedirect {
   created_at: string;
 }
 
-/** User shape returned by Supabase auth admin. */
+export type AdminUserRole = 'editor' | 'admin' | 'super_admin';
+
+/** User shape returned by Supabase auth admin, enriched with user_profiles role. */
 export interface AdminUser {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
+  role: AdminUserRole;
 }
 
 /** Row shape returned by the vault_sources table. */

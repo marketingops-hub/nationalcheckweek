@@ -26,8 +26,17 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   const updates: Record<string, string> = {};
   if ('email' in parsed.data && parsed.data.email) updates.email = parsed.data.email;
   if ('password' in parsed.data && parsed.data.password) updates.password = parsed.data.password;
-  const { error } = await sb.auth.admin.updateUserById(id, updates);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (Object.keys(updates).length > 0) {
+    const { error } = await sb.auth.admin.updateUserById(id, updates);
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  // Update role in user_profiles if provided
+  if ('role' in parsed.data && parsed.data.role) {
+    await sb.from('user_profiles').upsert({ id, role: parsed.data.role }, { onConflict: 'id' });
+  }
+
   return NextResponse.json({ ok: true });
 });
 

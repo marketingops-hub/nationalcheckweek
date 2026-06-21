@@ -135,7 +135,7 @@ export async function proxy(request: NextRequest) {
         .eq('id', user.id)
         .maybeSingle();
 
-      if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+      if (!profile || !['admin', 'super_admin', 'editor'].includes(profile.role)) {
         const loginUrl = request.nextUrl.clone();
         loginUrl.pathname = '/admin/login';
         loginUrl.searchParams.set('error', 'access_denied');

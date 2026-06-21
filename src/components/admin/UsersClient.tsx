@@ -10,14 +10,46 @@ import {
   inputStyle,
   fmtDateTime,
   type AdminUser,
+  type AdminUserRole,
   type FieldErrors,
 } from "@/components/admin/ui";
 
-// ---------------------------------------------------------------------------
-// Module-level validators
-// ---------------------------------------------------------------------------
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const ROLES: { value: AdminUserRole; label: string; desc: string; color: string }[] = [
+  { value: 'editor',      label: 'Editor',      desc: 'Can create and edit content, cannot manage users', color: '#0891b2' },
+  { value: 'admin',       label: 'Admin',        desc: 'Full access to all features',                      color: '#7c3aed' },
+  { value: 'super_admin', label: 'Super Admin',  desc: 'Full access + user management',                    color: '#dc2626' },
+];
+
+function RoleBadge({ role }: { role: AdminUserRole }) {
+  const r = ROLES.find(r => r.value === role) ?? ROLES[1];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+      background: r.color + '18', color: r.color, border: `1px solid ${r.color}33`,
+    }}>
+      {r.label}
+    </span>
+  );
+}
+
+function RoleSelect({ value, onChange, id }: { value: AdminUserRole; onChange: (v: AdminUserRole) => void; id: string }) {
+  return (
+    <select
+      id={id}
+      className={INPUT_CLS}
+      style={INPUT_STYLE}
+      value={value}
+      onChange={e => onChange(e.target.value as AdminUserRole)}
+    >
+      {ROLES.map(r => (
+        <option key={r.value} value={r.value}>{r.label} — {r.desc}</option>
+      ))}
+    </select>
+  );
+}
 
 function validateCreate(email: string, password: string): FieldErrors {
   const errs: FieldErrors = {};
@@ -31,7 +63,7 @@ function validateCreate(email: string, password: string): FieldErrors {
 function validateEdit(email: string, password: string): FieldErrors {
   const errs: FieldErrors = {};
   if (!email && !password) {
-    errs.editEmail = "Provide a new email or new password.";
+    errs.editEmail = "Provide a new email, password, or role change.";
   } else {
     if (email && !EMAIL_RE.test(email)) errs.editEmail = "Enter a valid email address.";
     if (password && password.length < 8) errs.editPassword = "Password must be at least 8 characters.";
@@ -39,42 +71,36 @@ function validateEdit(email: string, password: string): FieldErrors {
   return errs;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[] }) {
-  // ── State ──
-  const [users, setUsers]             = useState<AdminUser[]>(initialUsers);
-  const [showCreate, setShowCreate]   = useState(false);
-  const [editUser, setEditUser]       = useState<AdminUser | null>(null);
-  const [newEmail, setNewEmail]       = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [editEmail, setEditEmail]     = useState("");
+  const [users, setUsers]               = useState<AdminUser[]>(initialUsers);
+  const [showCreate, setShowCreate]     = useState(false);
+  const [editUser, setEditUser]         = useState<AdminUser | null>(null);
+  const [newEmail, setNewEmail]         = useState("");
+  const [newPassword, setNewPassword]   = useState("");
+  const [newRole, setNewRole]           = useState<AdminUserRole>("admin");
+  const [editEmail, setEditEmail]       = useState("");
   const [editPassword, setEditPassword] = useState("");
-  const [busy, setBusy]               = useState(false);
-  const [error, setError]             = useState("");
-  const [success, setSuccess]         = useState("");
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [editRole, setEditRole]         = useState<AdminUserRole>("admin");
+  const [busy, setBusy]                 = useState(false);
+  const [error, setError]               = useState("");
+  const [success, setSuccess]           = useState("");
+  const [fieldErrors, setFieldErrors]   = useState<FieldErrors>({});
   const [confirmDelete, setConfirmDelete] = useState<AdminUser | null>(null);
-  const [search, setSearch]           = useState("");
+  const [search, setSearch]             = useState("");
 
   const filteredUsers = useMemo(() => {
     const q = search.toLowerCase();
     return !q ? users : users.filter(u => u.email.toLowerCase().includes(q));
   }, [users, search]);
 
-  // ── Helpers ──
-
   function clearMessages() { setError(""); setSuccess(""); }
-
   function clearFieldError(key: string) {
     setFieldErrors(prev => prev[key] ? { ...prev, [key]: "" } : prev);
   }
 
   function closeCreatePanel() {
     setShowCreate(false);
-    setNewEmail(""); setNewPassword("");
+    setNewEmail(""); setNewPassword(""); setNewRole("admin");
     setFieldErrors({}); clearMessages();
   }
 
@@ -87,11 +113,10 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
   function openEditPanel(user: AdminUser) {
     setEditUser(user);
     setEditEmail(""); setEditPassword("");
+    setEditRole(user.role);
     setFieldErrors({}); clearMessages();
     setShowCreate(false); setConfirmDelete(null);
   }
-
-  // ── Mutation handlers ──
 
   async function handleCreate() {
     const errs = validateCreate(newEmail, newPassword);
@@ -101,11 +126,11 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newEmail, password: newPassword }),
+        body: JSON.stringify({ email: newEmail, password: newPassword, role: newRole }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to create user."); return; }
-      setUsers(u => [...u, { id: data.id, email: data.email, created_at: new Date().toISOString(), last_sign_in_at: null }]);
+      setUsers(u => [...u, { id: data.id, email: data.email, created_at: new Date().toISOString(), last_sign_in_at: null, role: newRole }]);
       setSuccess(`User ${data.email} created successfully.`);
       closeCreatePanel();
     } catch {
@@ -117,13 +142,19 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
 
   async function handleEdit() {
     if (!editUser) return;
+    const roleChanged = editRole !== editUser.role;
+    if (!editEmail && !editPassword && !roleChanged) {
+      setFieldErrors({ editEmail: "Provide a new email, password, or role change." });
+      return;
+    }
     const errs = validateEdit(editEmail, editPassword);
-    if (Object.keys(errs).length) { setFieldErrors(errs); return; }
+    if (Object.keys(errs).length && (editEmail || editPassword)) { setFieldErrors(errs); return; }
     setBusy(true); clearMessages();
     try {
       const body: Record<string, string> = {};
       if (editEmail) body.email = editEmail;
       if (editPassword) body.password = editPassword;
+      if (roleChanged) body.role = editRole;
       const res = await fetch(`/api/admin/users/${editUser.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +162,11 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to update user."); return; }
-      if (editEmail) setUsers(u => u.map(u2 => u2.id === editUser.id ? { ...u2, email: editEmail } : u2));
+      setUsers(u => u.map(u2 => u2.id === editUser.id ? {
+        ...u2,
+        email: editEmail || u2.email,
+        role: editRole,
+      } : u2));
       setSuccess("User updated successfully.");
       closeEditPanel();
     } catch {
@@ -175,15 +210,13 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
     }
   }
 
-  // ── Render ──
-
   return (
     <div className="space-y-8">
-      {/* Global feedback (hidden while a panel is open) */}
+      {/* Global feedback */}
       {!showCreate && !editUser && error   && <div className="admin-alert admin-alert-error"  role="alert">{error}</div>}
       {!showCreate && !editUser && success && <div className="admin-alert admin-alert-success" role="status">{success}</div>}
 
-      {/* ── Create inline panel ── */}
+      {/* ── Create panel ── */}
       {showCreate && (
         <div className="admin-form-panel" role="region" aria-label="Create new user">
           <FormPanelHeader
@@ -195,28 +228,34 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <AdminField id="new-user-email" label="Email" error={fieldErrors.newEmail}>
               <input
-                id="new-user-email"
-                type="email"
-                className={INPUT_CLS}
+                id="new-user-email" type="email" className={INPUT_CLS}
                 style={inputStyle(!!fieldErrors.newEmail)}
                 value={newEmail}
                 onChange={e => { setNewEmail(e.target.value); clearFieldError("newEmail"); }}
-                placeholder="user@example.com"
-                autoComplete="email"
+                placeholder="user@example.com" autoComplete="email"
               />
             </AdminField>
             <AdminField id="new-user-password" label="Password" error={fieldErrors.newPassword}>
               <input
-                id="new-user-password"
-                type="password"
-                className={INPUT_CLS}
+                id="new-user-password" type="password" className={INPUT_CLS}
                 style={inputStyle(!!fieldErrors.newPassword)}
                 value={newPassword}
                 onChange={e => { setNewPassword(e.target.value); clearFieldError("newPassword"); }}
-                placeholder="Min 6 characters"
-                autoComplete="new-password"
+                placeholder="Min 8 characters" autoComplete="new-password"
               />
             </AdminField>
+          </div>
+          <AdminField id="new-user-role" label="Role">
+            <RoleSelect id="new-user-role" value={newRole} onChange={setNewRole} />
+          </AdminField>
+          {/* Role legend */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8, marginBottom: 16 }}>
+            {ROLES.map(r => (
+              <div key={r.value} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6b7280' }}>
+                <RoleBadge role={r.value} />
+                <span>{r.desc}</span>
+              </div>
+            ))}
           </div>
           {error && <div className="admin-alert admin-alert-error mb-6" role="alert">{error}</div>}
           <div className="flex gap-3">
@@ -228,52 +267,46 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
         </div>
       )}
 
-      {/* ── Edit inline panel ── */}
+      {/* ── Edit panel ── */}
       {editUser && (
         <div className="admin-form-panel" role="region" aria-label={`Edit user ${editUser.email}`}>
           <FormPanelHeader
             title="Edit User"
-            subtitle={
-              <>Editing <strong style={{ color: "var(--admin-text-primary)" }}>{editUser.email}</strong> — leave a field blank to keep it unchanged.</>
-            }
+            subtitle={<>Editing <strong style={{ color: "var(--admin-text-primary)" }}>{editUser.email}</strong> — leave fields blank to keep unchanged.</>}
             onClose={closeEditPanel}
             closeLabel="Close edit user form"
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <AdminField id="edit-user-email" label="New Email" error={fieldErrors.editEmail}>
+            <AdminField id="edit-user-email" label="New Email (optional)" error={fieldErrors.editEmail}>
               <input
-                id="edit-user-email"
-                type="email"
-                className={INPUT_CLS}
+                id="edit-user-email" type="email" className={INPUT_CLS}
                 style={inputStyle(!!fieldErrors.editEmail)}
                 value={editEmail}
                 onChange={e => { setEditEmail(e.target.value); clearFieldError("editEmail"); }}
-                placeholder={editUser.email}
-                autoComplete="email"
+                placeholder={editUser.email} autoComplete="email"
               />
             </AdminField>
-            <AdminField id="edit-user-password" label="New Password" error={fieldErrors.editPassword}>
+            <AdminField id="edit-user-password" label="New Password (optional)" error={fieldErrors.editPassword}>
               <input
-                id="edit-user-password"
-                type="password"
-                className={INPUT_CLS}
+                id="edit-user-password" type="password" className={INPUT_CLS}
                 style={inputStyle(!!fieldErrors.editPassword)}
                 value={editPassword}
                 onChange={e => { setEditPassword(e.target.value); clearFieldError("editPassword"); }}
-                placeholder="Leave blank to keep current"
-                autoComplete="new-password"
+                placeholder="Leave blank to keep current" autoComplete="new-password"
               />
             </AdminField>
           </div>
-          {error && <div className="admin-alert admin-alert-error mb-6" role="alert">{error}</div>}
-          <div className="flex flex-wrap gap-3">
+          <AdminField id="edit-user-role" label="Role">
+            <RoleSelect id="edit-user-role" value={editRole} onChange={setEditRole} />
+          </AdminField>
+          {error && <div className="admin-alert admin-alert-error mb-6 mt-4" role="alert">{error}</div>}
+          <div className="flex flex-wrap gap-3 mt-6">
             <button onClick={handleEdit} disabled={busy} className="admin-btn admin-btn-primary" style={{ opacity: busy ? 0.6 : 1 }}>
               {busy ? "Saving…" : "Save Changes"}
             </button>
             <button onClick={closeEditPanel} className="admin-btn admin-btn-secondary">Cancel</button>
             <button
-              onClick={() => handleResetPassword(editUser)}
-              disabled={busy}
+              onClick={() => handleResetPassword(editUser)} disabled={busy}
               className="admin-btn"
               style={{ background: "var(--admin-accent-bg)", color: "var(--admin-accent)", border: "1px solid rgba(89,37,244,0.2)" }}
             >
@@ -289,12 +322,9 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
           <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
             <span className="material-symbols-outlined" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 17, color: '#9CA3AF', pointerEvents: 'none' }}>search</span>
             <input
-              type="search"
-              placeholder="Search users…"
-              value={search}
+              type="search" placeholder="Search users…" value={search}
               onChange={e => setSearch(e.target.value)}
-              className={INPUT_CLS}
-              style={{ paddingLeft: 34, ...INPUT_STYLE }}
+              className={INPUT_CLS} style={{ paddingLeft: 34, ...INPUT_STYLE }}
             />
           </div>
           <span className="text-sm" style={{ color: "var(--admin-text-subtle)", whiteSpace: 'nowrap' }}>
@@ -309,12 +339,13 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
         </div>
       )}
 
-      {/* ── Users table ── */}
+      {/* ── Table ── */}
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
             <tr>
               <th scope="col">Email</th>
+              <th scope="col">Role</th>
               <th scope="col" className="hidden md:table-cell">Created</th>
               <th scope="col" className="hidden md:table-cell">Last Sign In</th>
               <th scope="col">Actions</th>
@@ -323,14 +354,14 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
           <tbody>
             {users.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center py-12 text-sm" style={{ color: "var(--admin-text-faint)" }}>
+                <td colSpan={5} className="text-center py-12 text-sm" style={{ color: "var(--admin-text-faint)" }}>
                   No users yet. Create the first admin user above.
                 </td>
               </tr>
             )}
             {filteredUsers.length === 0 && search && (
               <tr>
-                <td colSpan={4} className="text-center py-12 text-sm" style={{ color: "var(--admin-text-faint)" }}>
+                <td colSpan={5} className="text-center py-12 text-sm" style={{ color: "var(--admin-text-faint)" }}>
                   No users match &ldquo;{search}&rdquo;.
                 </td>
               </tr>
@@ -340,6 +371,9 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
                 <td>
                   <div className="text-[15px] font-semibold" style={{ color: "var(--admin-text-primary)" }}>{user.email}</div>
                   <div className="text-xs mt-0.5 font-mono" style={{ color: "var(--admin-text-faint)" }}>{user.id.slice(0, 8)}…</div>
+                </td>
+                <td>
+                  <RoleBadge role={user.role} />
                 </td>
                 <td className="hidden md:table-cell">
                   <span className="text-sm" style={{ color: "var(--admin-text-muted)" }}>{fmtDateTime(user.created_at)}</span>
@@ -367,8 +401,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
                       </button>
                       <button
                         onClick={() => { setConfirmDelete(user); clearMessages(); }}
-                        disabled={busy}
-                        className="admin-icon-btn"
+                        disabled={busy} className="admin-icon-btn"
                         aria-label={`Delete ${user.email}`}
                         style={{ color: "var(--admin-danger)" }}
                       >
