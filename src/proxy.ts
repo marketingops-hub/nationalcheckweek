@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { canAccess, type Role } from '@/lib/rbac';
 
 /** Edge-safe Supabase client with no-op cookies (for DB queries that don't need session) */
 function makeStaticClient(url: string, key: string) {
@@ -135,11 +136,20 @@ export async function proxy(request: NextRequest) {
         .eq('id', user.id)
         .maybeSingle();
 
-      if (!profile || !['admin', 'super_admin', 'editor'].includes(profile.role)) {
+      const role = profile?.role as Role | undefined;
+      if (!role || !['editor', 'admin', 'super_admin'].includes(role)) {
         const loginUrl = request.nextUrl.clone();
         loginUrl.pathname = '/admin/login';
         loginUrl.searchParams.set('error', 'access_denied');
         return NextResponse.redirect(loginUrl);
+      }
+
+      // Role-based path check
+      if (!canAccess(role, pathname)) {
+        const forbiddenUrl = request.nextUrl.clone();
+        forbiddenUrl.pathname = '/admin';
+        forbiddenUrl.searchParams.set('error', 'forbidden');
+        return NextResponse.redirect(forbiddenUrl);
       }
     }
   } catch {

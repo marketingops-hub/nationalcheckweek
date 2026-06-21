@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { allowedPaths, ROLE_LABELS, ROLE_COLORS, type Role } from '@/lib/rbac';
 
 const SECTIONS = [
   {
@@ -72,7 +73,7 @@ const SECTIONS = [
   },
 ];
 
-export default function AdminSidebar({ userEmail }: { userEmail: string }) {
+export default function AdminSidebar({ userEmail, userRole }: { userEmail: string; userRole: Role }) {
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -100,10 +101,17 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
 
       {/* Nav sections */}
       <nav className="swa-sidebar__nav">
-        {SECTIONS.map((section) => (
+        {SECTIONS.map((section) => {
+          const visibleItems = section.items.filter(item =>
+            allowedPaths(userRole).some(p =>
+              p === '/admin' ? item.href === '/admin' : item.href.startsWith(p)
+            )
+          );
+          if (visibleItems.length === 0) return null;
+          return (
           <div key={section.label}>
             <div className="swa-sidebar__section-label">{section.label}</div>
-            {section.items.map((item) => {
+            {visibleItems.map((item) => {
               const isActive = item.href === '/admin'
                 ? pathname === '/admin'
                 : pathname.startsWith(item.href);
@@ -119,7 +127,8 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Footer */}
@@ -128,7 +137,7 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
           <div className="swa-sidebar__avatar">{initials}</div>
           <div>
             <div className="swa-sidebar__user-name">{userEmail || 'Admin'}</div>
-            <div className="swa-sidebar__user-role">Administrator</div>
+            <div className="swa-sidebar__user-role" style={{ color: ROLE_COLORS[userRole] }}>{ROLE_LABELS[userRole]}</div>
           </div>
         </div>
         <button

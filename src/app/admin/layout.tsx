@@ -1,8 +1,10 @@
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { adminClient } from '@/lib/adminClient';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { ToastProvider } from '@/components/admin/ui/Toast';
+import type { Role } from '@/lib/rbac';
 import './admin.css';
 import './swa-design.css';
 
@@ -46,6 +48,7 @@ export default async function AdminLayout({
   }
 
   let email = '';
+  let userId = '';
   let authFailed = false;
   try {
     const supabase = await createClient();
@@ -54,26 +57,50 @@ export default async function AdminLayout({
       authFailed = true;
     } else {
       email = user.email ?? '';
+      userId = user.id;
     }
   } catch (err) {
     console.error('[Admin Layout] Auth check failed:', err);
     authFailed = true;
   }
 
-  // Redirect to login if auth failed
   if (authFailed && pathname !== '/admin/login') {
     const { redirect } = await import('next/navigation');
     redirect(`/admin/login?next=${encodeURIComponent(pathname)}`);
   }
 
+  // Fetch role from user_profiles
+  let role: Role = 'admin';
+  if (userId) {
+    try {
+      const sb = adminClient();
+      const { data } = await sb
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      if (data?.role) role = data.role as Role;
+    } catch { /* default to admin */ }
+  }
+
+  const forbidden = headersList.get('x-pathname')
+    ? new URL(`https://x${pathname}`).searchParams.get('error') === 'forbidden'
+    : false;
+
   return (
     <ToastProvider>
       <div className="admin-shell swa-root">
         {fonts}
-        <AdminSidebar userEmail={email} />
+        <AdminSidebar userEmail={email} userRole={role} />
         <CommandPalette />
         <div className="swa-main-area no-right-panel">
           <main className="swa-main-content">
+            {forbidden && (
+              <div className="admin-alert admin-alert-error" style={{ marginBottom: 24 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, verticalAlign: 'middle', marginRight: 6 }}>lock</span>
+                You don&apos;t have permission to access that page. Contact a Super Admin to request access.
+              </div>
+            )}
             {children}
           </main>
         </div>
