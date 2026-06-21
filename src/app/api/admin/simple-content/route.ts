@@ -61,7 +61,7 @@ const CONTENT_CONFIGS: Record<ContentType, ContentTypeConfig> = {
   blog_article: {
     label:     'Blog Article',
     wordRange: '600–900 words',
-    maxTokens: 2000,
+    maxTokens: 4000,
     citStyle:  'blog',
     instructions: `Write a complete blog post. Follow these rules:
 - Length: 600–900 words.
@@ -74,7 +74,7 @@ const CONTENT_CONFIGS: Record<ContentType, ContentTypeConfig> = {
   short_article: {
     label:     'Short Article',
     wordRange: '300–400 words',
-    maxTokens: 1000,
+    maxTokens: 2000,
     citStyle:  'blog',
     instructions: `Write a concise article. Follow these rules:
 - Length: 300–400 words.
@@ -86,7 +86,7 @@ const CONTENT_CONFIGS: Record<ContentType, ContentTypeConfig> = {
   linkedin: {
     label:     'LinkedIn Post',
     wordRange: '200–300 words',
-    maxTokens: 700,
+    maxTokens: 1200,
     citStyle:  'social',
     instructions: `Write a LinkedIn post. Follow these rules:
 - Length: 200–300 words.
@@ -100,7 +100,7 @@ const CONTENT_CONFIGS: Record<ContentType, ContentTypeConfig> = {
   instagram: {
     label:     'Instagram Caption',
     wordRange: '100–150 words + hashtags',
-    maxTokens: 500,
+    maxTokens: 800,
     citStyle:  'social',
     instructions: `Write an Instagram caption. Follow these rules:
 - Length: 100–150 words of body copy.
@@ -113,7 +113,7 @@ const CONTENT_CONFIGS: Record<ContentType, ContentTypeConfig> = {
   newsletter: {
     label:     'Newsletter Section',
     wordRange: '250–350 words',
-    maxTokens: 900,
+    maxTokens: 1800,
     citStyle:  'newsletter',
     instructions: `Write a newsletter section. Follow these rules:
 - Length: 250–350 words.
