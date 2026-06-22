@@ -59,12 +59,60 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
   const [success, setSuccess] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // Local issues AI rewrite state
+  const [vaultDocs, setVaultDocs] = useState<{ id: string; title: string; kind: string }[]>([]);
+  const [loadingVault, setLoadingVault] = useState(false);
+  const [issueRewriteDocId, setIssueRewriteDocId] = useState("");
+  const [issueRewriting, setIssueRewriting] = useState(false);
+  const [issueRewriteResult, setIssueRewriteResult] = useState<{ issues: AreaIssue[]; document_title: string } | null>(null);
+  const [issueRewriteError, setIssueRewriteError] = useState("");
+  const [showIssueRewrite, setShowIssueRewrite] = useState(false);
+
   useEffect(() => {
     const sb = createClient();
     sb.from("issues").select("slug, title").order("rank").then(({ data }) => {
       if (data) setGlobalIssues(data as GlobalIssue[]);
     });
   }, []);
+
+  // Load vault docs when the issues rewrite panel is opened
+  useEffect(() => {
+    if (!showIssueRewrite || vaultDocs.length) return;
+    setLoadingVault(true);
+    adminFetch("/api/admin/vault/documents?status=ready&limit=100")
+      .then(r => r.json())
+      .then(d => setVaultDocs(d.documents ?? d.items ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingVault(false));
+  }, [showIssueRewrite, vaultDocs.length]);
+
+  async function handleIssueRewrite() {
+    if (!issueRewriteDocId || !area?.id) return;
+    setIssueRewriting(true); setIssueRewriteError(""); setIssueRewriteResult(null);
+    try {
+      const res = await adminFetch("/api/admin/areas/rewrite-issues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ area_id: area.id, vault_document_id: issueRewriteDocId }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Rewrite failed");
+      setIssueRewriteResult(d);
+    } catch (e) {
+      setIssueRewriteError(e instanceof Error ? e.message : "Rewrite failed");
+    } finally {
+      setIssueRewriting(false);
+    }
+  }
+
+  function applyIssueRewrite() {
+    if (!issueRewriteResult) return;
+    setIssues(issueRewriteResult.issues);
+    setDirty(true);
+    setIssueRewriteResult(null);
+    setShowIssueRewrite(false);
+    setIssueRewriteDocId("");
+  }
 
   function set(key: string, value: string) {
     setForm(f => ({ ...f, [key]: value }));
@@ -340,9 +388,87 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
             </div>
             <div className="flex items-center gap-2">
               {!isNew && <RegenBtn label="All Issues" onClick={() => handleRegen(["issues"])} busy={regen.busy === "issues"} />}
+              {!isNew && (
+                <button
+                  onClick={() => { setShowIssueRewrite(v => !v); setIssueRewriteResult(null); setIssueRewriteError(""); }}
+                  className="admin-btn admin-btn-secondary flex-shrink-0"
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>auto_awesome</span>
+                  Rewrite from Doc
+                </button>
+              )}
               <button onClick={addIssue} className="admin-btn admin-btn-primary flex-shrink-0">+ Add Issue</button>
             </div>
           </div>
+
+          {/* ── Rewrite from document panel ── */}
+          {showIssueRewrite && !isNew && (
+            <div style={{ background: "#f5f3ff", border: "1px solid #c4b5fd", borderRadius: 10, padding: "16px 18px" }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#5b21b6", marginBottom: 4 }}>Rewrite Local Issues from Document</p>
+              <p style={{ fontSize: 12, color: "#7c3aed", marginBottom: 12 }}>
+                Select a Vault document — AI will rewrite the <strong>stat</strong> and <strong>description</strong> of each issue using it as a source, citing the document name for any statistics.
+              </p>
+
+              {loadingVault ? (
+                <p style={{ fontSize: 12, color: "#9ca3af" }}>Loading vault…</p>
+              ) : vaultDocs.length === 0 ? (
+                <p style={{ fontSize: 12, color: "#9ca3af" }}>
+                  No indexed documents yet.{" "}
+                  <a href="/admin/vault/upload" target="_blank" style={{ color: "#7c3aed" }}>Upload one →</a>
+                </p>
+              ) : (
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <select
+                    value={issueRewriteDocId}
+                    onChange={e => { setIssueRewriteDocId(e.target.value); setIssueRewriteResult(null); setIssueRewriteError(""); }}
+                    style={{ flex: "1 1 260px", padding: "7px 10px", borderRadius: 7, border: issueRewriteDocId ? "1.5px solid #7c3aed" : "1.5px solid #e5e7eb", fontSize: 13, background: "#fff" }}
+                  >
+                    <option value="">— choose a document —</option>
+                    {vaultDocs.map(d => <option key={d.id} value={d.id}>{d.title} ({d.kind})</option>)}
+                  </select>
+                  <button
+                    onClick={handleIssueRewrite}
+                    disabled={!issueRewriteDocId || issueRewriting || issues.length === 0}
+                    className="admin-btn admin-btn-primary"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {issueRewriting
+                      ? <><span className="material-symbols-outlined" style={{ fontSize: 14, animation: "spin 1s linear infinite" }}>refresh</span> Rewriting…</>
+                      : <><span className="material-symbols-outlined" style={{ fontSize: 14 }}>auto_awesome</span> Generate</>}
+                  </button>
+                </div>
+              )}
+
+              {issueRewriteError && (
+                <p style={{ marginTop: 8, fontSize: 12, color: "#dc2626" }}>{issueRewriteError}</p>
+              )}
+
+              {issueRewriteResult && (
+                <div style={{ marginTop: 12, padding: "12px 14px", background: "#fff", borderRadius: 8, border: "1px solid #c4b5fd" }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#5b21b6", marginBottom: 8 }}>
+                    Preview — {issueRewriteResult.issues.length} issues rewritten from <em>{issueRewriteResult.document_title}</em>
+                  </p>
+                  {issueRewriteResult.issues.map((iss, i) => (
+                    <div key={i} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: i < issueRewriteResult.issues.length - 1 ? "1px solid #ede9fe" : "none" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>{iss.title}</span>
+                      {iss.stat && <span style={{ marginLeft: 8, fontSize: 11, color: "#7c3aed", background: "#ede9fe", padding: "1px 6px", borderRadius: 99 }}>{iss.stat}</span>}
+                      <p style={{ fontSize: 12, color: "#4b5563", marginTop: 3, lineHeight: 1.5 }}>{iss.desc}</p>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button onClick={applyIssueRewrite} className="admin-btn admin-btn-primary" style={{ fontSize: 13 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check</span>
+                      Apply to issues
+                    </button>
+                    <button onClick={() => setIssueRewriteResult(null)} className="admin-btn admin-btn-ghost" style={{ fontSize: 13 }}>Discard</button>
+                  </div>
+                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>Applying fills the form — you still need to save.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {issues.length === 0 && (
             <div className="admin-empty" style={{ border: "2px dashed var(--admin-border)" }}>
               <p className="text-sm" style={{ color: "var(--admin-text-faint)" }}>No issues added yet</p>
