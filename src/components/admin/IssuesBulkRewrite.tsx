@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface Issue {
   id: string;
@@ -11,6 +12,8 @@ interface Issue {
   severity: string;
   anchor_stat: string;
 }
+
+interface VaultDoc { id: string; title: string; kind: string }
 
 interface Props {
   issues: Issue[];
@@ -44,6 +47,22 @@ export default function IssuesBulkRewrite({ issues }: Props) {
   const [results, setResults]       = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [showPanel, setShowPanel]   = useState(false);
 
+  // Source document
+  const [vaultDocs, setVaultDocs]         = useState<VaultDoc[]>([]);
+  const [loadingVault, setLoadingVault]   = useState(false);
+  const [vaultDocId, setVaultDocId]       = useState("");
+
+  // Load vault docs when modal opens
+  useEffect(() => {
+    if (!showPanel || vaultDocs.length) return;
+    setLoadingVault(true);
+    adminFetch("/api/admin/vault/documents?status=ready&limit=100")
+      .then(r => r.json())
+      .then(d => setVaultDocs((d.documents ?? d.items ?? []) as VaultDoc[]))
+      .catch(() => {})
+      .finally(() => setLoadingVault(false));
+  }, [showPanel, vaultDocs.length]);
+
   function toggleIssue(id: string) {
     setSelected((s) => {
       const next = new Set(s);
@@ -74,7 +93,12 @@ export default function IssuesBulkRewrite({ issues }: Props) {
         const res = await fetch("/api/admin/issues/bulk-rewrite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: issue.id, fields, tone }),
+          body: JSON.stringify({
+            id: issue.id,
+            fields,
+            tone,
+            ...(vaultDocId ? { vault_document_id: vaultDocId } : {}),
+          }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Failed");
@@ -89,6 +113,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
   }
 
   const selCount = selected.size;
+  const selectedVault = vaultDocs.find(d => d.id === vaultDocId);
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -239,16 +264,54 @@ export default function IssuesBulkRewrite({ issues }: Props) {
         >
           <div style={{
             background: "#fff", borderRadius: 16, padding: 32,
-            maxWidth: 520, width: "100%",
+            maxWidth: 560, width: "100%",
             boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
+            maxHeight: "90vh", overflowY: "auto",
           }}>
             <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1E1040", marginBottom: 6 }}>
               AI Rewrite — {selCount} issue{selCount !== 1 ? "s" : ""}
             </h3>
             <p style={{ fontSize: "0.85rem", color: "#6B7280", marginBottom: 24, lineHeight: 1.6 }}>
-              OpenAI will rewrite the selected fields for each chosen issue and save directly to the database.
+              Rewrite the selected fields for each chosen issue and save directly to the database.
               Original content will be overwritten.
             </p>
+
+            {/* SOURCE DOCUMENT */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#7C3AED", marginBottom: 10 }}>
+                Source document <span style={{ fontWeight: 400, textTransform: "none", color: "#9CA3AF" }}>(optional — AI will cite stats from this doc)</span>
+              </div>
+              {loadingVault ? (
+                <p style={{ fontSize: "0.82rem", color: "#9CA3AF" }}>Loading vault…</p>
+              ) : vaultDocs.length === 0 ? (
+                <p style={{ fontSize: "0.82rem", color: "#9CA3AF" }}>
+                  No indexed documents in the Vault yet.{" "}
+                  <a href="/admin/vault/upload" target="_blank" style={{ color: "#7C3AED" }}>Upload one →</a>
+                </p>
+              ) : (
+                <select
+                  value={vaultDocId}
+                  onChange={e => setVaultDocId(e.target.value)}
+                  style={{
+                    width: "100%", padding: "8px 12px", borderRadius: 8,
+                    border: vaultDocId ? "1.5px solid #7C3AED" : "1.5px solid #E5E7EB",
+                    fontSize: "0.85rem", color: "#374151", background: "#fff",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">— no document, use general AI knowledge —</option>
+                  {vaultDocs.map(d => (
+                    <option key={d.id} value={d.id}>{d.title} ({d.kind})</option>
+                  ))}
+                </select>
+              )}
+              {selectedVault && (
+                <div style={{ marginTop: 8, padding: "6px 10px", background: "#F5F3FF", borderRadius: 6, fontSize: "0.78rem", color: "#6D28D9" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 13, verticalAlign: "middle", marginRight: 4 }}>info</span>
+                  Stats and claims from <strong>{selectedVault.title}</strong> will be cited inline as <em>(Source: {selectedVault.title})</em>
+                </div>
+              )}
+            </div>
 
             {/* FIELDS */}
             <div style={{ marginBottom: 20 }}>
@@ -331,14 +394,13 @@ export default function IssuesBulkRewrite({ issues }: Props) {
               </button>
               <button
                 onClick={async () => {
-                await runRewrite();
-                // Only auto-close if no errors
-                setResults(prev => {
-                  const hasErrors = Object.values(prev).some(r => !r.ok);
-                  if (!hasErrors) setShowPanel(false);
-                  return prev;
-                });
-              }}
+                  await runRewrite();
+                  setResults(prev => {
+                    const hasErrors = Object.values(prev).some(r => !r.ok);
+                    if (!hasErrors) setShowPanel(false);
+                    return prev;
+                  });
+                }}
                 disabled={running || fields.length === 0}
                 style={{
                   padding: "9px 20px", borderRadius: 8, border: "none",

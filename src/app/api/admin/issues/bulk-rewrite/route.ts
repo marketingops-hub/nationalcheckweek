@@ -14,10 +14,11 @@ export const POST = requireAdmin(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 
-  const { id, fields, tone } = body as {
+  const { id, fields, tone, vault_document_id } = body as {
     id: string;
     fields: string[];
     tone: string;
+    vault_document_id?: string;
   };
 
   if (!id || !fields?.length) {
@@ -53,8 +54,17 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     return NextResponse.json({ error: fetchErr?.message ?? "Issue not found" }, { status: 404 });
   }
 
-  // Note: AI service will use environment variables for API keys
-  // and automatically fallback from OpenAI to Anthropic if needed
+  // Fetch vault document chunks if a source document was selected
+  let vaultDocTitle = "";
+  let vaultDocText  = "";
+  if (vault_document_id) {
+    const { data: doc } = await sb.from("vault_documents").select("title, status").eq("id", vault_document_id).single();
+    if (doc?.status === "ready") {
+      const { data: chunks } = await sb.from("vault_chunks").select("chunk_index, content").eq("document_id", vault_document_id).order("chunk_index");
+      vaultDocTitle = doc.title ?? "";
+      vaultDocText  = (chunks ?? []).map((c: { content: string }) => c.content).join("\n\n");
+    }
+  }
 
   const toneInstructions: Record<string, string> = {
     professional: "Write in a professional, authoritative tone suitable for a policy and education audience.",
@@ -74,11 +84,12 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     const systemPrompt = `You are an expert in Australian school student wellbeing and mental health.
 ${toneInstructions[tone] ?? toneInstructions.professional}
 You are rewriting content for the website "National Check-in Week", which advocates for data-led wellbeing in Australian schools.
+${vaultDocText ? `CITATION RULE: Whenever you use a specific statistic, figure, percentage, or factual claim drawn from the source document, you MUST append an inline citation "(Source: ${vaultDocTitle})" immediately after that sentence.` : ""}
 Output ONLY the rewritten text with no preamble, labels, or explanation.`;
 
     const userPrompt = `Issue: ${issue.title} (severity: ${issue.severity})
 Anchor stat: ${issue.anchor_stat}
-
+${vaultDocText ? `\nSOURCE DOCUMENT: "${vaultDocTitle}"\n${vaultDocText}\n` : ""}
 Task: ${fieldPrompt}
 
 Current text (use as context, improve upon it):
