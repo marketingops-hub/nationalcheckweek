@@ -42,11 +42,27 @@ export default function BlogBody({ html, className }: Props) {
     const embeds = container.querySelectorAll<HTMLElement>("div.hs-form-embed");
     if (!embeds.length) return;
 
+    // Show loading placeholder in each embed slot while HubSpot script loads
+    embeds.forEach((el) => {
+      el.innerHTML = `
+        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:24px 20px;text-align:center;background:#f9fafb;color:#6b7280;font-size:14px;">
+          <svg style="display:inline-block;margin-bottom:8px;animation:spin 1s linear infinite" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          <div>Loading form…</div>
+        </div>
+        <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+      `;
+    });
+
     loadHubSpotScript().then(() => {
       embeds.forEach((el, i) => {
         const formId   = el.getAttribute("data-form-id") ?? "";
         const portalId = el.getAttribute("data-portal-id") || DEFAULT_PORTAL_ID;
-        if (!formId || !portalId) return;
+        if (!formId || !portalId) {
+          el.innerHTML = `<div style="border:1px dashed #d1d5db;border-radius:8px;padding:24px 20px;text-align:center;background:#f9fafb;color:#9ca3af;font-size:13px;">Form unavailable — missing form ID or portal ID.</div>`;
+          return;
+        }
 
         // Give each embed div a unique target id
         const targetId = `hs-form-target-${i}-${formId.slice(0, 8)}`;

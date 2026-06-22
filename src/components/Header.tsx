@@ -13,9 +13,10 @@ export type NavLink = {
 
 const FALLBACK_LINKS: NavLink[] = [
   { id: "0", href: "/", label: "Home", target: "_self" },
-  { id: "1", href: "/resources", label: "Resources", target: "_self" },
-  { id: "2", href: "/faq", label: "FAQ", target: "_self" },
-  { id: "3", href: "/ambassadors", label: "Ambassadors", target: "_self" },
+  { id: "1", href: "/blog", label: "Blog", target: "_self" },
+  { id: "2", href: "/resources", label: "Resources", target: "_self" },
+  { id: "3", href: "/faq", label: "FAQ", target: "_self" },
+  { id: "4", href: "/ambassadors", label: "Ambassadors", target: "_self" },
 ];
 
 const PINNED_START: NavLink[] = [
@@ -23,6 +24,7 @@ const PINNED_START: NavLink[] = [
 ];
 
 const PINNED_END: NavLink[] = [
+  { id: "blog", href: "/blog", label: "Blog", target: "_self" },
   { id: "resources", href: "/resources", label: "Resources", target: "_self" },
   { id: "contact", href: "/contact", label: "Contact", target: "_self" },
 ];
