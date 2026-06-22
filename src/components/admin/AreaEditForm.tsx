@@ -12,6 +12,7 @@ import KeyStatCard from "@/components/admin/areas/KeyStatCard";
 import AreaIssueCard from "@/components/admin/areas/AreaIssueCard";
 import { type KeyStat, type AreaIssue, type GlobalIssue, INPUT_CLS, INPUT_STYLE, LABEL_CLS, LABEL_STYLE } from "@/components/admin/areas/AreaTypes";
 import { adminFetch } from "@/lib/adminFetch";
+import RewriteFromSource from "@/components/admin/RewriteFromSource";
 
 interface Area {
   id: string; slug: string; name: string; state: string; state_slug: string;
@@ -38,7 +39,7 @@ function parseJsonArray<T>(raw: unknown, fallback: T[]): T[] {
 export default function AreaEditForm({ area }: { area: Area | null }) {
   const router = useRouter();
   const isNew = !area;
-  const [tab, setTab] = useState<"info" | "stats" | "issues" | "seo">("info");
+  const [tab, setTab] = useState<"info" | "stats" | "issues" | "seo" | "rewrite">("info");
   const [dirty, setDirty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const regen = useRegenerate();
@@ -184,10 +185,11 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
   }
 
   const TABS = [
-    { id: "info",   label: "Basic Info",   count: null },
-    { id: "stats",  label: "Key Stats",    count: keyStats.length },
-    { id: "issues", label: "Local Issues", count: issues.length },
-    { id: "seo",    label: "SEO",          count: null },
+    { id: "info",    label: "Basic Info",   count: null },
+    { id: "stats",   label: "Key Stats",    count: keyStats.length },
+    { id: "issues",  label: "Local Issues", count: issues.length },
+    { id: "seo",     label: "SEO",          count: null },
+    { id: "rewrite", label: "AI Rewrite",   count: null },
   ] as const;
 
   return (
@@ -364,6 +366,21 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
             defaultTitle={`${form.name}, ${form.state} — Wellbeing Data`} defaultDesc={form.overview}
             onChange={(field, value) => set(field, value)} />
         </>
+      )}
+
+      {/* ── Tab: AI Rewrite ── */}
+      {tab === "rewrite" && (
+        <div className="mt-2">
+          <RewriteFromSource
+            recordType="area"
+            recordId={area?.id ?? null}
+            onApply={(fields) => {
+              if (typeof fields.overview === "string")    set("overview",    fields.overview);
+              if (typeof fields.prevention === "string")  set("prevention",  fields.prevention);
+              if (Array.isArray(fields.key_stats))        { setKeyStats(fields.key_stats as KeyStat[]); setDirty(true); }
+            }}
+          />
+        </div>
       )}
 
       {/* Status messages */}

@@ -9,6 +9,7 @@ import ImpactsTab from "@/components/admin/issues/ImpactsTab";
 import SourcesTab from "@/components/admin/issues/SourcesTab";
 import type { IssueSource } from "@/components/admin/ui";
 import { type ImpactBox, type PendingVerify, type VerifyResult, type NewSourceState, INPUT_CLS, INPUT_STYLE, LABEL_CLS, LABEL_STYLE } from "@/components/admin/issues/IssueTypes";
+import RewriteFromSource from "@/components/admin/RewriteFromSource";
 
 interface Issue {
   id: string; rank: number; slug: string; icon: string; severity: string;
@@ -36,7 +37,7 @@ function parseJsonArray<T>(raw: unknown, fallback: T[]): T[] {
 export default function IssueEditForm({ issue, initialSources = [] }: { issue: Issue | null; initialSources?: IssueSource[] }) {
   const router = useRouter();
   const isNew = !issue;
-  const [tab, setTab] = useState<"basic" | "content" | "impacts" | "sources" | "seo">("basic");
+  const [tab, setTab] = useState<"basic" | "content" | "impacts" | "sources" | "seo" | "rewrite">("basic");
   const [dirty, setDirty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -230,6 +231,7 @@ export default function IssueEditForm({ issue, initialSources = [] }: { issue: I
     { id: "impacts", label: "Impacts & Data", count: impacts.length },
     { id: "sources", label: "Sources",        count: dbSources.length },
     { id: "seo",     label: "SEO",            count: null },
+    { id: "rewrite", label: "AI Rewrite",     count: null },
   ] as const;
 
   return (
@@ -406,6 +408,20 @@ export default function IssueEditForm({ issue, initialSources = [] }: { issue: I
           recordId={issue?.id}
           recordType="issue"
         />
+      )}
+
+      {/* ── Tab: AI Rewrite ── */}
+      {tab === "rewrite" && (
+        <div className="mt-2">
+          <RewriteFromSource
+            recordType="issue"
+            recordId={issue?.id ?? null}
+            onApply={(fields) => {
+              const allowed = ["short_desc", "definition", "australian_data", "mechanisms", "anchor_stat"];
+              allowed.forEach(k => { if (k in fields && typeof fields[k] === "string") set(k, fields[k] as string); });
+            }}
+          />
+        </div>
       )}
 
       {/* Actions bar */}
