@@ -11,9 +11,10 @@ export const runtime = 'nodejs';
  * Returns the rewritten issues array — does NOT save automatically.
  */
 export const POST = requireAdmin(async (req: NextRequest) => {
-  const { area_id, vault_document_id } = await req.json() as {
+  const { area_id, vault_document_id, save: autoSave } = await req.json() as {
     area_id: string;
     vault_document_id: string;
+    save?: boolean;
   };
 
   if (!area_id || !vault_document_id) {
@@ -106,7 +107,12 @@ Return ONLY a JSON array with the same number of objects as the input, preservin
       return NextResponse.json({ error: 'AI returned wrong number of issues — try again' }, { status: 500 });
     }
 
-    return NextResponse.json({ issues: rewritten, document_title: doc.title });
+    // Auto-save if requested (bulk mode)
+    if (autoSave) {
+      await sb.from('areas').update({ issues: rewritten, updated_at: new Date().toISOString() }).eq('id', area_id);
+    }
+
+    return NextResponse.json({ issues: rewritten, document_title: doc.title, saved: !!autoSave });
   } catch (err: unknown) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'AI generation failed' }, { status: 500 });
   }

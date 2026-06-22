@@ -68,6 +68,10 @@ export default function AdminContentPage() {
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>upload_file</span>
             Bulk Upload
           </Link>
+          <Link href="/admin/content/bulk-issues" className="swa-btn swa-btn--secondary" style={{ textDecoration: "none" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_awesome</span>
+            Bulk Generate Issues
+          </Link>
           <Link href="/admin/content/new" className="swa-btn swa-btn--primary" style={{ textDecoration: "none" }}>
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
             New Area
