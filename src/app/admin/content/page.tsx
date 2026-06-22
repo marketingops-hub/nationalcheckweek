@@ -63,10 +63,16 @@ export default function AdminContentPage() {
             {loading ? "Loading…" : `${areas.length} cities, regions and LGAs`}
           </p>
         </div>
-        <Link href="/admin/content/new" className="swa-btn swa-btn--primary" style={{ textDecoration: "none" }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
-          New Area
-        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link href="/admin/content/bulk" className="swa-btn swa-btn--secondary" style={{ textDecoration: "none" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>upload_file</span>
+            Bulk Upload
+          </Link>
+          <Link href="/admin/content/new" className="swa-btn swa-btn--primary" style={{ textDecoration: "none" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+            New Area
+          </Link>
+        </div>
       </div>
 
       {fetchError && (
