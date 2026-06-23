@@ -91,6 +91,11 @@ export default async function RootLayout({
           src="https://lsgo-resources.s3.ap-southeast-2.amazonaws.com/utilities/lsgo_ac/lsgo_ac_global_v4.min.js"
           strategy="afterInteractive"
         />
+        <Script
+          id="hs-script-loader"
+          src="//js-ap1.hs-scripts.com/4596264.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
