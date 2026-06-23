@@ -107,7 +107,12 @@ export default function BulkAreaIssuesPage() {
 
   const states = ['all', ...Array.from(new Set(areas.map(a => a.state))).sort()];
   const filteredAreas = stateFilter === 'all' ? areas : areas.filter(a => a.state === stateFilter);
-  const areasWithIssues = filteredAreas.filter(a => Array.isArray(a.issues) ? a.issues.length > 0 : false);
+  function parseIssues(raw: unknown): unknown[] {
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') { try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; } }
+    return [];
+  }
+  const areasWithIssues = filteredAreas.filter(a => parseIssues(a.issues).length > 0);
 
   function toggleArea(id: string) {
     setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -130,7 +135,7 @@ export default function BulkAreaIssuesPage() {
     let ok = 0, skipped = 0, failed = 0;
 
     for (const area of queue) {
-      const hasIssues = Array.isArray(area.issues) && (area.issues as unknown[]).length > 0;
+      const hasIssues = parseIssues(area.issues).length > 0;
       if (!hasIssues) {
         addLog(area.name, 'Skipped — no local issues configured', 'warn');
         skipped++;

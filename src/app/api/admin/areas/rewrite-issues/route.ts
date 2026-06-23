@@ -109,7 +109,8 @@ Return ONLY a JSON array with the same number of objects as the input, preservin
 
     // Auto-save if requested (bulk mode)
     if (autoSave) {
-      await sb.from('areas').update({ issues: rewritten, updated_at: new Date().toISOString() }).eq('id', area_id);
+      const { error: saveErr } = await sb.from('areas').update({ issues: rewritten, updated_at: new Date().toISOString() }).eq('id', area_id);
+      if (saveErr) return NextResponse.json({ error: `Save failed: ${saveErr.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ issues: rewritten, document_title: doc.title, saved: !!autoSave });

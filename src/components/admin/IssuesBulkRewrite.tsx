@@ -54,14 +54,14 @@ export default function IssuesBulkRewrite({ issues }: Props) {
 
   // Load vault docs when modal opens
   useEffect(() => {
-    if (!showPanel || vaultDocs.length) return;
+    if (!showPanel) return;
     setLoadingVault(true);
     adminFetch("/api/admin/vault/documents?status=ready&limit=100")
       .then(r => r.json())
       .then(d => setVaultDocs((d.documents ?? d.items ?? []) as VaultDoc[]))
       .catch(() => {})
       .finally(() => setLoadingVault(false));
-  }, [showPanel, vaultDocs.length]);
+  }, [showPanel]);
 
   function toggleIssue(id: string) {
     setSelected((s) => {

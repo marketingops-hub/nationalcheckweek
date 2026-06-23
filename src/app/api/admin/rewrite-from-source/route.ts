@@ -7,7 +7,7 @@ import { anthropicService } from '@/lib/ai/anthropic-service';
 export const runtime = 'nodejs';
 
 const ISSUE_FIELDS = ['short_desc', 'definition', 'australian_data', 'mechanisms', 'anchor_stat'] as const;
-const AREA_FIELDS  = ['overview', 'prevention'] as const;
+const AREA_FIELDS  = ['overview', 'prevention', 'key_stats'] as const;
 
 function buildIssuePrompt(issue: Record<string, unknown>, docTitle: string, docText: string): string {
   return `SOURCE DOCUMENT TITLE: "${docTitle}"
@@ -152,7 +152,7 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     }
 
     // Validate expected keys exist
-    const expectedKeys = record_type === 'issue' ? ISSUE_FIELDS : [...AREA_FIELDS, 'key_stats'];
+    const expectedKeys = record_type === 'issue' ? ISSUE_FIELDS : AREA_FIELDS;
     const missing = expectedKeys.filter(k => !(k in parsed));
     if (missing.length) {
       return NextResponse.json({ error: `AI response missing fields: ${missing.join(', ')}` }, { status: 500 });
