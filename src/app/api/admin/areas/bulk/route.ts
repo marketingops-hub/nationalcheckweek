@@ -54,7 +54,7 @@ export const POST = requireAdmin(async (req: NextRequest) => {
       state,
       state_slug,
       slug: row.slug?.trim() || slugify(name),
-      type: ['city', 'region', 'lga'].includes(row.type ?? '') ? row.type : 'city',
+      type: (['city', 'region', 'lga'].includes(row.type ?? '') ? row.type : 'city') as string,
       population: row.population?.trim() ?? '',
       schools: row.schools?.trim() ?? '',
       overview: '',

@@ -185,7 +185,7 @@ export default function RewriteFromSource({ recordType, recordId, onApply }: Pro
   }
 
   async function handleRewrite() {
-    const useDoc = docReady ?? (mode === 'vault' ? vaultDocs.find(d => d.id === selectedDocId) : null);
+    const useDoc = docReady;
     if (!useDoc || !recordId) return;
     setRewriting(true); setError(''); setResult(null);
     try {

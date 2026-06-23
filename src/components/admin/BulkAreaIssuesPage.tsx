@@ -247,7 +247,7 @@ export default function BulkAreaIssuesPage() {
 
           {/* Controls */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <select className="swa-form-input" value={stateFilter} onChange={e => setStateFilter(e.target.value)} style={{ width: 'auto', minWidth: 180 }}>
+            <select className="swa-form-input" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setSelected(new Set()); }} style={{ width: 'auto', minWidth: 180 }}>
               {states.map(s => <option key={s} value={s}>{s === 'all' ? 'All states' : s}</option>)}
             </select>
             <button className="swa-btn swa-btn--ghost" onClick={selectAll} style={{ fontSize: 12 }}>Select all ({filteredAreas.length})</button>

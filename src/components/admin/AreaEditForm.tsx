@@ -390,7 +390,7 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               {!isNew && <RegenBtn label="All Issues" onClick={() => handleRegen(["issues"])} busy={regen.busy === "issues"} />}
               {!isNew && (
                 <button
-                  onClick={() => { setShowIssueRewrite(v => !v); setIssueRewriteResult(null); setIssueRewriteError(""); }}
+                  onClick={() => { setShowIssueRewrite(v => { if (v) { setIssueRewriteDocId(""); setIssueRewriteResult(null); setIssueRewriteError(""); } return !v; }); }}
                   className="admin-btn admin-btn-secondary flex-shrink-0"
                   style={{ display: "flex", alignItems: "center", gap: 4 }}
                 >
