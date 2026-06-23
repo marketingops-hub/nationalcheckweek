@@ -20,8 +20,8 @@
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 
-export const runtime     = 'nodejs';
-export const revalidate  = 3600; // 1 hour
+export const runtime  = 'nodejs';
+export const dynamic  = 'force-dynamic';
 
 const BASE = 'https://nationalcheckinweek.com';
 

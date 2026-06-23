@@ -105,7 +105,7 @@ describe('safeParseJson', () => {
 
   it('throws a labelled error with preview when both passes fail', () => {
     expect(() => safeParseJson('not json at all', 'openai ideas')).toThrow(
-      /openai ideas returned invalid JSON:.*Preview: not json at all/,
+      /openai ideas returned invalid JSON:.*Preview:.*not json at all/,
     );
   });
 
@@ -116,8 +116,9 @@ describe('safeParseJson', () => {
       throw new Error('should have thrown');
     } catch (e) {
       const msg = (e as Error).message;
-      // The Preview: section contains the first 200 chars of `huge`.
-      const preview = msg.split('Preview: ')[1] ?? '';
+      // Extract content after "Preview: " — strip surrounding backtick fence if present
+      const afterPreview = msg.split('Preview: ')[1] ?? '';
+      const preview = afterPreview.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       expect(preview.length).toBe(200);
     }
   });
@@ -126,7 +127,7 @@ describe('safeParseJson', () => {
     try {
       safeParseJson('bad\n\n\tjson\n\nhere', 'test');
     } catch (e) {
-      expect((e as Error).message).toContain('Preview: bad json here');
+      expect((e as Error).message).toContain('bad json here');
     }
   });
 });

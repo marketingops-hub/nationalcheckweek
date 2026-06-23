@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { DashboardClient } from '@/components/admin/dashboard/DashboardClient';
 
-// Cache dashboard for 60 seconds instead of force-dynamic
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
   let userEmail = '';
