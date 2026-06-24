@@ -40,6 +40,7 @@ const ADMIN_PATHS = [
   '/admin/home-page',
   '/admin/cms/menu',
   '/admin/cms/redirects',
+  '/admin/content-moderation',
   '/admin/prompts',
   '/admin/seo',
   '/admin/typography',

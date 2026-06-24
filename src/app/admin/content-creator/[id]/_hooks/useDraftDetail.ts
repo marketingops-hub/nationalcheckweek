@@ -37,6 +37,7 @@ import {
   publishDraftToBlog,
   publishDraftToPages,
   recoverStuckDraft,
+  submitDraftForReview,
 } from "@/lib/content-creator/client";
 import type {
   ContentDraft, ContentType, SocialPlatform,
@@ -57,7 +58,7 @@ export interface BriefMetaPatch {
 const MAX_POLLS = 30;
 const POLL_INTERVAL_MS = 3000;
 
-export type DraftBusy = null | 'generate' | 'verify' | 'save' | 'finalize' | 'regenerate' | 'meta' | 'publish';
+export type DraftBusy = null | 'generate' | 'verify' | 'save' | 'finalize' | 'regenerate' | 'meta' | 'publish' | 'submit-review';
 
 export interface UseDraftDetail {
   /** Loaded draft, or null while fetching / if not found. */
@@ -99,6 +100,8 @@ export interface UseDraftDetail {
    *  category='geo'. No-ops (and surfaces an error) for non-GEO or
    *  non-finalized drafts. */
   doPublishToPages: () => Promise<void>;
+  /** Submit this draft for moderator review. Available for draft/verified/rejected. */
+  doSubmitReview: () => Promise<void>;
   /** Patch the meta bar (content_type / platform / include_title / style_id).
    *  Returns true on success so the UI can close its editor cleanly. */
   patchMeta:    (patch: BriefMetaPatch) => Promise<boolean>;
@@ -346,6 +349,21 @@ export function useDraftDetail(id: string): UseDraftDetail {
     }
   }, [draft, title, body, refresh]);
 
+  const doSubmitReview = useCallback(async () => {
+    if (!draft) return;
+    setBusy('submit-review'); setError("");
+    try {
+      const updated = await submitDraftForReview(draft.id);
+      setDraft(updated);
+      setError("Submitted for review. Awaiting moderator approval.");
+      setTimeout(() => setError(""), 4000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  }, [draft]);
+
   const patchMeta = useCallback(async (patch: BriefMetaPatch): Promise<boolean> => {
     if (!draft) return false;
     setBusy('meta'); setError("");
@@ -471,8 +489,8 @@ export function useDraftDetail(id: string): UseDraftDetail {
     title, setTitle, body, setBody,
     refresh,
     doGenerate, doSave, doVerify, doArchive, doDelete, doUnapprove,
-    doFinalize, doRegenerate, doPublishToBlog, doPublishToPages, patchMeta,
-    copyBody, downloadMd,
+    doFinalize, doRegenerate, doPublishToBlog, doPublishToPages, doSubmitReview,
+    patchMeta, copyBody, downloadMd,
     retryFromStuck,
   };
 }

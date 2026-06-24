@@ -98,6 +98,7 @@ export default function DraftDetailPage() {
             onPublishToBlog={d.doPublishToBlog}
             onPublishToPages={d.doPublishToPages}
             onRetryStuck={d.retryFromStuck}
+            onSubmitReview={d.doSubmitReview}
           />
         </div>
 

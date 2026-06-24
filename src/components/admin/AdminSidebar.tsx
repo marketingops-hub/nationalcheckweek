@@ -54,6 +54,7 @@ const SECTIONS = [
       { label: 'Ideas',            href: '/admin/content-creator/ideas',    ms: 'emoji_objects' },
       { label: 'Drafts',           href: '/admin/content-creator/drafts',   ms: 'edit_note' },
       { label: 'Verified',         href: '/admin/content-creator/verified', ms: 'verified' },
+      { label: 'Moderation',       href: '/admin/content-moderation',       ms: 'rate_review' },
       { label: 'Prompts',       href: '/admin/prompts',         ms: 'smart_toy' },
       { label: 'SEO',           href: '/admin/seo',             ms: 'travel_explore' },
       { label: 'SEO Report',    href: '/admin/seo/report',      ms: 'analytics' },

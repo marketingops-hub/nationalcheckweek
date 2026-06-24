@@ -288,6 +288,34 @@ export async function publishDraftToPages(id: string): Promise<PublishToPagesRes
   return asJson<PublishToPagesResult>(res);
 }
 
+/** Submit a draft for moderator review. */
+export async function submitDraftForReview(id: string): Promise<ContentDraft> {
+  const res = await adminFetch(`${BASE}/${id}/submit-review`, { method: 'POST' });
+  const { draft } = await asJson<{ draft: ContentDraft }>(res);
+  return draft;
+}
+
+/** Approve a draft from the moderation queue. Auto-publishes blog drafts. */
+export async function approveDraftReview(id: string): Promise<{
+  draft: ContentDraft;
+  post?: { id: string; slug: string; title: string; published: boolean };
+  created?: boolean;
+}> {
+  const res = await adminFetch(`${BASE}/${id}/approve-review`, { method: 'POST' });
+  return asJson(res);
+}
+
+/** Reject a draft from the moderation queue and return it to the editor. */
+export async function rejectDraftReview(id: string, reason?: string): Promise<ContentDraft> {
+  const res = await adminFetch(`${BASE}/${id}/reject-review`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason: reason ?? '' }),
+  });
+  const { draft } = await asJson<{ draft: ContentDraft }>(res);
+  return draft;
+}
+
 /** Soft-delete — flips status to 'archived'. Reversible. */
 export async function archiveDraft(id: string): Promise<void> {
   const res = await adminFetch(`${BASE}/${id}`, { method: 'DELETE' });

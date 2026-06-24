@@ -46,7 +46,7 @@ const FEEDBACK_PRESETS: readonly { label: string; text: string }[] = [
 ];
 
 export type EditorBusy =
-  | null | 'generate' | 'verify' | 'save' | 'finalize' | 'regenerate' | 'meta' | 'publish';
+  | null | 'generate' | 'verify' | 'save' | 'finalize' | 'regenerate' | 'meta' | 'publish' | 'submit-review';
 
 export interface DraftBodyEditorProps {
   draft:        ContentDraft;
@@ -71,6 +71,7 @@ export interface DraftBodyEditorProps {
   /** GEO-only mirror of onPublishToBlog — pushes into cms_pages. */
   onPublishToPages: () => void;
   onRetryStuck: () => void | Promise<void>;
+  onSubmitReview: () => void;
 }
 
 export function DraftBodyEditor(props: DraftBodyEditorProps) {
@@ -78,7 +79,7 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
     draft, title, body, onTitleChange, onBodyChange,
     isEditable, inFlight, busy, stuck, stuckAfterSeconds,
     onGenerate, onSave, onVerify, onFinalize, onRegenerate,
-    onCopy, onDownload, onPublishToBlog, onPublishToPages, onRetryStuck,
+    onCopy, onDownload, onPublishToBlog, onPublishToPages, onRetryStuck, onSubmitReview,
   } = props;
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -228,6 +229,19 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
               {busy === 'verify' ? 'Verifying…' : 'Verify against Vault'}
             </button>
             <button
+              onClick={onSubmitReview}
+              disabled={inFlight || !!draft.verification?.submitted_for_review_at}
+              className="swa-btn"
+              title="Submit this draft for moderator approval before publishing"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>rate_review</span>
+              {busy === 'submit-review'
+                ? 'Submitting…'
+                : draft.verification?.submitted_for_review_at
+                  ? 'In review'
+                  : 'Submit for review'}
+            </button>
+            <button
               onClick={() => setFeedbackOpen((v) => !v)}
               disabled={inFlight}
               className="swa-btn"
@@ -243,7 +257,20 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
 
         {draft.status === 'verified' && !isFinalized && (
           <>
-            <button onClick={onFinalize} disabled={inFlight} className="swa-btn swa-btn--primary">
+            <button
+              onClick={onSubmitReview}
+              disabled={inFlight || !!draft.verification?.submitted_for_review_at}
+              className="swa-btn swa-btn--primary"
+              title="Submit this draft for moderator approval before publishing"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>rate_review</span>
+              {busy === 'submit-review'
+                ? 'Submitting…'
+                : draft.verification?.submitted_for_review_at
+                  ? 'In review'
+                  : 'Submit for review'}
+            </button>
+            <button onClick={onFinalize} disabled={inFlight} className="swa-btn">
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>task_alt</span>
               {busy === 'finalize' ? 'Finalizing…' : 'Approve & finalize'}
             </button>

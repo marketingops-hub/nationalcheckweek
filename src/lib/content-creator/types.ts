@@ -156,6 +156,11 @@ export interface VerificationResult {
    *  "ready to publish" signal. */
   approved_at?: string;
   approved_by?: string | null;
+  /** Set when the draft is submitted for moderator review. */
+  submitted_for_review_at?: string | null;
+  submitted_for_review_by?: string | null;
+  /** Populated by the moderator when rejecting a review submission. */
+  rejection_reason?: string | null;
 }
 
 /**
