@@ -1350,6 +1350,18 @@ export default function TutorialPage() {
         </div>
       </div>
 
+      {/* ── Loom video walkthrough ── */}
+      <div style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
+        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+          <iframe
+            src="https://www.loom.com/embed/34090b10da414491ad1a4a5a405af7c1"
+            frameBorder="0"
+            allowFullScreen
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+          />
+        </div>
+      </div>
+
       {/* ── Quick Reference banner ── */}
       <div style={{ marginBottom: 22, padding: '14px 16px', background: 'linear-gradient(135deg,#f8fafc,#eef2ff)', borderRadius: 12, border: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
