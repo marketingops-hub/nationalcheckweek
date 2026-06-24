@@ -90,7 +90,7 @@ export default function BulkAreaIssuesPage() {
       const res = await adminFetch('/api/admin/vault/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: 'url', source: url.trim(), title: urlTitle.trim() || url.trim(), category: 'general', tags: [] }),
+        body: JSON.stringify({ kind: 'url', url: url.trim(), title: urlTitle.trim() || undefined, category: 'general', tags: [] }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? 'Failed');
