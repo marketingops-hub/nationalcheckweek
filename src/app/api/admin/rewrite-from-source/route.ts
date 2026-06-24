@@ -138,7 +138,7 @@ export const POST = requireAdmin(async (req: NextRequest) => {
 
   try {
     const result = await anthropicService.generateContent(systemPrompt, userPrompt, {
-      model: 'gpt-4o',
+      model: 'claude-sonnet-4-6',
       temperature: 0.4,
       maxTokens: 3000,
       timeout: 90000,
