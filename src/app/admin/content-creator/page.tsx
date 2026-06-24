@@ -20,6 +20,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { listDrafts, getStats } from "@/lib/content-creator/client";
+import { adminFetch } from "@/lib/adminFetch";
+import { asJson } from "@/lib/content-creator/http";
 import type { ContentDraft, ContentStatus } from "@/lib/content-creator/types";
 
 type StageSummary = {
@@ -39,6 +41,7 @@ export default function ContentCreatorOverview() {
     { key: 'verified', label: 'Verified', href: '/admin/content-creator/library?tab=verified', icon: 'verified',    statuses: ['verified'],                        count: 0, hint: 'Stage 3. Ready for team use.' },
     { key: 'archived', label: 'Archived', href: '/admin/content-creator/library?tab=archived', icon: 'inventory_2', statuses: ['archived'],                        count: 0, hint: 'Soft-deleted. Kept for audit.' },
   ]);
+  const [inReviewCount, setInReviewCount] = useState(0);
   const [recent,  setRecent]  = useState<ContentDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
@@ -47,14 +50,12 @@ export default function ContentCreatorOverview() {
     let cancelled = false;
     async function load() {
       try {
-        // Two calls in parallel:
-        //   1. getStats      → exact per-status counts (PostgREST HEAD)
-        //   2. listDrafts    → the 20 most-recently-updated rows for the
-        //                       "recent activity" strip. We then take 5.
-        const [counts, recentRows] = await Promise.all([
+        const [counts, recentRows, modRes] = await Promise.all([
           getStats(),
           listDrafts({ limit: 20 }),
+          adminFetch('/api/admin/content-moderation'),
         ]);
+        const modData = await asJson<{ drafts: ContentDraft[] }>(modRes).catch(() => ({ drafts: [] }));
         if (cancelled) return;
         setStages((prev) =>
           prev.map((s) => ({
@@ -62,6 +63,7 @@ export default function ContentCreatorOverview() {
             count: s.statuses.reduce((sum, st) => sum + (counts[st] ?? 0), 0),
           })),
         );
+        setInReviewCount(modData.drafts.length);
         setRecent(recentRows.slice(0, 5));
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
@@ -111,6 +113,8 @@ export default function ContentCreatorOverview() {
         <PipelineStep icon="edit_note"   label="Drafts"    href="/admin/content-creator/library?tab=drafts"   color="#374151" />
         <PipelineArrow />
         <PipelineStep icon="verified"    label="Verified"  href="/admin/content-creator/library?tab=verified" color="#047857" />
+        <PipelineArrow />
+        <PipelineStep icon="rate_review" label="Review"    href="/admin/content-moderation"       color="#7C3AED" badge={inReviewCount} />
       </div>
 
       {/* Stage KPI cards */}
@@ -139,6 +143,28 @@ export default function ContentCreatorOverview() {
             <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 6 }}>{s.hint}</div>
           </Link>
         ))}
+        {/* In Review card — live count from content-moderation queue */}
+        <Link
+          href="/admin/content-moderation"
+          style={{
+            display: 'block', background: inReviewCount > 0 ? '#F5F3FF' : '#fff',
+            border: `1px solid ${inReviewCount > 0 ? '#C4B5FD' : '#E5E7EB'}`,
+            borderRadius: 12, padding: 16, textDecoration: 'none',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#7C3AED', marginBottom: 8 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>rate_review</span>
+            <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              In Review
+            </span>
+          </div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: '#1E1040', lineHeight: 1 }}>
+            {loading ? '…' : inReviewCount}
+          </div>
+          <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 6 }}>
+            Awaiting moderator approval.
+          </div>
+        </Link>
       </div>
 
       {/* Recent activity */}
@@ -170,15 +196,24 @@ export default function ContentCreatorOverview() {
 
 /* ─── Subcomponents ─────────────────────────────────────────────────────── */
 
-function PipelineStep({ icon, label, href, color }: { icon: string; label: string; href: string; color: string }) {
+function PipelineStep({ icon, label, href, color, badge }: { icon: string; label: string; href: string; color: string; badge?: number }) {
   return (
     <Link href={href} style={{
-      display: 'flex', alignItems: 'center', gap: 6,
+      display: 'flex', alignItems: 'center', gap: 6, position: 'relative',
       padding: '8px 12px', background: '#fff', border: '1px solid #E5E7EB',
       borderRadius: 8, textDecoration: 'none', color,
     }}>
       <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{icon}</span>
       <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
+      {badge != null && badge > 0 && (
+        <span style={{
+          marginLeft: 2, background: '#7C3AED', color: '#fff',
+          fontSize: 10, fontWeight: 700, borderRadius: 999,
+          padding: '1px 5px', lineHeight: '14px',
+        }}>
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
