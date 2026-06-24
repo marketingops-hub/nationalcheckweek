@@ -75,6 +75,9 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://js-ap1.hsforms.net" />
         <link rel="dns-prefetch" href="https://f.vimeocdn.com" />
         <link rel="dns-prefetch" href="https://player.vimeo.com" />
+        {/* HubSpot tracking — in <head> for verification and full-page coverage */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script type="text/javascript" id="hs-script-loader" async defer src="//js-ap1.hs-scripts.com/4596264.js" />
         {/* Material Symbols — display=swap prevents render-blocking */}
         <link
           rel="stylesheet"
@@ -89,11 +92,6 @@ export default async function RootLayout({
         {children}
         <Script
           src="https://lsgo-resources.s3.ap-southeast-2.amazonaws.com/utilities/lsgo_ac/lsgo_ac_global_v4.min.js"
-          strategy="afterInteractive"
-        />
-        <Script
-          id="hs-script-loader"
-          src="//js-ap1.hs-scripts.com/4596264.js"
           strategy="afterInteractive"
         />
       </body>
