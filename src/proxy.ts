@@ -126,35 +126,50 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Verify admin role — authenticated users must also be admin or super_admin
+    // Verify admin role — authenticated users must also be admin or super_admin.
+    // If the service role key is missing we CANNOT verify the role, so we
+    // must fail closed: a missing key previously skipped the role check
+    // entirely and let any authenticated user into /admin.
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (serviceRoleKey) {
-      const serviceClient = makeStaticClient(supabaseUrl, serviceRoleKey);
-      const { data: profile } = await serviceClient
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
+    if (!serviceRoleKey) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      loginUrl.searchParams.set('error', 'config_error');
+      return NextResponse.redirect(loginUrl);
+    }
 
-      const role = profile?.role as Role | undefined;
-      if (!role || !['editor', 'admin', 'super_admin'].includes(role)) {
-        const loginUrl = request.nextUrl.clone();
-        loginUrl.pathname = '/admin/login';
-        loginUrl.searchParams.set('error', 'access_denied');
-        return NextResponse.redirect(loginUrl);
-      }
+    const serviceClient = makeStaticClient(supabaseUrl, serviceRoleKey);
+    const { data: profile } = await serviceClient
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
 
-      // Role-based path check
-      if (!canAccess(role, pathname)) {
-        const forbiddenUrl = request.nextUrl.clone();
-        forbiddenUrl.pathname = '/admin';
-        forbiddenUrl.searchParams.set('error', 'forbidden');
-        return NextResponse.redirect(forbiddenUrl);
-      }
+    const role = profile?.role as Role | undefined;
+    if (!role || !['editor', 'admin', 'super_admin'].includes(role)) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      loginUrl.searchParams.set('error', 'access_denied');
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Role-based path check
+    if (!canAccess(role, pathname)) {
+      const forbiddenUrl = request.nextUrl.clone();
+      forbiddenUrl.pathname = '/admin';
+      forbiddenUrl.searchParams.set('error', 'forbidden');
+      return NextResponse.redirect(forbiddenUrl);
     }
   } catch {
-    // Auth check failed — pass through, layout will handle it
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    // Auth check failed (e.g. transient Supabase error). Fail CLOSED:
+    // redirect to login rather than passing through. Failing open here
+    // would grant unauthenticated access to /admin on any SDK/network
+    // exception. A transient error logging an admin out is a far smaller
+    // cost than an auth bypass.
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/admin/login';
+    loginUrl.searchParams.set('next', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return supabaseResponse;

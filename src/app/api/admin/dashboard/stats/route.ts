@@ -10,13 +10,28 @@ export const runtime = "edge";
  */
 export async function GET(req: NextRequest) {
   const sb = await createClient();
-  
+
   // Check authentication
   const { data: { user }, error: authError } = await sb.auth.getUser();
   if (authError || !user) {
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 }
+    );
+  }
+
+  // Check authorization — authentication alone is not enough. This endpoint
+  // returns admin dashboard aggregates, so the caller must hold an admin
+  // role. RLS on user_profiles permits a user to read their own row.
+  const { data: profile } = await sb
+    .from("user_profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile || !["editor", "admin", "super_admin"].includes(profile.role)) {
+    return NextResponse.json(
+      { error: "Forbidden. Admin access required." },
+      { status: 403 }
     );
   }
 
