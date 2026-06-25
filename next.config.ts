@@ -77,6 +77,32 @@ const nextConfig: NextConfig = {
               "form-action 'self' https://*.hsforms.com https://*.hubspot.com",
             ].join("; "),
           },
+          // Full source-allowlist CSP shipped in REPORT-ONLY mode: the browser
+          // does NOT block anything, it only logs violations to the console.
+          // This lets us validate every third-party origin (HubSpot, Vimeo,
+          // Loom, Supabase, Sentry) against real traffic in staging before
+          // promoting these directives into the enforcing header above.
+          // To enforce: move these directives into "Content-Security-Policy"
+          // once the console is clean across all key flows.
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: [
+              "default-src 'self'",
+              // 'unsafe-inline'/'unsafe-eval' required by Next.js hydration +
+              // the inline third-party loaders. Origins still block foreign
+              // <script src> injection, which is the main XSS containment win.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.hs-scripts.com https://*.hsforms.net https://*.hubspot.com https://lsgo-resources.s3.ap-southeast-2.amazonaws.com https://player.vimeo.com https://www.loom.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data: https://fonts.gstatic.com https://*.supabase.co",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.ingest.sentry.io https://*.hubspot.com https://*.hsforms.com https://*.hscollectedforms.net https://*.hs-analytics.net",
+              "frame-src 'self' https://player.vimeo.com https://www.loom.com https://*.hsforms.net https://*.hsforms.com https://app.hubspot.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "frame-ancestors 'self'",
+              "form-action 'self' https://*.hsforms.com https://*.hubspot.com",
+            ].join("; "),
+          },
         ],
       },
     ];

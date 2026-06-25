@@ -35,8 +35,17 @@ function getStore(name: string): Map<string, Entry> {
 }
 
 function getClientIp(req: NextRequest): string {
+  // `x-real-ip` is set by the Vercel edge to the true client IP and cannot
+  // be spoofed by the client, so prefer it. Fall back to the LAST entry of
+  // `x-forwarded-for` (the value appended by our own proxy) rather than the
+  // first — the first entry is fully attacker-controlled, so keying the
+  // limiter on it let a single attacker rotate IPs and bypass the limit.
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp;
+
   const forwarded = req.headers.get('x-forwarded-for') ?? '';
-  return forwarded.split(',')[0].trim() || 'unknown';
+  const parts = forwarded.split(',').map((s) => s.trim()).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : 'unknown';
 }
 
 /**
