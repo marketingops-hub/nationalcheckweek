@@ -34,18 +34,23 @@ const CreateAreaSchema = z.object({
  */
 export const GET = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
-  
-  const { data, error } = await sb
+  const { searchParams } = new URL(req.url);
+  const limit  = Math.min(Math.max(parseInt(searchParams.get('limit')  ?? '100', 10), 1), 500);
+  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0',  10), 0);
+
+  const { data, error, count } = await sb
     .from('areas')
-    .select('id, slug, name, state, type, issues, updated_at, seo_title')
+    .select('id, slug, name, state, type, issues, updated_at, seo_title', { count: 'exact' })
     .order('state')
-    .order('name');
+    .order('name')
+    .range(offset, offset + limit - 1);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[areas:list]', error.message);
+    return NextResponse.json({ error: 'Failed to fetch areas.' }, { status: 500 });
   }
 
-  return NextResponse.json({ areas: data ?? [] });
+  return NextResponse.json({ areas: data ?? [], total: count ?? 0 });
 });
 
 /**
@@ -79,7 +84,7 @@ export const POST = requireAdmin(async (req: NextRequest) => {
   if (error) {
     // Log the raw DB error server-side; return a generic message so we
     // don't leak schema/constraint details to the client.
-    console.error('[areas:create] insert failed:', error.message);
+    console.error('[areas:create]', error.message);
     return NextResponse.json({ error: 'Failed to create area.' }, { status: 500 });
   }
 

@@ -17,9 +17,11 @@ export const GET = requireAdmin(async () => {
   const { data, error } = await sb
     .from('issues')
     .select('id, rank, slug, title, severity, icon, anchor_stat')
-    .order('rank', { ascending: true });
+    .order('rank', { ascending: true })
+    .limit(500);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[issues:list]', error.message);
+    return NextResponse.json({ error: 'Failed to fetch issues.' }, { status: 500 });
   }
   return NextResponse.json({ issues: data ?? [] });
 });

@@ -15,24 +15,28 @@ import { revalidateEntity } from '@/lib/revalidate';
 export const GET = requireAdmin(async (req: NextRequest) => {
   const sb = adminClient();
   const { searchParams } = new URL(req.url);
-  const all = searchParams.get('all') === 'true';
+  const all    = searchParams.get('all') === 'true';
+  const limit  = Math.min(Math.max(parseInt(searchParams.get('limit')  ?? '50', 10), 1), 200);
+  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0',  10), 0);
 
   let query = sb
     .from('blog_posts')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (!all) {
     query = query.eq('published', true);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[blog:list]', error.message);
+    return NextResponse.json({ error: 'Failed to fetch posts.' }, { status: 500 });
   }
 
-  return NextResponse.json({ posts: data ?? [] });
+  return NextResponse.json({ posts: data ?? [], total: count ?? 0 });
 });
 
 /**
@@ -91,7 +95,8 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[blog:create]', error.message);
+    return NextResponse.json({ error: 'Failed to create post.' }, { status: 500 });
   }
 
   revalidateEntity('blog', data.slug);

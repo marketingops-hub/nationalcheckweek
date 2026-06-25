@@ -69,7 +69,10 @@ export const GET = requireAdmin(async (req: NextRequest) => {
   }
 
   const { data, error } = await q;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[vault:list]', error.message);
+    return NextResponse.json({ error: 'Failed to fetch documents.' }, { status: 500 });
+  }
   return NextResponse.json({ documents: data ?? [] });
 });
 
@@ -124,6 +127,12 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // Verify magic bytes so a renamed file can't masquerade as a safe type.
+  const magicError = await checkMagicBytes(file);
+  if (magicError) {
+    return NextResponse.json({ error: magicError }, { status: 415 });
+  }
+
   const kind: DocumentKind = MIME_TO_KIND[file.type];
 
   // Metadata fields (title, category, tags) come as form strings.
@@ -152,10 +161,8 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
     .from(STORAGE_BUCKET)
     .upload(storage_path, bytes, { contentType: file.type, upsert: false });
   if (upErr) {
-    return NextResponse.json(
-      { error: `Storage upload failed: ${upErr.message}` },
-      { status: 500 },
-    );
+    console.error('[vault:upload] storage error:', upErr.message);
+    return NextResponse.json({ error: 'Storage upload failed.' }, { status: 500 });
   }
 
   // 2. Insert the document row.
@@ -176,10 +183,8 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
   if (insErr || !doc) {
     // Roll back the storage upload so we don't leak orphan files.
     await sb.storage.from(STORAGE_BUCKET).remove([storage_path]);
-    return NextResponse.json(
-      { error: `Document insert failed: ${insErr?.message ?? 'no row'}` },
-      { status: 500 },
-    );
+    console.error('[vault:upload] insert error:', insErr?.message);
+    return NextResponse.json({ error: 'Failed to create document.' }, { status: 500 });
   }
 
   // 3. Trigger the indexer (fire-and-forget — UI polls status).
@@ -220,10 +225,8 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
       .select()
       .single<VaultDocument>();
     if (error || !doc) {
-      return NextResponse.json(
-        { error: `Document insert failed: ${error?.message ?? 'no row'}` },
-        { status: 500 },
-      );
+      console.error('[vault:paste] insert error:', error?.message);
+      return NextResponse.json({ error: 'Failed to create document.' }, { status: 500 });
     }
     triggerIndexer(doc.id);
     return NextResponse.json({ document: doc }, { status: 201 });
@@ -245,10 +248,8 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
     .select()
     .single<VaultDocument>();
   if (error || !doc) {
-    return NextResponse.json(
-      { error: `Document insert failed: ${error?.message ?? 'no row'}` },
-      { status: 500 },
-    );
+    console.error('[vault:url] insert error:', error?.message);
+    return NextResponse.json({ error: 'Failed to create document.' }, { status: 500 });
   }
   triggerIndexer(doc.id);
   return NextResponse.json({ document: doc }, { status: 201 });
@@ -284,6 +285,29 @@ export function triggerIndexer(document_id: string): void {
   }).catch((err) => {
     console.error('[vault-indexer] trigger failed:', err);
   });
+}
+
+/* ─── Magic-bytes validation ──────────────────────────────────────────── */
+
+// Returns an error string if bytes don't match the declared MIME, null if OK.
+async function checkMagicBytes(file: File): Promise<string | null> {
+  const PDF_MAGIC  = [0x25, 0x50, 0x44, 0x46]; // %PDF
+  const ZIP_MAGIC  = [0x50, 0x4B, 0x03, 0x04]; // PK\x03\x04 — DOCX is a zip
+
+  const buf = await file.slice(0, 8).arrayBuffer();
+  const bytes = new Uint8Array(buf);
+
+  const startsWith = (magic: number[]) => magic.every((b, i) => bytes[i] === b);
+
+  if (file.type === 'application/pdf') {
+    if (!startsWith(PDF_MAGIC)) return 'File does not appear to be a valid PDF.';
+  } else if (
+    file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ) {
+    if (!startsWith(ZIP_MAGIC)) return 'File does not appear to be a valid DOCX.';
+  }
+  // TXT and MD have no reliable magic bytes — trust the MIME allowlist check above.
+  return null;
 }
 
 /* ─── helpers ─────────────────────────────────────────────────────────── */
