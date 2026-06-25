@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   AdminField,
   DangerConfirm,
@@ -71,6 +72,15 @@ function validateEdit(email: string, password: string): FieldErrors {
   return errs;
 }
 
+async function authHeaders(): Promise<HeadersInit> {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  return {
+    "Content-Type": "application/json",
+    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+  };
+}
+
 export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[] }) {
   const [users, setUsers]               = useState<AdminUser[]>(initialUsers);
   const [showCreate, setShowCreate]     = useState(false);
@@ -125,7 +135,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ email: newEmail, password: newPassword, role: newRole }),
       });
       const data = await res.json();
@@ -157,7 +167,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
       if (roleChanged) body.role = editRole;
       const res = await fetch(`/api/admin/users/${editUser.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -181,7 +191,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
     try {
       const res = await fetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ send_reset: true, email: user.email }),
       });
       const data = await res.json();
@@ -197,7 +207,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
   async function handleDelete(user: AdminUser) {
     setBusy(true); clearMessages();
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE", headers: await authHeaders() });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to delete user."); setConfirmDelete(null); return; }
       setUsers(u => u.filter(u2 => u2.id !== user.id));
