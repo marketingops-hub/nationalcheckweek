@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/adminClient";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 /**
  * GET /api/admin/dashboard/stats
@@ -9,10 +10,9 @@ export const runtime = "edge";
  * Cached for 60 seconds with stale-while-revalidate
  */
 export async function GET(req: NextRequest) {
-  const sb = await createClient();
-
-  // Check authentication
-  const { data: { user }, error: authError } = await sb.auth.getUser();
+  // Authenticate via the session cookie.
+  const session = await createClient();
+  const { data: { user }, error: authError } = await session.auth.getUser();
   if (authError || !user) {
     return NextResponse.json(
       { error: "Unauthorized" },
@@ -20,9 +20,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Check authorization — authentication alone is not enough. This endpoint
-  // returns admin dashboard aggregates, so the caller must hold an admin
-  // role. RLS on user_profiles permits a user to read their own row.
+  // Authorize + fetch via the service-role client (bypasses RLS), the same
+  // way the middleware and every other admin route resolve roles. Reading the
+  // profile through the RLS-bound session client previously failed for staff
+  // whose own row wasn't readable under policy, yielding a spurious 403.
+  const sb = adminClient();
   const { data: profile } = await sb
     .from("user_profiles")
     .select("role")
