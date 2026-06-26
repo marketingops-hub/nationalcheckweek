@@ -20,7 +20,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { adminClient } from '@/lib/adminClient';
 import { AnthropicService } from '@/lib/ai/anthropic-service';
 import { fetchVaultContext, formatVaultContext } from '@/lib/content-creator/vault';
@@ -282,7 +282,7 @@ Write the ${cfg.label} now. Return JSON only.`;
 
 /* ─── Route handler ──────────────────────────────────────────────────────── */
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   let payload: unknown;
   try { payload = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });

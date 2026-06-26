@@ -11,14 +11,14 @@
 
 import { NextRequest } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { ok, err, pgError } from '@/lib/content-creator/api-helpers';
 import { slugify, reserveSlug, deriveExcerpt } from '@/lib/content-creator/publish-utils';
 import { stripHashHeadings } from '@/lib/content-creator/length';
 
 export const runtime = 'nodejs';
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   let body: unknown;
   try { body = await req.json(); } catch {
     return err('Invalid JSON body.', 400);

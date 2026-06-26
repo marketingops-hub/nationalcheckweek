@@ -6,7 +6,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { adminClient } from '@/lib/adminClient';
 
 export const runtime = 'nodejs';
@@ -23,7 +23,7 @@ export interface HistoryEntry {
   updated_at:         string;
 }
 
-export const GET = requireAdmin(async (_req: NextRequest) => {
+export const GET = requireStaff(async (_req: NextRequest) => {
   const sb = adminClient();
   const { data, error } = await sb
     .from('simple_content_history')
