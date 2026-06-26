@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 const VOICE_KEYS = ["voice_heading", "voice_body", "voice_cta_text", "voice_cta_url", "voice_enabled"];
 
@@ -17,7 +17,7 @@ export const GET = async () => {
   return NextResponse.json(map);
 };
 
-export const PATCH = requireAdmin(async (req: NextRequest) => {
+export const PATCH = requireStaff(async (req: NextRequest) => {
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });

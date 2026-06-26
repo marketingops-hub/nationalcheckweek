@@ -14,7 +14,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { adminClient } from '@/lib/adminClient';
 import { AnthropicService } from '@/lib/ai/anthropic-service';
 import { fetchVaultContext, formatVaultContext } from '@/lib/content-creator/vault';
@@ -159,7 +159,7 @@ function toPageReport(p: RawPage, seo: ReturnType<typeof scoreSeo>, ai: ReturnTy
 
 /* ─── POST — generate patches ────────────────────────────────────────────── */
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const body = await req.json() as { id: string; type: string };
   if (!body.id || !body.type) {
     return NextResponse.json({ error: 'id and type required' }, { status: 400 });
@@ -311,7 +311,7 @@ Return JSON:
 
 /* ─── PATCH — apply accepted patches to the DB ───────────────────────────── */
 
-export const PATCH = requireAdmin(async (req: NextRequest) => {
+export const PATCH = requireStaff(async (req: NextRequest) => {
   const { id, type, patches } = await req.json() as {
     id:      string;
     type:    string;

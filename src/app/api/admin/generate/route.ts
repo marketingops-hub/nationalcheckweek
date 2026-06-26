@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 export const runtime = "edge";
 
@@ -12,7 +12,7 @@ export const runtime = "edge";
  * Body: { page_type: "state"|"area", record_id: string, section_keys?: string[] }
  * Returns: { updated: Record<string, unknown>, log: { section_key: string, status: string }[] }
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 

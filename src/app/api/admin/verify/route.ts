@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import OpenAI from "openai";
 
 export const runtime = "edge";
@@ -17,7 +17,7 @@ export const runtime = "edge";
  *   existing_source_count: number
  * }
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const openaiKey = process.env.OPENAI_API_KEY;
 
   if (!openaiKey) {

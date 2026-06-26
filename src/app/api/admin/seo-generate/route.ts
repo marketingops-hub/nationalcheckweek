@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import OpenAI from "openai";
 
 /**
@@ -18,7 +18,7 @@ const ALLOWED_TABLES: Record<string, string> = {
   states: "id, name, subtitle",
 };
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const openaiKey = process.env.OPENAI_API_KEY;
 
   // Get OpenAI key from api_keys table if not in env

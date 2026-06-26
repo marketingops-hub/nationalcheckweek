@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { anthropicService } from '@/lib/ai/anthropic-service';
 
 // Node.js runtime — Anthropic SDK requires it
@@ -75,7 +75,7 @@ CITATION RULE: Whenever you use a specific statistic, figure, percentage, or dir
 Return ONLY a JSON object with these exact keys: overview, key_stats (array), prevention`;
 }
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const { record_type, record_id, vault_document_id } = await req.json() as {
     record_type: 'issue' | 'area';
     record_id: string;
