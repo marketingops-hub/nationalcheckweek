@@ -55,6 +55,9 @@ async function handleGenerateIdeas(body: Record<string, unknown>, ctx: Ctx) {
     vault_category?: string; source_topic_id?: string;
   };
   const count = (body.count as number | undefined) ?? 5;
+  // Who triggered generation — the staff email forwarded by the API route.
+  // Falls back to 'admin' for older callers that don't send it.
+  const created_by = (body.created_by as string | undefined)?.trim() || "admin";
 
   if (!content_type || !brief?.topic) {
     throw new Error("content_type and brief.topic are required.");
@@ -108,6 +111,7 @@ async function handleGenerateIdeas(body: Record<string, unknown>, ctx: Ctx) {
     title:    content_type === "social" ? null : idea.title,
     body:     idea.summary,
     brief,
+    created_by,
     ai_metadata: {
       openai_model:  ai.model,
       tokens:        ai.tokens,

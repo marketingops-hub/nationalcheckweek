@@ -51,6 +51,9 @@ async function handleGenerateTopics(body: Record<string, unknown>, ctx: Ctx) {
   const vault_category = (body.vault_category as string | undefined)?.trim();
   const count          = Math.min(Math.max((body.count as number | undefined) ?? 5, 1), 10);
   const seed           = (body.seed as string | undefined)?.trim() || undefined;
+  // Who triggered generation — the staff email forwarded by the API route.
+  // Falls back to 'admin' for older callers that don't send it.
+  const created_by     = (body.created_by as string | undefined)?.trim() || "admin";
 
   if (!vault_category) {
     throw new Error("vault_category is required (use 'all' for cross-category).");
@@ -129,6 +132,7 @@ async function handleGenerateTopics(body: Record<string, unknown>, ctx: Ctx) {
     source_document_ids: dedupUuids(t.source_document_ids ?? []).filter((id) => validDocIds.has(id)),
     vault_category:      vault_category === "all" ? null : vault_category,
     status:              "draft" as const,
+    created_by,
     ai_metadata: {
       openai_model: ai.model,
       tokens:       ai.tokens,

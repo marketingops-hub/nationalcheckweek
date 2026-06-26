@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { adminClient } from '@/lib/adminClient';
-import { requireStaff } from '@/lib/auth';
+import { requireStaff, type AuthedRequest } from '@/lib/auth';
 import { create as createLimiter } from '@/lib/rateLimit';
 import {
   CreateDocumentSchema,
@@ -177,6 +177,7 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
       category: metaParsed.data.category,
       tags,
       status: 'pending',
+      added_by: (req as AuthedRequest).user.id,
     })
     .select()
     .single<VaultDocument>();
@@ -221,6 +222,7 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
         tags:      parsed.data.tags,
         status:    'pending',
         raw_text:  parsed.data.content,
+        added_by:  (req as AuthedRequest).user.id,
       })
       .select()
       .single<VaultDocument>();
@@ -244,6 +246,7 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
       category: parsed.data.category,
       tags:     parsed.data.tags,
       status:   'pending',
+      added_by: (req as AuthedRequest).user.id,
     })
     .select()
     .single<VaultDocument>();

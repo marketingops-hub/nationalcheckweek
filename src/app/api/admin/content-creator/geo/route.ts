@@ -19,7 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireStaff } from '@/lib/auth';
+import { requireStaff, type AuthedRequest } from '@/lib/auth';
 import { GenerateGeoDraftSchema } from '@/lib/content-creator/schemas';
 import { ok, err, parseJsonBody, validate, pgError } from '@/lib/content-creator/api-helpers';
 
@@ -132,6 +132,7 @@ export const POST = requireStaff(async (req: NextRequest) => {
       ai_metadata:  {},
       verification: {},
       vault_refs:   [],
+      created_by:   (req as AuthedRequest).user.email,
     })
     .select()
     .single();

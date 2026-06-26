@@ -7,7 +7,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireStaff } from '@/lib/auth';
+import { requireStaff, type AuthedRequest } from '@/lib/auth';
 import { GenerateTopicsSchema } from '@/lib/content-creator/topics';
 import { callEdge, contentCreatorAILimiter } from '../../route';
 
@@ -30,6 +30,11 @@ export const POST = requireStaff(async (req: NextRequest) => {
     );
   }
 
-  const edgeRes = await callEdge('content-creator-topics', { ...parsed.data });
+  // Attribute the topics to the staff member who triggered generation.
+  const { user } = req as AuthedRequest;
+  const edgeRes = await callEdge('content-creator-topics', {
+    ...parsed.data,
+    created_by: user.email,
+  });
   return NextResponse.json(edgeRes.body, { status: edgeRes.status });
 });

@@ -16,6 +16,7 @@
 
 import Link from "next/link";
 import type { ContentTopic, TopicStatus } from "@/lib/content-creator/topics";
+import { formatAuthor } from "@/lib/content-creator/author";
 
 const STATUS_CHIP: Record<TopicStatus, { bg: string; color: string; label: string }> = {
   draft:    { bg: '#FEF3C7', color: '#92400E', label: 'To review' },
@@ -99,6 +100,10 @@ export function TopicCard({
           {(topic.source_document_ids ?? []).length === 1 ? '' : 's'}
         </span>
         {topic.suggested_audience && <span>· {topic.suggested_audience}</span>}
+        <span title={`Created by ${topic.created_by}`} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 13, verticalAlign: -2 }}>person</span>
+          {formatAuthor(topic.created_by)}
+        </span>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>

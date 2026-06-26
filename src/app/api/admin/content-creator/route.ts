@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireStaff } from '@/lib/auth';
+import { requireStaff, type AuthedRequest } from '@/lib/auth';
 import { create as createLimiter } from '@/lib/rateLimit';
 import { GenerateIdeasSchema } from '@/lib/content-creator/schemas';
 
@@ -72,7 +72,12 @@ export const POST = requireStaff(async (req: NextRequest) => {
     );
   }
 
-  const edgeRes = await callEdge('content-creator-ideas', { ...parsed.data });
+  // Attribute the ideas to the staff member who triggered generation.
+  const { user } = req as AuthedRequest;
+  const edgeRes = await callEdge('content-creator-ideas', {
+    ...parsed.data,
+    created_by: user.email,
+  });
 
   // One-shot topic lifecycle: if this brief was spawned from a topic, flip
   // that topic to 'used' as soon as ideas are successfully generated. The

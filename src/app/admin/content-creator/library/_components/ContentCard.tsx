@@ -26,6 +26,7 @@
 
 import Link from "next/link";
 import type { ContentDraft } from "@/lib/content-creator/types";
+import { formatAuthor } from "@/lib/content-creator/author";
 
 /* ─── Status / type theming ───────────────────────────────────────────────
  * Colours mirror the existing StatusPill theme so a user glancing from the
@@ -229,7 +230,13 @@ export function ContentCard(props: ContentCardProps) {
             {words.toLocaleString()} words
           </span>
         )}
-        <span style={{ marginLeft: 'auto' }}>
+        <span title={`Created by ${draft.created_by}`} style={{ marginLeft: 'auto' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 12, verticalAlign: -2 }}>
+            person
+          </span>{' '}
+          {formatAuthor(draft.created_by)}
+        </span>
+        <span>
           <span className="material-symbols-outlined" style={{ fontSize: 12, verticalAlign: -2 }}>
             schedule
           </span>{' '}

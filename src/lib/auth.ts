@@ -10,6 +10,16 @@ export interface AdminUser {
 }
 
 /**
+ * A NextRequest decorated by `requireAdmin` / `requireStaff` with the
+ * authenticated user. Wrapped handlers can read `(req as AuthedRequest).user`
+ * to attribute records — e.g. stamp `created_by` / `added_by` with the staff
+ * member who performed the action.
+ */
+export interface AuthedRequest extends NextRequest {
+  user: AdminUser;
+}
+
+/**
  * Verify a Bearer token and return the user IF their role is in `allowed`.
  * Returns the authenticated user (with role + email) or null.
  */
@@ -83,6 +93,8 @@ export function requireAdmin<T = any>(
         { status: 401 }
       );
     }
+    // Expose the verified user so handlers can attribute records.
+    (req as AuthedRequest).user = user;
     return handler(req, context);
   };
 }
@@ -102,6 +114,8 @@ export function requireStaff<T = any>(
         { status: 401 }
       );
     }
+    // Expose the verified user so handlers can attribute records.
+    (req as AuthedRequest).user = user;
     return handler(req, context);
   };
 }
