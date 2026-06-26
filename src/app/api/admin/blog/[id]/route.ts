@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { BlogPatchSchema, parseBody } from '@/lib/adminSchemas';
 import { revalidateEntity } from '@/lib/revalidate';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
-export const GET = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+export const GET = requireStaff(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { data, error } = await sb.from('blog_posts').select('*').eq('id', id).single();
@@ -14,7 +14,7 @@ export const GET = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
   return NextResponse.json({ post: data });
 });
 
-export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
+export const PATCH = requireStaff(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -34,7 +34,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   return NextResponse.json({ post: data });
 });
 
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.from('blog_posts').delete().eq('id', id);

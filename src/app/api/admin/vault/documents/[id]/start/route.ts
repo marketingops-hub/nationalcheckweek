@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { triggerIndexer } from '../../route';
 import type { VaultDocument } from '@/lib/vault/types';
 
@@ -25,7 +25,7 @@ const STORAGE_BUCKET = 'vault';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export const POST = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const POST = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
 

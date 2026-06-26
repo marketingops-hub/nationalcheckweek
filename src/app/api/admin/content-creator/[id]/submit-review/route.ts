@@ -1,18 +1,18 @@
 import { NextRequest } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { ok, err, pgError, readParams } from '@/lib/content-creator/api-helpers';
-import { verifyAdminAuth } from '@/lib/auth';
+import { verifyStaffAuth } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export const POST = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
+export const POST = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   const { id } = await readParams(ctx);
   const sb = adminClient();
 
-  const auth = await verifyAdminAuth(req);
+  const auth = await verifyStaffAuth(req);
   const submittedBy = auth?.email ?? null;
 
   const { data: draft, error: loadErr } = await sb

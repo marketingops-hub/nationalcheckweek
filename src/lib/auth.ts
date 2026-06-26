@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export type StaffRole = 'editor' | 'admin' | 'super_admin';
+
 export interface AdminUser {
   id: string;
   email: string;
-  role: 'admin' | 'super_admin';
+  role: StaffRole;
 }
 
 /**
- * Verify admin authentication from request headers.
- * Checks the Bearer token AND verifies user_profiles.role = admin|super_admin.
- * Returns the authenticated user or null.
+ * Verify a Bearer token and return the user IF their role is in `allowed`.
+ * Returns the authenticated user (with role + email) or null.
  */
-export async function verifyAdminAuth(req: NextRequest) {
+async function verifyAuth(req: NextRequest, allowed: readonly StaffRole[]) {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
@@ -42,15 +43,32 @@ export async function verifyAdminAuth(req: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+  if (!profile || !allowed.includes(profile.role as StaffRole)) {
     return null;
   }
 
-  return { ...user, role: profile.role as 'admin' | 'super_admin', email: profile.email || user.email || '' };
+  return { ...user, role: profile.role as StaffRole, email: profile.email || user.email || '' };
 }
 
 /**
- * Middleware wrapper that requires admin authentication
+ * Verify admin authentication from request headers.
+ * Checks the Bearer token AND verifies user_profiles.role = admin|super_admin.
+ * Returns the authenticated user or null.
+ */
+export async function verifyAdminAuth(req: NextRequest) {
+  return verifyAuth(req, ['admin', 'super_admin']);
+}
+
+/**
+ * Like verifyAdminAuth but also accepts the 'editor' role. Use for content
+ * endpoints that editors are allowed to operate (per rbac.ts EDITOR_PATHS).
+ */
+export async function verifyStaffAuth(req: NextRequest) {
+  return verifyAuth(req, ['editor', 'admin', 'super_admin']);
+}
+
+/**
+ * Middleware wrapper that requires admin authentication (admin|super_admin).
  * Usage: export const GET = requireAdmin(async (req) => { ... });
  * For dynamic routes: export const GET = requireAdmin(async (req, context) => { ... });
  */
@@ -62,6 +80,25 @@ export function requireAdmin<T = any>(
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
+        { status: 401 }
+      );
+    }
+    return handler(req, context);
+  };
+}
+
+/**
+ * Middleware wrapper that requires staff authentication (editor|admin|
+ * super_admin). Use for content-management endpoints editors may operate.
+ */
+export function requireStaff<T = any>(
+  handler: (req: NextRequest, context?: T) => Promise<NextResponse>
+) {
+  return async (req: NextRequest, context?: T) => {
+    const user = await verifyStaffAuth(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Staff access required.' },
         { status: 401 }
       );
     }

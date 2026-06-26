@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { AmbassadorCategoryPatchSchema, parseBody } from '@/lib/adminSchemas';
 
 export const runtime = 'edge';
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
-export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
+export const PATCH = requireStaff(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -30,7 +30,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   return NextResponse.json({ category: data });
 });
 
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.from('ambassador_categories').delete().eq('id', id);

@@ -7,14 +7,14 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { GenerateTopicsSchema } from '@/lib/content-creator/topics';
 import { callEdge, contentCreatorAILimiter } from '../../route';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const limited = contentCreatorAILimiter.check(req);
   if (limited) return limited;
 

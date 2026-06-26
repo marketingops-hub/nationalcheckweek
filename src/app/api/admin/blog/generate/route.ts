@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { openaiService } from '@/lib/ai/openai-service';
 import { OpenAIError } from '@/lib/ai/errors';
 import { BLOG_SYSTEM_PROMPT, getBlogPrompt } from '@/lib/ai/prompts';
@@ -22,7 +22,7 @@ export const runtime = 'edge';
  * - metaTitle: SEO title
  * - metaDesc: SEO description
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   try {
     // Parse and validate request body
     const body = await req.json();

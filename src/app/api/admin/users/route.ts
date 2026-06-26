@@ -34,8 +34,21 @@ export const POST = requireAdmin(async (req: NextRequest) => {
   const { data, error } = await sb.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Create user_profiles row with selected role
-  await sb.from('user_profiles').upsert({ id: data.user.id, role }, { onConflict: 'id' });
+  // Create user_profiles row with selected role. If this fails (e.g. the role
+  // CHECK constraint rejects the value), the auth user would otherwise be left
+  // without a usable profile — so roll it back and surface the error instead
+  // of returning a silently-broken account.
+  const { error: profileError } = await sb
+    .from('user_profiles')
+    .upsert({ id: data.user.id, role }, { onConflict: 'id' });
+  if (profileError) {
+    await sb.auth.admin.deleteUser(data.user.id);
+    console.error('[users:create] profile upsert failed:', profileError.message);
+    return NextResponse.json(
+      { error: 'Failed to assign role to the new account. No account was created.' },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ id: data.user.id, email: data.user.email, role });
 });

@@ -19,13 +19,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { GenerateGeoDraftSchema } from '@/lib/content-creator/schemas';
 import { ok, err, parseJsonBody, validate, pgError } from '@/lib/content-creator/api-helpers';
 
 export const runtime = 'nodejs';
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const raw = await parseJsonBody(req);
   if (raw instanceof NextResponse) return raw;
   const parsed = validate(GenerateGeoDraftSchema, raw);

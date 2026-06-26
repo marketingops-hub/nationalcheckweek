@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { create as createLimiter } from '@/lib/rateLimit';
 import { GenerateIdeasSchema } from '@/lib/content-creator/schemas';
 
@@ -31,7 +31,7 @@ const EDGE_FN_TIMEOUT_MS = 270_000;
 
 /* ─── GET — list ─────────────────────────────────────────────────────────── */
 
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const status       = searchParams.get('status');
   const content_type = searchParams.get('content_type');
@@ -55,7 +55,7 @@ export const GET = requireAdmin(async (req: NextRequest) => {
 
 /* ─── POST — generate ideas via edge function ─────────────────────────────── */
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const limited = contentCreatorAILimiter.check(req);
   if (limited) return limited;
 

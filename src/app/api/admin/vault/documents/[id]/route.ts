@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { PatchDocumentSchema } from '@/lib/vault/schemas';
 import type { VaultDocument } from '@/lib/vault/types';
 
@@ -22,7 +22,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /* ─── GET ─────────────────────────────────────────────────────────────── */
 
-export const GET = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const GET = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
 
@@ -52,7 +52,7 @@ export const GET = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
 
 /* ─── PATCH ───────────────────────────────────────────────────────────── */
 
-export const PATCH = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
+export const PATCH = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   const { id } = await ctx!.params;
 
   let body: unknown;
@@ -89,7 +89,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
 
 /* ─── DELETE ──────────────────────────────────────────────────────────── */
 
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
 

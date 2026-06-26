@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { vaultUploadLimiter, triggerIndexer } from '../../route';
 import type { VaultDocument } from '@/lib/vault/types';
 
@@ -21,7 +21,7 @@ export const runtime = 'nodejs';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export const POST = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
+export const POST = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   // Share the upload limiter — re-indexing also costs embedding calls.
   const limited = vaultUploadLimiter.check(req);
   if (limited) return limited;

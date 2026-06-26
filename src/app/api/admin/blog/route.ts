@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { blogPostCreateSchema, safeValidate } from '@/lib/adminSchemas';
 import { revalidateEntity } from '@/lib/revalidate';
 
@@ -12,7 +12,7 @@ import { revalidateEntity } from '@/lib/revalidate';
  * - all: Include drafts (default: published only)
  */
 
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   const { searchParams } = new URL(req.url);
   const all    = searchParams.get('all') === 'true';
@@ -45,7 +45,7 @@ export const GET = requireAdmin(async (req: NextRequest) => {
  * 
  * Request body: See blogPostCreateSchema
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   
   // Parse and validate request body

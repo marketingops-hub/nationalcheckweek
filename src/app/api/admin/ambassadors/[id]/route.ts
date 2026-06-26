@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { AmbassadorPatchSchema, parseBody } from "@/lib/adminSchemas";
 
 export const runtime = "edge";
@@ -8,7 +8,7 @@ export const runtime = "edge";
 type RouteCtx = { params: Promise<{ id: string }> };
 
 // GET /api/admin/ambassadors/[id] — by id or slug
-export const GET = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+export const GET = requireStaff(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -28,7 +28,7 @@ export const GET = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
 });
 
 // PATCH /api/admin/ambassadors/[id]
-export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
+export const PATCH = requireStaff(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const raw = await req.json().catch(() => null);
@@ -61,7 +61,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
 });
 
 // DELETE /api/admin/ambassadors/[id]
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.from("Ambassador").delete().eq("id", id);

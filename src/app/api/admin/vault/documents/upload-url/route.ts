@@ -19,7 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import {
   SignedUploadRequestSchema,
   UPLOAD_LIMITS,
@@ -32,7 +32,7 @@ export const runtime = 'nodejs';
 
 const STORAGE_BUCKET = 'vault';
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const limited = vaultUploadLimiter.check(req);
   if (limited) return limited;
 

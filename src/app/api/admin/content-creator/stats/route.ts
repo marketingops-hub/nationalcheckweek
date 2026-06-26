@@ -15,7 +15,7 @@
 
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import type { ContentStatus } from '@/lib/content-creator/types';
 
 export const runtime = 'nodejs';
@@ -27,7 +27,7 @@ const ALL_STATUSES: ContentStatus[] = [
   'archived',
 ];
 
-export const GET = requireAdmin(async () => {
+export const GET = requireStaff(async () => {
   const sb = adminClient();
 
   // Run all 8 count queries in parallel. Each is a HEAD request returning

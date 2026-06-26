@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin, verifyAdminAuth } from '@/lib/auth';
+import { requireStaff, verifyStaffAuth } from '@/lib/auth';
 import { CreateStyleSchema } from '@/lib/content-creator/styles';
 import {
   ok, pgError, parseJsonBody, validate,
@@ -23,7 +23,7 @@ export const runtime = 'nodejs';
  *  the route file has zero cross-imports on the enum. */
 const APPLIES_TO_VALUES = new Set(['blog', 'newsletter', 'social']);
 
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const activeOnly = searchParams.get('active_only') === 'true';
   const appliesToRaw = searchParams.get('applies_to');
@@ -51,17 +51,17 @@ export const GET = requireAdmin(async (req: NextRequest) => {
   return ok({ styles: data ?? [] });
 });
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const body = await parseJsonBody(req);
   if (body instanceof NextResponse) return body;
 
   const input = validate(CreateStyleSchema, body);
   if (input instanceof NextResponse) return input;
 
-  // verifyAdminAuth was already called inside requireAdmin, but it doesn't
+  // verifyStaffAuth was already called inside requireStaff, but it doesn't
   // pass the user through — rerun to attribute created_by. Cheap (one
   // cached session lookup) so we don't bother refactoring the wrapper.
-  const user = await verifyAdminAuth(req);
+  const user = await verifyStaffAuth(req);
 
   const { data, error } = await adminClient()
     .from('content_writing_styles')

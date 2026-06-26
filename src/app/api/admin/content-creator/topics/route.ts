@@ -8,11 +8,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const status   = searchParams.get('status');
   const category = searchParams.get('vault_category');

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import OpenAI from "openai";
 
 export const runtime = "edge";
@@ -10,7 +10,7 @@ export const runtime = "edge";
  * Generates an ambassador bio using the prompt stored in prompt_templates
  * (page_type = "ambassador", section_key = "bio").
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   // Parse body
   let body: { name: string; title?: string; linkedinUrl?: string; websiteUrl?: string; notes?: string };
   try { body = await req.json(); }

@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { PatchStyleSchema } from '@/lib/content-creator/styles';
 import {
   ok, err, pgError, parseJsonBody, validate, readParams,
@@ -23,7 +23,7 @@ export const runtime = 'nodejs';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export const GET = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const GET = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await readParams(ctx);
 
   const { data, error } = await adminClient()
@@ -36,7 +36,7 @@ export const GET = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
   return ok({ style: data });
 });
 
-export const PATCH = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
+export const PATCH = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   const { id } = await readParams(ctx);
 
   const body = await parseJsonBody(req);
@@ -61,7 +61,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
   return ok({ style: data });
 });
 
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await readParams(ctx);
 
   const { error } = await adminClient()

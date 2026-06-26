@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { create as createLimiter } from '@/lib/rateLimit';
 import {
   CreateDocumentSchema,
@@ -43,7 +43,7 @@ export const vaultUploadLimiter = createLimiter('vault-upload', {
 
 /* ─── GET ──────────────────────────────────────────────────────────────── */
 
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const status   = searchParams.get('status');
   const kind     = searchParams.get('kind');
@@ -78,7 +78,7 @@ export const GET = requireAdmin(async (req: NextRequest) => {
 
 /* ─── POST ─────────────────────────────────────────────────────────────── */
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const limited = vaultUploadLimiter.check(req);
   if (limited) return limited;
 

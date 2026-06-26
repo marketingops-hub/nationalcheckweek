@@ -34,7 +34,7 @@
 
 import { NextRequest } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { ok, err, pgError, readParams } from '@/lib/content-creator/api-helpers';
 
 export const runtime = 'nodejs';
@@ -46,7 +46,7 @@ const STUCK_MIN_SECONDS = 300; // 5 minutes
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export const POST = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const POST = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const { id } = await readParams(ctx);
   const sb = adminClient();
 

@@ -19,7 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { canTransition } from '@/lib/content-creator/schemas';
 import { callEdge, contentCreatorAILimiter } from '../../route';
 import {
@@ -35,7 +35,7 @@ const RegenerateSchema = z.object({
   feedback: z.string().min(3, 'Feedback must be at least 3 characters').max(2000),
 });
 
-export const POST = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
+export const POST = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   const limited = contentCreatorAILimiter.check(req);
   if (limited) return limited;
 

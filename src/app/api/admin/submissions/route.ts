@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 
 export const runtime = 'edge';
 
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get('type') ?? 'applications';
   const status = searchParams.get('status') ?? '';
