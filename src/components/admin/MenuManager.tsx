@@ -152,9 +152,9 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
   const topLevel = sorted.filter(i => !i.parent_id);
 
   return (
-    <div className="flex gap-6 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
       {/* Menu tree */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full">
         {error && <div className="admin-alert admin-alert-error mb-4">{error}</div>}
         {success && <div className="admin-alert admin-alert-success mb-4">{success}</div>}
 
@@ -260,7 +260,7 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
       </div>
 
       {/* Right panel */}
-      <div className="w-72 flex-shrink-0 sticky top-6">
+      <div className="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-6">
         {showAdd ? (
           <div className="rounded-xl p-5" style={{ background: "#fff", border: "1px solid var(--admin-border)", boxShadow: "var(--admin-shadow-card)" }}>
             <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--admin-text-primary)" }}>

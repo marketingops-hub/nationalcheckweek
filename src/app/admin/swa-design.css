@@ -82,25 +82,29 @@
   letter-spacing: -0.01em;
 }
 
-/* ── Root Layout Grid ── */
+/* ── Root Layout Grid ──
+   Content tracks use minmax(0, 1fr) (not bare 1fr) so a wide child can't
+   blow the column out past the viewport — bare 1fr resolves to
+   minmax(auto, 1fr), whose min is min-content and overflows. */
 .admin-shell.swa-root {
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
 }
 
 .swa-main-area {
   display: grid;
-  grid-template-columns: 1fr var(--right-panel-width);
+  grid-template-columns: minmax(0, 1fr) var(--right-panel-width);
   overflow: hidden;
   height: 100vh;
 }
 .swa-main-area.no-right-panel {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .swa-main-content {
+  min-width: 0;
   overflow-y: auto;
   padding: 24px;
 }
