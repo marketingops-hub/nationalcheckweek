@@ -168,14 +168,14 @@ export function GenerateOptionsModal({
         }}>
           <span
             className="material-symbols-outlined"
-            style={{ fontSize: 22, color: '#5925F4' }}
+            style={{ fontSize: 22, color: '#13b5ea' }}
           >
             auto_awesome
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2
               id="gen-opts-title"
-              style={{ fontSize: 16, fontWeight: 700, color: '#1E1040', margin: 0 }}
+              style={{ fontSize: 16, fontWeight: 700, color: '#1b4673', margin: 0 }}
             >
               Generate content
             </h2>
@@ -273,7 +273,7 @@ export function GenerateOptionsModal({
                 No styles scoped to {contentType}.{' '}
                 <Link
                   href="/admin/content-creator/styles"
-                  style={{ color: '#5925F4' }}
+                  style={{ color: '#13b5ea' }}
                 >
                   Create one →
                 </Link>
@@ -360,7 +360,7 @@ function Field({
 const selectStyle: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 8,
   border: '1px solid #D1D5DB', fontSize: 13,
-  background: '#fff', color: '#1E1040',
+  background: '#fff', color: '#1b4673',
   cursor: 'pointer',
 };
 

@@ -28,7 +28,7 @@ import type { ContentDraft } from "@/lib/content-creator/types";
 const STATUS_THEME: Record<string, { stripe: string; chipBg: string; chipColor: string; label: string }> = {
   idea:          { stripe: '#F59E0B', chipBg: '#FEF3C7', chipColor: '#92400E', label: 'Idea' },
   approved_idea: { stripe: '#2563EB', chipBg: '#DBEAFE', chipColor: '#1D4ED8', label: 'Approved' },
-  generating:    { stripe: '#7C3AED', chipBg: '#EDE9FE', chipColor: '#5B21B6', label: 'Generating…' },
+  generating:    { stripe: '#13b5ea', chipBg: '#d6eef7', chipColor: '#153659', label: 'Generating…' },
 };
 
 /* ─── Type / platform chip ───────────────────────────────────────────────── */
@@ -113,7 +113,7 @@ export function IdeaCard(props: IdeaCardProps) {
       style={{
         position: 'relative',
         background: '#fff',
-        border: `1px solid ${selected ? '#5925F4' : '#E5E7EB'}`,
+        border: `1px solid ${selected ? '#13b5ea' : '#E5E7EB'}`,
         borderRadius: 12,
         padding: '16px 18px',
         display: 'flex',
@@ -121,7 +121,7 @@ export function IdeaCard(props: IdeaCardProps) {
         gap: 10,
         transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
         boxShadow: selected
-          ? '0 4px 14px rgba(89, 37, 244, 0.14)'
+          ? '0 4px 14px rgba(19,181,234, 0.14)'
           : '0 1px 2px rgba(16, 24, 40, 0.04)',
         opacity: disabled ? 0.55 : 1,
         pointerEvents: disabled ? 'none' : 'auto',
@@ -150,7 +150,7 @@ export function IdeaCard(props: IdeaCardProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{
           fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
-          background: '#1E1040', color: '#fff',
+          background: '#1b4673', color: '#fff',
           textTransform: 'capitalize',
         }}>
           {typeLabel(idea)}
@@ -168,7 +168,7 @@ export function IdeaCard(props: IdeaCardProps) {
             <span
               className="material-symbols-outlined swa-spin"
               aria-label="Generating"
-              style={{ fontSize: 18, color: '#7C3AED' }}
+              style={{ fontSize: 18, color: '#13b5ea' }}
             >
               progress_activity
             </span>
@@ -186,7 +186,7 @@ export function IdeaCard(props: IdeaCardProps) {
 
       {/* Title */}
       <h3 style={{
-        fontSize: 15, fontWeight: 700, color: '#1E1040',
+        fontSize: 15, fontWeight: 700, color: '#1b4673',
         margin: 0, lineHeight: 1.35,
         display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
         overflow: 'hidden',

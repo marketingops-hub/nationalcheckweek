@@ -152,7 +152,7 @@ export default function AdminEventsPage() {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 48, display: "block", marginBottom: 16 }}>event</span>
-          <h3 style={{ color: "#1E1040", marginBottom: 8 }}>No events yet</h3>
+          <h3 style={{ color: "#1b4673", marginBottom: 8 }}>No events yet</h3>
           <p style={{ marginBottom: 20 }}>Create your first event to get started.</p>
           <Link href="/admin/events/new" className="swa-btn swa-btn--primary">Create an event</Link>
         </div>
@@ -183,7 +183,7 @@ export default function AdminEventsPage() {
                 {/* Info */}
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 700, fontSize: "0.92rem", color: "#1E1040" }}>{ev.title}</span>
+                    <span style={{ fontWeight: 700, fontSize: "0.92rem", color: "#1b4673" }}>{ev.title}</span>
                     <span style={{
                       fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100,
                       background: badge.bg, color: badge.color, textTransform: "uppercase",
@@ -213,7 +213,7 @@ export default function AdminEventsPage() {
                       <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{ev.is_free ? "redeem" : "payments"}</span>
                       {ev.is_free ? "Free" : ev.price}
                     </span>
-                    <span style={{ color: "#C4B5FD", display: "flex", alignItems: "center", gap: 3 }}>
+                    <span style={{ color: "#9fc9e6", display: "flex", alignItems: "center", gap: 3 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: 13 }}>link</span>
                       /events/{ev.slug}
                     </span>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { type AmbassadorCategory } from './types';
 
 const ICON_OPTIONS = ['school','cast_for_education','psychology','business_center','star','science','diversity_3','person','health_and_safety','sports','music_note','mic','public','volunteer_activism'];
-const COLOR_OPTIONS = ['#2563eb','#16a34a','#7c3aed','#d97706','#db2777','#0891b2','#dc2626','#059669','#9333ea','#ea580c'];
+const COLOR_OPTIONS = ['#2563eb','#16a34a','#13b5ea','#d97706','#db2777','#0891b2','#dc2626','#059669','#13b5ea','#ea580c'];
 
 function slugifyStr(t: string) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 
@@ -17,7 +17,7 @@ export default function CategoriesManager({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [editCat, setEditCat] = useState<AmbassadorCategory | null>(null);
-  const [form, setForm] = useState({ name: '', slug: '', description: '', color: '#7c3aed', icon: 'diversity_3', sort_order: 0 });
+  const [form, setForm] = useState({ name: '', slug: '', description: '', color: '#13b5ea', icon: 'diversity_3', sort_order: 0 });
   const [autoSlug, setAutoSlug] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export default function CategoriesManager({
 
   function openNew() {
     setEditCat(null);
-    setForm({ name: '', slug: '', description: '', color: '#7c3aed', icon: 'diversity_3', sort_order: categories.length });
+    setForm({ name: '', slug: '', description: '', color: '#13b5ea', icon: 'diversity_3', sort_order: categories.length });
     setAutoSlug(true);
     setCatError('');
     setShowForm(true);

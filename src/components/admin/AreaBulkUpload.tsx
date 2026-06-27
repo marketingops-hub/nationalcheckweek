@@ -62,7 +62,7 @@ function parseCSV(text: string): ParsedRow[] {
 
 const TYPE_COLORS: Record<string, string> = {
   city:   '#0ea5e9',
-  region: '#8b5cf6',
+  region: '#3eb5e9',
   lga:    '#f59e0b',
 };
 

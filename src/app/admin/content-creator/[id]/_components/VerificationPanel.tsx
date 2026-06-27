@@ -30,7 +30,7 @@ export function VerificationPanel({ draft }: { draft: ContentDraft }) {
   return (
     <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
       <h3 style={{
-        fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10,
+        fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10,
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>fact_check</span>
@@ -128,7 +128,7 @@ function ClaimRow({ claim, sub, tone }: { claim: string; sub: string; tone: 'goo
       borderLeft: `3px solid ${tone === 'good' ? '#10B981' : '#EF4444'}`,
       borderRadius: 4,
     }}>
-      <div style={{ color: '#1E1040', marginBottom: 2 }}>{claim}</div>
+      <div style={{ color: '#1b4673', marginBottom: 2 }}>{claim}</div>
       <div style={{ color: '#6B7280' }}>{sub}</div>
     </div>
   );

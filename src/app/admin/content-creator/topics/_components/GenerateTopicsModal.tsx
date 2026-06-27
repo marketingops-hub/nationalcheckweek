@@ -61,7 +61,7 @@ export function GenerateTopicsModal({
         }}
       >
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1E1040' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1b4673' }}>
             Generate topics from vault
           </h2>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>

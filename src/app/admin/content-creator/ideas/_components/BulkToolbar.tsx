@@ -41,12 +41,12 @@ export function BulkToolbar(props: BulkToolbarProps) {
   return (
     <div style={{
       position: 'sticky', top: 0, zIndex: 20,
-      background: 'linear-gradient(180deg, #5925F4 0%, #4C1FD8 100%)',
+      background: 'linear-gradient(180deg, #13b5ea 0%, #4C1FD8 100%)',
       color: '#fff',
       borderRadius: 12,
       padding: '10px 14px',
       marginBottom: 16,
-      boxShadow: '0 8px 24px rgba(89, 37, 244, 0.25)',
+      boxShadow: '0 8px 24px rgba(19,181,234, 0.25)',
       display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
     }}>
       <label style={{
@@ -92,7 +92,7 @@ export function BulkToolbar(props: BulkToolbarProps) {
               onClick={onGenerate}
               style={{
                 fontSize: 12, fontWeight: 700, padding: '7px 12px',
-                background: '#fff', color: '#5925F4',
+                background: '#fff', color: '#13b5ea',
                 border: 'none', borderRadius: 6, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}

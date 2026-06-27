@@ -64,7 +64,7 @@ export function MetaPanel({ draft }: { draft: ContentDraft }) {
       background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12,
       padding: 16, fontSize: 12, color: '#6B7280',
     }}>
-      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10 }}>
+      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>
         Provenance
       </h3>
 
@@ -89,7 +89,7 @@ export function MetaPanel({ draft }: { draft: ContentDraft }) {
                 <span style={{
                   marginLeft: 6, fontSize: 10,
                   padding: '1px 6px', borderRadius: 4,
-                  background: '#EEF2FF', color: '#4338CA',
+                  background: '#d6eef7', color: '#0d8cb8',
                 }}>
                   retried {lengthRetry.direction}
                 </span>
@@ -192,8 +192,8 @@ function LatencyBar({
   const total = latency.total ?? 0;
   if (total <= 0) return null;
   const segs: Array<{ label: string; ms: number; color: string }> = [
-    { label: 'Vault',     ms: latency.vault     ?? 0, color: '#A78BFA' },
-    { label: 'OpenAI',    ms: latency.openai    ?? 0, color: '#5925F4' },
+    { label: 'Vault',     ms: latency.vault     ?? 0, color: '#7094b8' },
+    { label: 'OpenAI',    ms: latency.openai    ?? 0, color: '#13b5ea' },
     { label: 'Anthropic', ms: latency.anthropic ?? 0, color: '#EC4899' },
   ];
 

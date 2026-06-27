@@ -78,7 +78,7 @@ export default function SubmissionsClient() {
         {[
           { label: 'Total Applications', value: applications.length, color: '#2563eb' },
           { label: 'New Applications', value: newApps, color: '#d97706', alert: newApps > 0 },
-          { label: 'Total Nominations', value: nominations.length, color: '#7c3aed' },
+          { label: 'Total Nominations', value: nominations.length, color: '#13b5ea' },
           { label: 'New Nominations', value: newNoms, color: '#d97706', alert: newNoms > 0 },
         ].map(stat => (
           <div key={stat.label} className="swa-card" style={{ textAlign: 'center', padding: '16px 12px', border: stat.alert ? `1px solid ${stat.color}44` : undefined, background: stat.alert ? stat.color + '08' : undefined }}>

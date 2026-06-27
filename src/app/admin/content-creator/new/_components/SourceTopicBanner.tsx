@@ -16,21 +16,21 @@ export function SourceTopicBanner({
 }: { topic: ContentTopic; onUnlink: () => void }) {
   return (
     <div style={{
-      background: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: 10,
+      background: '#d6eef7', border: '1px solid #C7D2FE', borderRadius: 10,
       padding: '12px 16px', marginBottom: 20,
       display: 'flex', alignItems: 'center', gap: 12,
     }}>
-      <span className="material-symbols-outlined" style={{ color: '#4338CA' }}>lightbulb</span>
+      <span className="material-symbols-outlined" style={{ color: '#0d8cb8' }}>lightbulb</span>
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize: 12, fontWeight: 700, color: '#4338CA',
+          fontSize: 12, fontWeight: 700, color: '#0d8cb8',
           textTransform: 'uppercase', letterSpacing: 0.5,
         }}>
           Pre-filled from topic
         </div>
         <div style={{
-          fontSize: 14, color: '#1E1040', fontWeight: 600,
+          fontSize: 14, color: '#1b4673', fontWeight: 600,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {topic.title}

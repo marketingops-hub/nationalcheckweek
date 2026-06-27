@@ -63,7 +63,7 @@ export default function ContentModerationPage() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1E1040", margin: 0 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1b4673", margin: 0 }}>
           Content Moderation
         </h1>
         <p style={{ color: "#6B7280", fontSize: 14, marginTop: 6 }}>
@@ -118,7 +118,7 @@ export default function ContentModerationPage() {
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, flexWrap: "wrap" }}>
                       <span style={{
-                        background: "#EEF2FF", color: "#3730A3", fontSize: 11, fontWeight: 700,
+                        background: "#d6eef7", color: "#1b4673", fontSize: 11, fontWeight: 700,
                         padding: "2px 8px", borderRadius: 999, textTransform: "uppercase",
                       }}>
                         {draft.content_type}
@@ -132,7 +132,7 @@ export default function ContentModerationPage() {
                     </div>
                     <Link
                       href={`/admin/content-creator/${draft.id}`}
-                      style={{ fontSize: 16, fontWeight: 700, color: "#1E1040", textDecoration: "none" }}
+                      style={{ fontSize: 16, fontWeight: 700, color: "#1b4673", textDecoration: "none" }}
                     >
                       {draft.title ?? "(No title)"}
                     </Link>

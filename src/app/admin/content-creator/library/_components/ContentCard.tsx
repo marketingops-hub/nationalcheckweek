@@ -35,9 +35,9 @@ import { formatAuthor } from "@/lib/content-creator/author";
 const STATUS_THEME: Record<string, { bg: string; color: string; label: string; stripe: string }> = {
   idea:          { bg: '#FEF3C7', color: '#92400E', label: 'Idea',          stripe: '#F59E0B' },
   approved_idea: { bg: '#DBEAFE', color: '#1D4ED8', label: 'Approved idea', stripe: '#2563EB' },
-  generating:    { bg: '#EDE9FE', color: '#5B21B6', label: 'Generating…',   stripe: '#7C3AED' },
-  draft:         { bg: '#E0E7FF', color: '#3730A3', label: 'Draft',         stripe: '#4F46E5' },
-  verifying:     { bg: '#EDE9FE', color: '#5B21B6', label: 'Verifying…',    stripe: '#7C3AED' },
+  generating:    { bg: '#d6eef7', color: '#153659', label: 'Generating…',   stripe: '#13b5ea' },
+  draft:         { bg: '#E0E7FF', color: '#1b4673', label: 'Draft',         stripe: '#0d8cb8' },
+  verifying:     { bg: '#d6eef7', color: '#153659', label: 'Verifying…',    stripe: '#13b5ea' },
   rejected:      { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected',      stripe: '#DC2626' },
   verified:      { bg: '#D1FAE5', color: '#065F46', label: 'Verified',      stripe: '#10B981' },
   archived:      { bg: '#F3F4F6', color: '#6B7280', label: 'Archived',      stripe: '#9CA3AF' },
@@ -110,14 +110,14 @@ export function ContentCard(props: ContentCardProps) {
       style={{
         position: 'relative',
         background: '#fff',
-        border: `1px solid ${selected ? '#5925F4' : '#E5E7EB'}`,
+        border: `1px solid ${selected ? '#13b5ea' : '#E5E7EB'}`,
         borderRadius: 14,
         padding: 18,
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
         boxShadow: selected
-          ? '0 0 0 3px rgba(89,37,244,0.08)'
+          ? '0 0 0 3px rgba(19,181,234,0.08)'
           : '0 1px 2px rgba(16,24,40,0.03)',
         opacity: disabled ? 0.6 : 1,
         transition: 'box-shadow 120ms ease, border-color 120ms ease',
@@ -144,7 +144,7 @@ export function ContentCard(props: ContentCardProps) {
             title="AI run in progress"
             style={{
               marginLeft: 'auto', display: 'inline-flex', alignItems: 'center',
-              gap: 4, color: '#7C3AED', fontSize: 11, fontWeight: 600,
+              gap: 4, color: '#13b5ea', fontSize: 11, fontWeight: 600,
             }}
           >
             <span
@@ -178,7 +178,7 @@ export function ContentCard(props: ContentCardProps) {
       <Link
         href={`/admin/content-creator/${draft.id}`}
         style={{
-          color: '#1E1040', fontSize: 16, fontWeight: 700, lineHeight: 1.35,
+          color: '#1b4673', fontSize: 16, fontWeight: 700, lineHeight: 1.35,
           textDecoration: 'none',
           display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           overflow: 'hidden',

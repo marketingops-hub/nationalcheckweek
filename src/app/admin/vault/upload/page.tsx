@@ -190,9 +190,9 @@ export default function VaultUploadPage() {
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '10px 16px',
                   border: 'none',
-                  borderBottom: mode === m.key ? '2px solid #1E1040' : '2px solid transparent',
+                  borderBottom: mode === m.key ? '2px solid #1b4673' : '2px solid transparent',
                   background: 'transparent',
-                  color: mode === m.key ? '#1E1040' : '#6B7280',
+                  color: mode === m.key ? '#1b4673' : '#6B7280',
                   fontWeight: mode === m.key ? 700 : 500,
                   cursor: 'pointer',
                 }}
@@ -213,7 +213,7 @@ export default function VaultUploadPage() {
                 if (e.dataTransfer.files) onFilesSelected(e.dataTransfer.files);
               }}
               style={{
-                border: `2px dashed ${dragging ? '#1E1040' : '#D1D5DB'}`,
+                border: `2px dashed ${dragging ? '#1b4673' : '#D1D5DB'}`,
                 borderRadius: 12,
                 padding: '48px 24px',
                 textAlign: 'center',
@@ -223,10 +223,10 @@ export default function VaultUploadPage() {
               }}
               onClick={() => fileInputRef.current?.click()}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#1E1040', display: 'block', marginBottom: 12 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#1b4673', display: 'block', marginBottom: 12 }}>
                 cloud_upload
               </span>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#1E1040', marginBottom: 4 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#1b4673', marginBottom: 4 }}>
                 Drop files here or click to select
               </div>
               <div style={{ fontSize: 13, color: '#6B7280' }}>
@@ -347,7 +347,7 @@ export default function VaultUploadPage() {
 
         {/* ── Right: queue ────────────────────────────────────────────── */}
         <aside>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Upload queue ({queue.length})
           </h3>
           {queue.length === 0 ? (
@@ -375,7 +375,7 @@ function QueueRow({ doc }: { doc: VaultDocument }) {
     >
       <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#1E1040' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#1b4673' }}>
             {DOCUMENT_KIND_ICONS[doc.kind]}
           </span>
           <div style={{ fontSize: 13, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -396,9 +396,9 @@ function QueueRow({ doc }: { doc: VaultDocument }) {
 export function StatusChip({ status }: { status: DocumentStatus }) {
   const m: Record<DocumentStatus, { bg: string; color: string; label: string }> = {
     pending:    { bg: '#F3F4F6', color: '#6B7280', label: 'Queued' },
-    extracting: { bg: '#E0E7FF', color: '#4338CA', label: 'Extracting…' },
-    chunking:   { bg: '#E0E7FF', color: '#4338CA', label: 'Chunking…' },
-    embedding:  { bg: '#E0E7FF', color: '#4338CA', label: 'Embedding…' },
+    extracting: { bg: '#E0E7FF', color: '#0d8cb8', label: 'Extracting…' },
+    chunking:   { bg: '#E0E7FF', color: '#0d8cb8', label: 'Chunking…' },
+    embedding:  { bg: '#E0E7FF', color: '#0d8cb8', label: 'Embedding…' },
     ready:      { bg: '#D1FAE5', color: '#047857', label: 'Ready' },
     failed:     { bg: '#FEE2E2', color: '#B91C1C', label: 'Failed' },
   };

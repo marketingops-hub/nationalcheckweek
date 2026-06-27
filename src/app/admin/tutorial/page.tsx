@@ -228,7 +228,7 @@ const SECTIONS: Section[] = [
   },
 
   {
-    id: 'public', label: 'Public Pages', icon: 'public', color: '#8b5cf6',
+    id: 'public', label: 'Public Pages', icon: 'public', color: '#3eb5e9',
     features: [
       {
         id: 'events', icon: 'event', label: 'Events', href: '/admin/events',
@@ -630,7 +630,7 @@ const SECTIONS: Section[] = [
   },
 
   {
-    id: 'ai', label: 'AI', icon: 'auto_awesome', color: '#7c3aed',
+    id: 'ai', label: 'AI', icon: 'auto_awesome', color: '#13b5ea',
     features: [
       {
         id: 'vault-sources', icon: 'lock', label: 'Vault Library', href: '/admin/vault/sources',
@@ -1363,10 +1363,10 @@ export default function TutorialPage() {
       </div>
 
       {/* ── Quick Reference banner ── */}
-      <div style={{ marginBottom: 22, padding: '14px 16px', background: 'linear-gradient(135deg,#f8fafc,#eef2ff)', borderRadius: 12, border: '1px solid #e5e7eb' }}>
+      <div style={{ marginBottom: 22, padding: '14px 16px', background: 'linear-gradient(135deg,#f8fafc,#d6eef7)', borderRadius: 12, border: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 9, background: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: '#0d8cb8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#fff' }}>menu_book</span>
             </div>
             <div>
@@ -1376,7 +1376,7 @@ export default function TutorialPage() {
           </div>
           <button
             onClick={() => { setSearch(''); setActiveSection(SECTIONS[0].id); }}
-            style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1px solid #c7d2fe', background: '#fff', color: '#4338ca', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1px solid #c7d2fe', background: '#fff', color: '#0d8cb8', cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             View All
           </button>

@@ -65,8 +65,8 @@ export function IdeasToolbar(props: IdeasToolbarProps) {
                 padding: '6px 12px',
                 borderRadius: 8,
                 border: '1px solid',
-                borderColor:  active ? '#5925F4' : '#E5E7EB',
-                background:   active ? '#5925F4' : '#fff',
+                borderColor:  active ? '#13b5ea' : '#E5E7EB',
+                background:   active ? '#13b5ea' : '#fff',
                 color:        active ? '#fff'    : '#374151',
                 fontSize: 13,
                 fontWeight: 600,
@@ -105,7 +105,7 @@ export function IdeasToolbar(props: IdeasToolbarProps) {
           onChange={(e) => onTypeChange(e.target.value as ContentType | 'all')}
           style={{
             padding: '6px 10px', borderRadius: 8, border: '1px solid #D1D5DB',
-            fontSize: 13, background: '#fff', color: '#1E1040', cursor: 'pointer',
+            fontSize: 13, background: '#fff', color: '#1b4673', cursor: 'pointer',
           }}
         >
           <option value="all">All types</option>
@@ -122,7 +122,7 @@ export function IdeasToolbar(props: IdeasToolbarProps) {
         fontSize: 12, color: '#6B7280',
       }}>
         <span>
-          Showing <strong style={{ color: '#1E1040' }}>{totalShowing}</strong>
+          Showing <strong style={{ color: '#1b4673' }}>{totalShowing}</strong>
           {totalShowing === 1 ? ' idea' : ' ideas'}
         </span>
         <button

@@ -39,7 +39,7 @@ export default async function AdminIssuesPage() {
       {issues.length === 0 && !fetchError ? (
         <div style={{ textAlign: "center", padding: "80px 24px", color: "#9CA3AF" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 48, display: "block", marginBottom: 16 }}>description</span>
-          <h3 style={{ color: "#1E1040", marginBottom: 8 }}>No issues yet</h3>
+          <h3 style={{ color: "#1b4673", marginBottom: 8 }}>No issues yet</h3>
           <p style={{ marginBottom: 20 }}>Create your first issue to start building the wellbeing database.</p>
           <Link href="/admin/issues/new" className="swa-btn swa-btn--primary">Create an issue</Link>
         </div>

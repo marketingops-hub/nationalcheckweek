@@ -41,9 +41,9 @@ export function TopicsTabs({
             style={{
               padding: '10px 16px',
               border: 'none',
-              borderBottom: isActive ? '2px solid #1E1040' : '2px solid transparent',
+              borderBottom: isActive ? '2px solid #1b4673' : '2px solid transparent',
               background: 'transparent',
-              color: isActive ? '#1E1040' : '#6B7280',
+              color: isActive ? '#1b4673' : '#6B7280',
               fontWeight: isActive ? 700 : 500,
               cursor: 'pointer',
               fontSize: 14,

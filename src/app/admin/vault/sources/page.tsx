@@ -177,7 +177,7 @@ export default function VaultLibraryPage() {
 function Stat({ label, value, tone = 'neutral' as 'neutral' | 'good' | 'busy' }: { label: string; value: number | string; tone?: 'neutral' | 'good' | 'busy' }) {
   const colour =
     tone === 'good' ? '#047857' :
-    tone === 'busy' ? '#B45309' : '#1E1040';
+    tone === 'busy' ? '#B45309' : '#1b4673';
   return (
     <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: '14px 16px' }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: colour }}>{value}</div>
@@ -223,10 +223,10 @@ function DocumentCard({
       display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#1E1040' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#1b4673' }}>
           {DOCUMENT_KIND_ICONS[doc.kind]}
         </span>
-        <Link href={`/admin/vault/sources/${doc.id}`} style={{ flex: 1, minWidth: 0, color: '#1E1040', textDecoration: 'none' }}>
+        <Link href={`/admin/vault/sources/${doc.id}`} style={{ flex: 1, minWidth: 0, color: '#1b4673', textDecoration: 'none' }}>
           <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {doc.title}
           </div>
@@ -279,7 +279,7 @@ function EmptyState() {
   return (
     <div style={{ textAlign: 'center', padding: '80px 24px', color: '#9CA3AF', border: '1px dashed #E5E7EB', borderRadius: 12 }}>
       <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 16, color: '#D1D5DB' }}>inventory_2</span>
-      <h3 style={{ color: '#1E1040', marginBottom: 8 }}>Your vault is empty</h3>
+      <h3 style={{ color: '#1b4673', marginBottom: 8 }}>Your vault is empty</h3>
       <p style={{ marginBottom: 20 }}>Upload PDFs, paste text, or crawl a URL to give the AI something to work with.</p>
       <Link href="/admin/vault/upload" className="swa-btn swa-btn--primary">Upload a document</Link>
     </div>

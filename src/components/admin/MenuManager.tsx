@@ -159,7 +159,7 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
         {success && <div className="admin-alert admin-alert-success mb-4">{success}</div>}
 
         {/* Live preview bar */}
-        <div className="rounded-xl px-6 py-3 mb-6 flex items-center gap-6 overflow-x-auto" style={{ background: "linear-gradient(135deg, #5925f4, #7c56ff)", border: "none" }}>
+        <div className="rounded-xl px-6 py-3 mb-6 flex items-center gap-6 overflow-x-auto" style={{ background: "linear-gradient(135deg, #13b5ea, #7c56ff)", border: "none" }}>
           <span className="text-sm font-bold flex-shrink-0 text-white">
             National Check-in Week
           </span>
@@ -199,7 +199,7 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
                   </div>
 
                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                    style={{ background: "rgba(89,37,244,0.1)", color: "#5925f4" }}>
+                    style={{ background: "rgba(19,181,234,0.1)", color: "#13b5ea" }}>
                     {item.position}
                   </div>
 
@@ -279,7 +279,7 @@ export default function MenuManager({ initialItems, pages }: { initialItems: Men
                 {(["custom", "page"] as const).map(t => (
                   <button key={t} onClick={() => setLinkType(t)}
                     className="flex-1 text-xs font-semibold py-2 capitalize"
-                    style={{ background: linkType === t ? "rgba(89,37,244,0.1)" : "transparent", color: linkType === t ? "#5925f4" : "var(--admin-text-subtle)" }}>
+                    style={{ background: linkType === t ? "rgba(19,181,234,0.1)" : "transparent", color: linkType === t ? "#13b5ea" : "var(--admin-text-subtle)" }}>
                     {t === "custom" ? "Custom URL" : "CMS Page"}
                   </button>
                 ))}

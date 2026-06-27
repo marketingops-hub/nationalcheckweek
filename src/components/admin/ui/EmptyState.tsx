@@ -50,7 +50,7 @@ export function EmptyState({
         style={{
           fontSize: '18px',
           fontWeight: 600,
-          color: '#1e1040',
+          color: '#1b4673',
           marginBottom: '8px',
         }}
       >

@@ -125,7 +125,7 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {draft.brief?.area_slug && (
             <span style={{
-              background: '#EEF2FF', color: '#3730A3', fontSize: 12, fontWeight: 600,
+              background: '#d6eef7', color: '#1b4673', fontSize: 12, fontWeight: 600,
               padding: '4px 10px', borderRadius: 999,
             }}>
               <span className="material-symbols-outlined" style={{ fontSize: 13, verticalAlign: '-2px', marginRight: 4 }}>location_on</span>
@@ -157,7 +157,7 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
             padding: '10px 12px',
             border: '1px solid #E5E7EB',
             borderRadius: 8,
-            color: '#1E1040',
+            color: '#1b4673',
           }}
         />
       )}
@@ -373,10 +373,10 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
           gap: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#5925F4' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#13b5ea' }}>
               psychology
             </span>
-            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1E1040', letterSpacing: 0.3 }}>
+            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1b4673', letterSpacing: 0.3 }}>
               What should the AI fix?
             </h3>
           </div>
@@ -411,7 +411,7 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
                 borderRadius: 6,
                 fontSize: 12,
                 background: '#fff',
-                color: '#1E1040',
+                color: '#1b4673',
                 cursor: 'pointer',
               }}
             >

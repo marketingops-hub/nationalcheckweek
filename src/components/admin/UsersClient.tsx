@@ -19,7 +19,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ROLES: { value: AdminUserRole; label: string; desc: string; color: string }[] = [
   { value: 'editor',      label: 'Editor',      desc: 'Can create and edit content, cannot manage users', color: '#0891b2' },
-  { value: 'admin',       label: 'Admin',        desc: 'Full access to all features',                      color: '#7c3aed' },
+  { value: 'admin',       label: 'Admin',        desc: 'Full access to all features',                      color: '#13b5ea' },
   { value: 'super_admin', label: 'Super Admin',  desc: 'Full access + user management',                    color: '#dc2626' },
 ];
 
@@ -318,7 +318,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: AdminUser[
             <button
               onClick={() => handleResetPassword(editUser)} disabled={busy}
               className="admin-btn"
-              style={{ background: "var(--admin-accent-bg)", color: "var(--admin-accent)", border: "1px solid rgba(89,37,244,0.2)" }}
+              style={{ background: "var(--admin-accent-bg)", color: "var(--admin-accent)", border: "1px solid rgba(19,181,234,0.2)" }}
             >
               {busy ? "Sending…" : "Send Password Reset Email"}
             </button>

@@ -9,7 +9,7 @@
 
 export function DraftSpinner({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#4338CA', fontSize: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#0d8cb8', fontSize: 14 }}>
       <span
         className="material-symbols-outlined"
         style={{ fontSize: 18, animation: 'cc-spin 1.2s linear infinite' }}

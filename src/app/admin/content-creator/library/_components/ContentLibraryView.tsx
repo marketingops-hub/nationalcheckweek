@@ -65,7 +65,7 @@ export function ContentLibraryView({ state }: { state: LibraryState }) {
         <div
           style={{
             position: 'sticky', top: 12, zIndex: 2,
-            background: '#1E1040', color: '#fff',
+            background: '#1b4673', color: '#fff',
             borderRadius: 10, padding: '10px 14px',
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
             marginBottom: 12,
@@ -82,7 +82,7 @@ export function ContentLibraryView({ state }: { state: LibraryState }) {
             {selected.size} selected
           </span>
           {bulkBusy && (
-            <span style={{ fontSize: 12, color: '#C4B5FD' }}>
+            <span style={{ fontSize: 12, color: '#9fc9e6' }}>
               {bulkBusy.label}… {bulkBusy.done}/{bulkBusy.total}
             </span>
           )}

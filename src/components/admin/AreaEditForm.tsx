@@ -404,9 +404,9 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
 
           {/* ── Rewrite from document panel ── */}
           {showIssueRewrite && !isNew && (
-            <div style={{ background: "#f5f3ff", border: "1px solid #c4b5fd", borderRadius: 10, padding: "16px 18px" }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#5b21b6", marginBottom: 4 }}>Rewrite Local Issues from Document</p>
-              <p style={{ fontSize: 12, color: "#7c3aed", marginBottom: 12 }}>
+            <div style={{ background: "#f5f3ff", border: "1px solid #9fc9e6", borderRadius: 10, padding: "16px 18px" }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#153659", marginBottom: 4 }}>Rewrite Local Issues from Document</p>
+              <p style={{ fontSize: 12, color: "#13b5ea", marginBottom: 12 }}>
                 Select a Vault document — AI will rewrite the <strong>stat</strong> and <strong>description</strong> of each issue using it as a source, citing the document name for any statistics.
               </p>
 
@@ -415,14 +415,14 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               ) : vaultDocs.length === 0 ? (
                 <p style={{ fontSize: 12, color: "#9ca3af" }}>
                   No indexed documents yet.{" "}
-                  <a href="/admin/vault/upload" target="_blank" style={{ color: "#7c3aed" }}>Upload one →</a>
+                  <a href="/admin/vault/upload" target="_blank" style={{ color: "#13b5ea" }}>Upload one →</a>
                 </p>
               ) : (
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                   <select
                     value={issueRewriteDocId}
                     onChange={e => { setIssueRewriteDocId(e.target.value); setIssueRewriteResult(null); setIssueRewriteError(""); }}
-                    style={{ flex: "1 1 260px", padding: "7px 10px", borderRadius: 7, border: issueRewriteDocId ? "1.5px solid #7c3aed" : "1.5px solid #e5e7eb", fontSize: 13, background: "#fff" }}
+                    style={{ flex: "1 1 260px", padding: "7px 10px", borderRadius: 7, border: issueRewriteDocId ? "1.5px solid #13b5ea" : "1.5px solid #e5e7eb", fontSize: 13, background: "#fff" }}
                   >
                     <option value="">— choose a document —</option>
                     {vaultDocs.map(d => <option key={d.id} value={d.id}>{d.title} ({d.kind})</option>)}
@@ -445,14 +445,14 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               )}
 
               {issueRewriteResult && (
-                <div style={{ marginTop: 12, padding: "12px 14px", background: "#fff", borderRadius: 8, border: "1px solid #c4b5fd" }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "#5b21b6", marginBottom: 8 }}>
+                <div style={{ marginTop: 12, padding: "12px 14px", background: "#fff", borderRadius: 8, border: "1px solid #9fc9e6" }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#153659", marginBottom: 8 }}>
                     Preview — {issueRewriteResult.issues.length} issues rewritten from <em>{issueRewriteResult.document_title}</em>
                   </p>
                   {issueRewriteResult.issues.map((iss, i) => (
-                    <div key={i} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: i < issueRewriteResult.issues.length - 1 ? "1px solid #ede9fe" : "none" }}>
+                    <div key={i} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: i < issueRewriteResult.issues.length - 1 ? "1px solid #d6eef7" : "none" }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>{iss.title}</span>
-                      {iss.stat && <span style={{ marginLeft: 8, fontSize: 11, color: "#7c3aed", background: "#ede9fe", padding: "1px 6px", borderRadius: 99 }}>{iss.stat}</span>}
+                      {iss.stat && <span style={{ marginLeft: 8, fontSize: 11, color: "#13b5ea", background: "#d6eef7", padding: "1px 6px", borderRadius: 99 }}>{iss.stat}</span>}
                       <p style={{ fontSize: 12, color: "#4b5563", marginTop: 3, lineHeight: 1.5 }}>{iss.desc}</p>
                     </div>
                   ))}

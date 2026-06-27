@@ -27,7 +27,7 @@ export default async function EditPagePage({ params }: Props) {
       <div className="swa-page-header">
         <div>
           <div style={{ fontSize: "0.78rem", color: "#9CA3AF", marginBottom: 4 }}>
-            <a href="/admin/cms/pages" style={{ color: "#7C3AED", fontWeight: 600, textDecoration: "none" }}>CMS Pages</a>
+            <a href="/admin/cms/pages" style={{ color: "#13b5ea", fontWeight: 600, textDecoration: "none" }}>CMS Pages</a>
             {" / "}Edit
           </div>
           <h1 className="swa-page-title">{page.title}</h1>

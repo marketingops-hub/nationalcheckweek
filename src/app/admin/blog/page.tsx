@@ -86,7 +86,7 @@ export default function AdminBlogPage() {
           <span className="material-symbols-outlined" style={{ fontSize: 48, display: "block", marginBottom: 16 }}>
             article
           </span>
-          <h3 style={{ color: "#1E1040", marginBottom: 8 }}>No blog posts yet</h3>
+          <h3 style={{ color: "#1b4673", marginBottom: 8 }}>No blog posts yet</h3>
           <p style={{ marginBottom: 20 }}>Create your first blog post to get started.</p>
           <Link href="/admin/blog/new" className="swa-btn swa-btn--primary">
             Create a post
@@ -110,7 +110,7 @@ export default function AdminBlogPage() {
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1E1040" }}>{post.title}</span>
+                  <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1b4673" }}>{post.title}</span>
                   {!post.published && (
                     <span
                       style={{

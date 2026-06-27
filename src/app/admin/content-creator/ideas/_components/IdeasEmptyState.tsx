@@ -22,19 +22,19 @@ export function IdeasEmptyState({
       <div style={{
         width: 64, height: 64, margin: '0 auto 16px',
         borderRadius: 16,
-        background: 'linear-gradient(135deg, #EDE9FE 0%, #F3E8FF 100%)',
+        background: 'linear-gradient(135deg, #d6eef7 0%, #F3E8FF 100%)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <span
           className="material-symbols-outlined"
-          style={{ fontSize: 32, color: '#7C3AED' }}
+          style={{ fontSize: 32, color: '#13b5ea' }}
         >
           emoji_objects
         </span>
       </div>
 
       <h3 style={{
-        fontSize: 16, color: '#1E1040', margin: '0 0 8px', fontWeight: 700,
+        fontSize: 16, color: '#1b4673', margin: '0 0 8px', fontWeight: 700,
       }}>
         {filtered ? 'No ideas match these filters' : 'No ideas yet'}
       </h3>

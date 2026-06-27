@@ -44,7 +44,7 @@ export function LibraryEmptyState({
       </span>
 
       <div>
-        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E1040', margin: '0 0 4px' }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1b4673', margin: '0 0 4px' }}>
           {isFiltered ? 'No content matches these filters' : 'No content yet'}
         </h3>
         <p style={{ fontSize: 13, color: '#6B7280', margin: 0, maxWidth: 420 }}>

@@ -142,10 +142,10 @@ export function BriefSettingsPanel({ draft, disabled, onSave }: BriefSettingsPan
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2,
       }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#5925F4' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#13b5ea' }}>
           tune
         </span>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', margin: 0, letterSpacing: 0.3 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', margin: 0, letterSpacing: 0.3 }}>
           Brief settings
         </h2>
         {dirty && !disabled && (
@@ -289,7 +289,7 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 const selectStyle: React.CSSProperties = {
   padding: '7px 10px', borderRadius: 8,
   border: '1px solid #D1D5DB', fontSize: 13,
-  background: '#fff', color: '#1E1040',
+  background: '#fff', color: '#1b4673',
   cursor: 'pointer', minWidth: 180,
 };
 

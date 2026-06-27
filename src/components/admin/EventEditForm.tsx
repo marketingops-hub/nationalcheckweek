@@ -166,15 +166,15 @@ export default function EventEditForm({ event }: Props) {
             style={{
               padding: "10px 18px", border: "none", background: "none", cursor: "pointer",
               fontSize: "0.85rem", fontWeight: tab === t.id ? 700 : 500,
-              color: tab === t.id ? "#7C3AED" : "#6B7280",
-              borderBottom: tab === t.id ? "2px solid #7C3AED" : "2px solid transparent",
+              color: tab === t.id ? "#13b5ea" : "#6B7280",
+              borderBottom: tab === t.id ? "2px solid #13b5ea" : "2px solid transparent",
               marginBottom: -1, display: "flex", alignItems: "center", gap: 6,
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{t.icon}</span>
             {t.label}
             {"count" in t && t.count > 0 && (
-              <span style={{ background: "#7C3AED", color: "#fff", borderRadius: 100, fontSize: "0.7rem", padding: "1px 6px" }}>{t.count}</span>
+              <span style={{ background: "#13b5ea", color: "#fff", borderRadius: 100, fontSize: "0.7rem", padding: "1px 6px" }}>{t.count}</span>
             )}
           </button>
         ))}

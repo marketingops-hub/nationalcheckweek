@@ -106,7 +106,7 @@ export default function ContentCreatorOverview() {
         display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24,
         padding: 16, background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 12,
       }}>
-        <PipelineStep icon="lightbulb"   label="Topics"    href="/admin/content-creator/topics"   color="#4338CA" />
+        <PipelineStep icon="lightbulb"   label="Topics"    href="/admin/content-creator/topics"   color="#0d8cb8" />
         <PipelineArrow />
         <PipelineStep icon="lightbulb"   label="Ideas"     href="/admin/content-creator/ideas"    color="#B45309" />
         <PipelineArrow />
@@ -114,7 +114,7 @@ export default function ContentCreatorOverview() {
         <PipelineArrow />
         <PipelineStep icon="verified"    label="Verified"  href="/admin/content-creator/library?tab=verified" color="#047857" />
         <PipelineArrow />
-        <PipelineStep icon="rate_review" label="Review"    href="/admin/content-moderation"       color="#7C3AED" badge={inReviewCount} />
+        <PipelineStep icon="rate_review" label="Review"    href="/admin/content-moderation"       color="#13b5ea" badge={inReviewCount} />
       </div>
 
       {/* Stage KPI cards */}
@@ -137,7 +137,7 @@ export default function ContentCreatorOverview() {
                 {s.label}
               </span>
             </div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: '#1E1040', lineHeight: 1 }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: '#1b4673', lineHeight: 1 }}>
               {loading ? '…' : s.count}
             </div>
             <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 6 }}>{s.hint}</div>
@@ -148,17 +148,17 @@ export default function ContentCreatorOverview() {
           href="/admin/content-moderation"
           style={{
             display: 'block', background: inReviewCount > 0 ? '#F5F3FF' : '#fff',
-            border: `1px solid ${inReviewCount > 0 ? '#C4B5FD' : '#E5E7EB'}`,
+            border: `1px solid ${inReviewCount > 0 ? '#9fc9e6' : '#E5E7EB'}`,
             borderRadius: 12, padding: 16, textDecoration: 'none',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#7C3AED', marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#13b5ea', marginBottom: 8 }}>
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>rate_review</span>
             <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               In Review
             </span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: '#1E1040', lineHeight: 1 }}>
+          <div style={{ fontSize: 32, fontWeight: 800, color: '#1b4673', lineHeight: 1 }}>
             {loading ? '…' : inReviewCount}
           </div>
           <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 6 }}>
@@ -170,7 +170,7 @@ export default function ContentCreatorOverview() {
       {/* Recent activity */}
       <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Recent activity
           </h2>
           <Link href="/admin/content-creator/library" style={{ fontSize: 12, color: '#6B7280', textDecoration: 'none' }}>
@@ -207,7 +207,7 @@ function PipelineStep({ icon, label, href, color, badge }: { icon: string; label
       <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
       {badge != null && badge > 0 && (
         <span style={{
-          marginLeft: 2, background: '#7C3AED', color: '#fff',
+          marginLeft: 2, background: '#13b5ea', color: '#fff',
           fontSize: 10, fontWeight: 700, borderRadius: 999,
           padding: '1px 5px', lineHeight: '14px',
         }}>
@@ -245,7 +245,7 @@ function RecentRow({ draft }: { draft: ContentDraft }) {
         {draft.status.replace('_', ' ')}
       </span>
       <span style={{
-        flex: 1, minWidth: 0, fontSize: 13, color: '#1E1040',
+        flex: 1, minWidth: 0, fontSize: 13, color: '#1b4673',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
         {title}

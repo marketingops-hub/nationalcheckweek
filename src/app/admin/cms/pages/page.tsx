@@ -141,7 +141,7 @@ export default function CmsPagesPage() {
       {!loading && pages.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 24px", color: "#9CA3AF" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 48, display: "block", marginBottom: 16 }}>article</span>
-          <h3 style={{ color: "#1E1040", marginBottom: 8 }}>No pages yet</h3>
+          <h3 style={{ color: "#1b4673", marginBottom: 8 }}>No pages yet</h3>
           <p style={{ marginBottom: 20 }}>Create your first CMS page to add it to the site.</p>
           <Link href="/admin/cms/pages/new" className="swa-btn swa-btn--primary" style={{ textDecoration: "none" }}>Create a page</Link>
         </div>
@@ -167,7 +167,7 @@ export default function CmsPagesPage() {
                       {page.title}
                       {page.category === 'geo' && (
                         <span style={{
-                          background: '#EEF2FF', color: '#3730A3',
+                          background: '#d6eef7', color: '#1b4673',
                           fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
                           padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase',
                         }}>

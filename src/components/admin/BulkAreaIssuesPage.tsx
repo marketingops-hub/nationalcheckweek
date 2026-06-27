@@ -179,9 +179,9 @@ export default function BulkAreaIssuesPage() {
       </div>
 
       {/* ── Step 1: URL ── */}
-      <div style={{ marginBottom: 24, padding: '20px 22px', background: step === 1 ? '#f5f3ff' : 'var(--color-surface)', border: `1px solid ${step === 1 ? '#c4b5fd' : 'var(--color-border)'}`, borderRadius: 10 }}>
+      <div style={{ marginBottom: 24, padding: '20px 22px', background: step === 1 ? '#f5f3ff' : 'var(--color-surface)', border: `1px solid ${step === 1 ? '#9fc9e6' : 'var(--color-border)'}`, borderRadius: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <span style={{ width: 26, height: 26, borderRadius: '50%', background: docReady ? '#16a34a' : '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+          <span style={{ width: 26, height: 26, borderRadius: '50%', background: docReady ? '#16a34a' : '#13b5ea', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
             {docReady ? '✓' : '1'}
           </span>
           <span style={{ fontWeight: 600, fontSize: 15 }}>Source URL</span>
@@ -211,9 +211,9 @@ export default function BulkAreaIssuesPage() {
               The title is used when citing stats — be specific, e.g. "AIHW Young Australians Report 2024"
             </p>
             {pollingId && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#7c3aed' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#13b5ea' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>refresh</span>
-                Indexing… <span style={{ padding: '1px 8px', borderRadius: 99, background: '#ede9fe', fontSize: 11, fontWeight: 600 }}>{pollingStatus}</span>
+                Indexing… <span style={{ padding: '1px 8px', borderRadius: 99, background: '#d6eef7', fontSize: 11, fontWeight: 600 }}>{pollingStatus}</span>
               </div>
             )}
             {urlError && <p style={{ fontSize: 12, color: '#dc2626' }}>{urlError}</p>}
@@ -240,9 +240,9 @@ export default function BulkAreaIssuesPage() {
       {docReady && (
         <div style={{ marginBottom: 24, padding: '20px 22px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>2</span>
+            <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#13b5ea', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>2</span>
             <span style={{ fontWeight: 600, fontSize: 15 }}>Select Areas</span>
-            {selected.size > 0 && <span style={{ fontSize: 12, background: '#7c3aed', color: '#fff', padding: '2px 10px', borderRadius: 99, fontWeight: 700 }}>{selected.size} selected</span>}
+            {selected.size > 0 && <span style={{ fontSize: 12, background: '#13b5ea', color: '#fff', padding: '2px 10px', borderRadius: 99, fontWeight: 700 }}>{selected.size} selected</span>}
           </div>
 
           {/* Controls */}
@@ -286,7 +286,7 @@ export default function BulkAreaIssuesPage() {
                       <td>
                         {issueCount === 0
                           ? <span style={{ color: '#9ca3af', fontSize: 11 }}>none — will skip</span>
-                          : <span style={{ color: '#7c3aed', fontWeight: 600 }}>{issueCount} issue{issueCount !== 1 ? 's' : ''}</span>}
+                          : <span style={{ color: '#13b5ea', fontWeight: 600 }}>{issueCount} issue{issueCount !== 1 ? 's' : ''}</span>}
                       </td>
                     </tr>
                   );
@@ -323,7 +323,7 @@ export default function BulkAreaIssuesPage() {
             {log.map((entry, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 3 }}>
                 <span style={{ color: '#475569', flexShrink: 0, fontSize: 11 }}>{String(i + 1).padStart(3, '0')}</span>
-                {entry.areaName && <span style={{ color: '#7c3aed', flexShrink: 0, minWidth: 180 }}>{entry.areaName}</span>}
+                {entry.areaName && <span style={{ color: '#13b5ea', flexShrink: 0, minWidth: 180 }}>{entry.areaName}</span>}
                 <span style={{ color: LEVEL_COLOR[entry.level] }}>{entry.msg}</span>
               </div>
             ))}

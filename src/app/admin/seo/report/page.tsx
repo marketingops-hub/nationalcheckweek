@@ -43,7 +43,7 @@ function statusIcon(s: CheckStatus) {
 function typeLabel(t: PageReport['type']) {
   const map = { blog: 'Blog', event: 'Event', page: 'Page' };
   const bg  = { blog: '#eff6ff', event: '#fdf4ff', page: '#f0fdf4' };
-  const col = { blog: '#3b82f6', event: '#9333ea', page: '#16a34a' };
+  const col = { blog: '#3b82f6', event: '#13b5ea', page: '#16a34a' };
   return (
     <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: bg[t], color: col[t] }}>
       {map[t]}

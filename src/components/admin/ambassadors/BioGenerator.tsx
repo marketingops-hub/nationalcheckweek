@@ -42,7 +42,7 @@ export default function BioGenerator({
   };
 
   return (
-    <div style={{ marginTop: 20, padding: '16px 20px', background: 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(79,70,229,0.04))', border: '1px solid var(--color-primary-light)', borderRadius: 'var(--radius-lg)' }}>
+    <div style={{ marginTop: 20, padding: '16px 20px', background: 'linear-gradient(135deg, rgba(19,181,234,0.06), rgba(79,70,229,0.04))', border: '1px solid var(--color-primary-light)', borderRadius: 'var(--radius-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--color-primary)' }}>auto_awesome</span>
         <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--color-primary)' }}>BIO Generator</span>

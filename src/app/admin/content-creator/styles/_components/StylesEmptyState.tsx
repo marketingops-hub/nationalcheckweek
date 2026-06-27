@@ -16,7 +16,7 @@ export function StylesEmptyState({ onCreate }: { onCreate: () => void }) {
       >
         brush
       </span>
-      <h3 style={{ color: '#1E1040', marginBottom: 8 }}>No writing styles yet</h3>
+      <h3 style={{ color: '#1b4673', marginBottom: 8 }}>No writing styles yet</h3>
       <p style={{ marginBottom: 20 }}>
         Create your first style — e.g. Storytelling, Educational, or Scientific —
         then pick it on the brief form to steer how the AI writes.

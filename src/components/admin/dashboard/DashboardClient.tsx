@@ -61,8 +61,8 @@ export function DashboardClient({ userEmail, today }: { userEmail: string; today
   const activityRows: ActivityRow[] = [
     ...(activity.issues || []).map(r => ({
       icon: 'warning',
-      iconBg: '#fef3c7',
-      iconColor: '#d97706',
+      iconBg: '#fbf0dd',
+      iconColor: '#c98a1e',
       title: 'Issue updated',
       description: r.title || '—',
       time: timeAgo(r.updated_at),
@@ -71,8 +71,8 @@ export function DashboardClient({ userEmail, today }: { userEmail: string; today
     })),
     ...(activity.areas || []).map(r => ({
       icon: 'location_on',
-      iconBg: '#ede9fe',
-      iconColor: '#7c3aed',
+      iconBg: '#f1e9f7',
+      iconColor: '#9b6cc0',
       title: 'Area updated',
       description: `${r.name || '—'}, ${r.state || ''}`,
       time: timeAgo(r.updated_at),
@@ -81,8 +81,8 @@ export function DashboardClient({ userEmail, today }: { userEmail: string; today
     })),
     ...(activity.events || []).map(r => ({
       icon: 'event',
-      iconBg: '#e0f2fe',
-      iconColor: '#0284c7',
+      iconBg: '#e6f6f3',
+      iconColor: '#3a9e8e',
       title: 'Event updated',
       description: r.title || '—',
       time: timeAgo(r.updated_at),
@@ -240,13 +240,13 @@ export function DashboardClient({ userEmail, today }: { userEmail: string; today
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '8px 0' }}>
               <svg width="80" height="80" viewBox="0 0 140 140" style={{ flexShrink: 0 }}>
-                <circle cx="70" cy="70" r="54" fill="none" stroke="#ede9fe" strokeWidth="12"/>
+                <circle cx="70" cy="70" r="54" fill="none" stroke="#e4eef5" strokeWidth="12"/>
                 <motion.circle
                   cx="70"
                   cy="70"
                   r="54"
                   fill="none"
-                  stroke="#7c3aed"
+                  stroke="#13b5ea"
                   strokeWidth="12"
                   strokeDasharray={circumference}
                   strokeDashoffset={circumference}
@@ -256,7 +256,7 @@ export function DashboardClient({ userEmail, today }: { userEmail: string; today
                   animate={{ strokeDashoffset: circumference - (seoHealthPct / 100) * circumference }}
                   transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
                 />
-                <text x="70" y="67" textAnchor="middle" fontSize="26" fontWeight="700" fill="#1e1040">{seoHealthPct}%</text>
+                <text x="70" y="67" textAnchor="middle" fontSize="26" fontWeight="700" fill="#1b4673">{seoHealthPct}%</text>
                 <text x="70" y="85" textAnchor="middle" fontSize="10" fill="#9ca3af" letterSpacing="1">AREAS</text>
               </svg>
               <div>

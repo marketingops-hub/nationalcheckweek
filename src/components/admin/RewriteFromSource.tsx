@@ -28,7 +28,7 @@ function StatusChip({ status }: { status: string }) {
     pending:    { bg: '#fef9c3', color: '#854d0e', label: 'Queued' },
     extracting: { bg: '#dbeafe', color: '#1d4ed8', label: 'Extracting' },
     chunking:   { bg: '#dbeafe', color: '#1d4ed8', label: 'Chunking' },
-    embedding:  { bg: '#ede9fe', color: '#6d28d9', label: 'Embedding' },
+    embedding:  { bg: '#d6eef7', color: '#0fa0d2', label: 'Embedding' },
     ready:      { bg: '#dcfce7', color: '#15803d', label: 'Ready' },
     failed:     { bg: '#fee2e2', color: '#b91c1c', label: 'Failed' },
   };

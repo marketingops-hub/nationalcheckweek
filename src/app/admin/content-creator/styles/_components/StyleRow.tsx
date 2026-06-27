@@ -27,7 +27,7 @@ export function StyleRow({ style, onEdit, onDelete, onToggleActive }: StyleRowPr
     }}>
       <div style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{ fontWeight: 600, color: '#1E1040', fontSize: 15 }}>
+          <span style={{ fontWeight: 600, color: '#1b4673', fontSize: 15 }}>
             {style.title}
           </span>
           {!style.is_active && (
@@ -44,7 +44,7 @@ export function StyleRow({ style, onEdit, onDelete, onToggleActive }: StyleRowPr
           {style.applies_to && !style.applies_to.includes('all') && (
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 3,
-              background: '#EDE9FE', color: '#4C1D95',
+              background: '#d6eef7', color: '#4C1D95',
               textTransform: 'uppercase', letterSpacing: 0.5,
             }}>
               {style.applies_to.join(' / ')}

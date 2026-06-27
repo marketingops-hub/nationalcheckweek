@@ -65,7 +65,7 @@ export function LibraryToolbar({
                 padding: '6px 12px',
                 border: 'none', borderRadius: 8,
                 background: active ? '#fff'     : 'transparent',
-                color:      active ? '#1E1040' : '#6B7280',
+                color:      active ? '#1b4673' : '#6B7280',
                 fontSize: 12, fontWeight: 600,
                 cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -80,8 +80,8 @@ export function LibraryToolbar({
                   style={{
                     fontSize: 10, fontWeight: 700,
                     padding: '1px 6px', borderRadius: 999,
-                    background: active ? '#EDE9FE' : '#E5E7EB',
-                    color:      active ? '#5925F4' : '#6B7280',
+                    background: active ? '#d6eef7' : '#E5E7EB',
+                    color:      active ? '#13b5ea' : '#6B7280',
                   }}
                 >
                   {count}
@@ -103,7 +103,7 @@ export function LibraryToolbar({
           style={{
             padding: '6px 10px', borderRadius: 8,
             border: '1px solid #D1D5DB', fontSize: 13,
-            background: '#fff', color: '#1E1040', cursor: 'pointer',
+            background: '#fff', color: '#1b4673', cursor: 'pointer',
           }}
         >
           <option value="all">All</option>
@@ -131,7 +131,7 @@ export function LibraryToolbar({
           placeholder="Search titles, topics, body…"
           style={{
             flex: 1, border: 'none', outline: 'none', background: 'transparent',
-            padding: '8px 0', fontSize: 13, color: '#1E1040',
+            padding: '8px 0', fontSize: 13, color: '#1b4673',
           }}
         />
         {query && (

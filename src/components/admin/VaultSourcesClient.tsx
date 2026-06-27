@@ -173,7 +173,7 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
           {filtered.map(source => (
             <div key={source.id} className="rounded-xl p-4" style={{ background: "#fff", border: `1px solid ${source.is_approved ? "var(--admin-border)" : "var(--admin-danger-light)"}`, boxShadow: "var(--admin-shadow-card)" }}>
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5" style={{ background: "rgba(89,37,244,0.1)", color: "#5925f4" }}>
+                <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5" style={{ background: "rgba(19,181,234,0.1)", color: "#13b5ea" }}>
                   {source.domain.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -207,7 +207,7 @@ export default function VaultSourcesClient({ initialSources }: { initialSources:
       )}
 
       {/* Info callout */}
-      <div className="mt-6 rounded-xl p-4" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(89,37,244,0.12)" }}>
+      <div className="mt-6 rounded-xl p-4" style={{ background: "var(--admin-accent-bg)", border: "1px solid rgba(19,181,234,0.12)" }}>
         <div className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--admin-accent)" }}>How the Vault works</div>
         <p className="text-xs leading-relaxed" style={{ color: "var(--admin-text-muted)" }}>
           When AI content generation is triggered, the system passes only the <strong style={{ color: "var(--admin-text-secondary)" }}>approved</strong> vault sources to OpenAI as its permitted knowledge base. OpenAI is instructed to base all factual claims exclusively on these URLs and cite them in its output — preventing hallucinated statistics or uncited claims. Suspending a source removes it from AI prompts without deleting it.

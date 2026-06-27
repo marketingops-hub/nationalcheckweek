@@ -147,7 +147,7 @@ export default function VaultDocumentDetailPage() {
               ← Vault library
             </Link>
             <span style={{ color: '#D1D5DB' }}>·</span>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#1E1040' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#1b4673' }}>
               {DOCUMENT_KIND_ICONS[doc.kind]}
             </span>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
@@ -164,7 +164,7 @@ export default function VaultDocumentDetailPage() {
                 onChange={(e) => setTitleDraft(e.target.value)}
                 onBlur={saveTitle}
                 onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setTitleDraft(doc.title); setEditingTitle(false); } }}
-                style={{ fontSize: 24, fontWeight: 700, color: '#1E1040', padding: '4px 8px', border: '1px solid #E5E7EB', borderRadius: 6, width: '100%' }}
+                style={{ fontSize: 24, fontWeight: 700, color: '#1b4673', padding: '4px 8px', border: '1px solid #E5E7EB', borderRadius: 6, width: '100%' }}
               />
             </div>
           ) : (
@@ -211,7 +211,7 @@ export default function VaultDocumentDetailPage() {
             <Meta label="Category" value={doc.category} />
           </div>
 
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Indexed chunks ({doc.chunks.length})
           </h3>
 
@@ -267,7 +267,7 @@ export default function VaultDocumentDetailPage() {
         {/* ── Sidebar: actions + metadata form ────────────────────────── */}
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10 }}>Actions</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Actions</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button onClick={onReindex} className="swa-btn" disabled={!STATUS_IS_TERMINAL[doc.status]}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>refresh</span>
@@ -281,7 +281,7 @@ export default function VaultDocumentDetailPage() {
           </div>
 
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10 }}>Metadata</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Metadata</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category</span>
@@ -307,7 +307,7 @@ export default function VaultDocumentDetailPage() {
           </div>
 
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16, fontSize: 12, color: '#6B7280' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1E1040', marginBottom: 10 }}>Provenance</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Provenance</h3>
             <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 10px', margin: 0 }}>
               <dt>Kind</dt>    <dd>{DOCUMENT_KIND_LABELS[doc.kind]}</dd>
               <dt>Source</dt>  <dd style={{ wordBreak: 'break-all' }}>{doc.source ?? '—'}</dd>
@@ -325,7 +325,7 @@ export default function VaultDocumentDetailPage() {
 function Meta({ label, value }: { label: string; value: number | string }) {
   return (
     <div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: '#1E1040' }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: '#1b4673' }}>{value}</div>
       <div style={{ fontSize: 11, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600, marginTop: 2 }}>{label}</div>
     </div>
   );

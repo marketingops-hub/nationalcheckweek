@@ -21,7 +21,7 @@ import { formatAuthor } from "@/lib/content-creator/author";
 const STATUS_CHIP: Record<TopicStatus, { bg: string; color: string; label: string }> = {
   draft:    { bg: '#FEF3C7', color: '#92400E', label: 'To review' },
   approved: { bg: '#D1FAE5', color: '#047857', label: 'Approved'  },
-  used:     { bg: '#E0E7FF', color: '#4338CA', label: 'Used'      },
+  used:     { bg: '#E0E7FF', color: '#0d8cb8', label: 'Used'      },
   archived: { bg: '#F3F4F6', color: '#6B7280', label: 'Archived'  },
 };
 
@@ -43,7 +43,7 @@ export function TopicCard({
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
         <h3 style={{
-          flex: 1, fontSize: 15, fontWeight: 700, color: '#1E1040',
+          flex: 1, fontSize: 15, fontWeight: 700, color: '#1b4673',
           margin: 0, lineHeight: 1.3,
         }}>
           {topic.title}
@@ -89,7 +89,7 @@ export function TopicCard({
       }}>
         {topic.vault_category && (
           <span style={{
-            background: '#EEF2FF', color: '#4338CA',
+            background: '#d6eef7', color: '#0d8cb8',
             padding: '2px 8px', borderRadius: 4, fontWeight: 600,
           }}>
             {topic.vault_category}

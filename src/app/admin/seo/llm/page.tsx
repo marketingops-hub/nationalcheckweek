@@ -125,7 +125,7 @@ export default function LlmIndexingPage() {
             href: '/llms.txt', hrefLabel: 'View /llms.txt →',
           },
           {
-            icon: 'code', color: '#7c3aed', bg: '#faf5ff',
+            icon: 'code', color: '#13b5ea', bg: '#faf5ff',
             title: 'Markdown interception',
             desc: 'When a known AI crawler visits any page, middleware rewrites their request to /api/llms-md, serving clean Markdown instead of HTML. Cuts token cost by ~70% and improves citation accuracy.',
             href: null, hrefLabel: null,

@@ -194,6 +194,13 @@ export function CommandPalette() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // The sidebar search box opens the palette via this custom event.
+  useEffect(() => {
+    const open = () => { setIsOpen(true); setSearch(''); setSelectedIndex(0); };
+    window.addEventListener('admin:open-command-palette', open);
+    return () => window.removeEventListener('admin:open-command-palette', open);
+  }, []);
+
   const executeCommand = (command: Command) => {
     command.action();
     setIsOpen(false);
@@ -255,7 +262,7 @@ export function CommandPalette() {
                 border: 'none',
                 outline: 'none',
                 fontSize: '16px',
-                color: '#1e1040',
+                color: '#1b4673',
               }}
             />
             <kbd style={{
@@ -310,14 +317,14 @@ export function CommandPalette() {
                     className="material-symbols-outlined"
                     style={{
                       fontSize: 20,
-                      color: index === selectedIndex ? '#5925f4' : '#6b7280',
+                      color: index === selectedIndex ? '#13b5ea' : '#6b7280',
                     }}
                   >
                     {cmd.icon}
                   </span>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 500, color: '#1e1040', marginBottom: '2px' }}>
+                  <div style={{ fontWeight: 500, color: '#1b4673', marginBottom: '2px' }}>
                     {cmd.label}
                   </div>
                   {cmd.description && (

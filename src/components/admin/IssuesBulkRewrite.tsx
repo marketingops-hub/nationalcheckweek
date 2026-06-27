@@ -120,8 +120,8 @@ export default function IssuesBulkRewrite({ issues }: Props) {
       {/* BULK ACTION BAR */}
       <div style={{
         display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-        padding: "12px 16px", background: "#F4F3FF",
-        border: "1px solid #C4B5FD", borderRadius: 10, marginBottom: 16,
+        padding: "12px 16px", background: "#eef3f8",
+        border: "1px solid #9fc9e6", borderRadius: 10, marginBottom: 16,
       }}>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="swa-btn swa-btn--ghost" onClick={selectAll} style={{ fontSize: "0.8rem" }}>
@@ -134,7 +134,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
 
         {selCount > 0 && (
           <span style={{
-            background: "#7C3AED", color: "#fff", borderRadius: 100,
+            background: "#13b5ea", color: "#fff", borderRadius: 100,
             padding: "2px 10px", fontSize: "0.78rem", fontWeight: 700,
           }}>
             {selCount} selected
@@ -200,7 +200,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <span style={{ fontSize: "1.1rem" }}>{issue.icon}</span>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1E1040" }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1b4673" }}>
                           {issue.title}
                         </div>
                         <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: 2 }}>
@@ -268,7 +268,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
             boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
             maxHeight: "90vh", overflowY: "auto",
           }}>
-            <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1E1040", marginBottom: 6 }}>
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1b4673", marginBottom: 6 }}>
               AI Rewrite — {selCount} issue{selCount !== 1 ? "s" : ""}
             </h3>
             <p style={{ fontSize: "0.85rem", color: "#6B7280", marginBottom: 24, lineHeight: 1.6 }}>
@@ -278,7 +278,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
 
             {/* SOURCE DOCUMENT */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#7C3AED", marginBottom: 10 }}>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#13b5ea", marginBottom: 10 }}>
                 Source document <span style={{ fontWeight: 400, textTransform: "none", color: "#9CA3AF" }}>(optional — AI will cite stats from this doc)</span>
               </div>
               {loadingVault ? (
@@ -286,7 +286,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
               ) : vaultDocs.length === 0 ? (
                 <p style={{ fontSize: "0.82rem", color: "#9CA3AF" }}>
                   No indexed documents in the Vault yet.{" "}
-                  <a href="/admin/vault/upload" target="_blank" style={{ color: "#7C3AED" }}>Upload one →</a>
+                  <a href="/admin/vault/upload" target="_blank" style={{ color: "#13b5ea" }}>Upload one →</a>
                 </p>
               ) : (
                 <select
@@ -294,7 +294,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
                   onChange={e => setVaultDocId(e.target.value)}
                   style={{
                     width: "100%", padding: "8px 12px", borderRadius: 8,
-                    border: vaultDocId ? "1.5px solid #7C3AED" : "1.5px solid #E5E7EB",
+                    border: vaultDocId ? "1.5px solid #13b5ea" : "1.5px solid #E5E7EB",
                     fontSize: "0.85rem", color: "#374151", background: "#fff",
                     outline: "none",
                   }}
@@ -306,7 +306,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
                 </select>
               )}
               {selectedVault && (
-                <div style={{ marginTop: 8, padding: "6px 10px", background: "#F5F3FF", borderRadius: 6, fontSize: "0.78rem", color: "#6D28D9" }}>
+                <div style={{ marginTop: 8, padding: "6px 10px", background: "#F5F3FF", borderRadius: 6, fontSize: "0.78rem", color: "#0fa0d2" }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 13, verticalAlign: "middle", marginRight: 4 }}>info</span>
                   Stats and claims from <strong>{selectedVault.title}</strong> will be cited inline as <em>(Source: {selectedVault.title})</em>
                 </div>
@@ -315,7 +315,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
 
             {/* FIELDS */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#7C3AED", marginBottom: 10 }}>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#13b5ea", marginBottom: 10 }}>
                 Fields to rewrite
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -325,9 +325,9 @@ export default function IssuesBulkRewrite({ issues }: Props) {
                     style={{
                       display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
                       padding: "6px 12px", borderRadius: 8, fontSize: "0.82rem", fontWeight: 500,
-                      border: fields.includes(f.value) ? "1.5px solid #7C3AED" : "1.5px solid #E5E7EB",
+                      border: fields.includes(f.value) ? "1.5px solid #13b5ea" : "1.5px solid #E5E7EB",
                       background: fields.includes(f.value) ? "#F5F3FF" : "#fff",
-                      color: fields.includes(f.value) ? "#6D28D9" : "#374151",
+                      color: fields.includes(f.value) ? "#0fa0d2" : "#374151",
                       transition: "all 0.12s ease",
                     }}
                   >
@@ -345,7 +345,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
 
             {/* TONE */}
             <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#7C3AED", marginBottom: 10 }}>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#13b5ea", marginBottom: 10 }}>
                 Writing tone
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -355,9 +355,9 @@ export default function IssuesBulkRewrite({ issues }: Props) {
                     onClick={() => setTone(t.value)}
                     style={{
                       padding: "6px 12px", borderRadius: 8, fontSize: "0.82rem", fontWeight: 500,
-                      border: tone === t.value ? "1.5px solid #7C3AED" : "1.5px solid #E5E7EB",
+                      border: tone === t.value ? "1.5px solid #13b5ea" : "1.5px solid #E5E7EB",
                       background: tone === t.value ? "#F5F3FF" : "#fff",
-                      color: tone === t.value ? "#6D28D9" : "#374151",
+                      color: tone === t.value ? "#0fa0d2" : "#374151",
                       cursor: "pointer", transition: "all 0.12s ease",
                     }}
                   >
@@ -371,7 +371,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
             {running && (
               <div style={{
                 background: "#F5F3FF", borderRadius: 8, padding: "12px 16px",
-                marginBottom: 20, fontSize: "0.82rem", color: "#6D28D9",
+                marginBottom: 20, fontSize: "0.82rem", color: "#0fa0d2",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 16, animation: "spin 1s linear infinite" }}>progress_activity</span>
@@ -404,7 +404,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
                 disabled={running || fields.length === 0}
                 style={{
                   padding: "9px 20px", borderRadius: 8, border: "none",
-                  background: running ? "#A78BFA" : "#7C3AED",
+                  background: running ? "#7094b8" : "#13b5ea",
                   color: "#fff", fontSize: "0.875rem", fontWeight: 700,
                   cursor: running ? "not-allowed" : "pointer",
                 }}

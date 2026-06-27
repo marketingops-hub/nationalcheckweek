@@ -29,7 +29,7 @@ export function ApprovedTopicsSidebar({
         marginBottom: 10,
       }}>
         <h3 style={{
-          fontSize: 12, fontWeight: 700, color: '#1E1040',
+          fontSize: 12, fontWeight: 700, color: '#1b4673',
           textTransform: 'uppercase', letterSpacing: 0.5, margin: 0,
         }}>
           Approved topics
@@ -51,7 +51,7 @@ export function ApprovedTopicsSidebar({
             style={{
               textAlign: 'left',
               background: '#fff',
-              border: `1px solid ${activeId === t.id ? '#4338CA' : '#E5E7EB'}`,
+              border: `1px solid ${activeId === t.id ? '#0d8cb8' : '#E5E7EB'}`,
               borderRadius: 10,
               padding: 10,
               cursor: 'pointer',
@@ -59,7 +59,7 @@ export function ApprovedTopicsSidebar({
             }}
           >
             <div style={{
-              fontSize: 13, fontWeight: 600, color: '#1E1040',
+              fontSize: 13, fontWeight: 600, color: '#1b4673',
               lineHeight: 1.3, marginBottom: 4,
             }}>
               {t.title}
@@ -67,7 +67,7 @@ export function ApprovedTopicsSidebar({
             {t.vault_category && (
               <span style={{
                 fontSize: 10, padding: '1px 6px',
-                background: '#EEF2FF', color: '#4338CA',
+                background: '#d6eef7', color: '#0d8cb8',
                 borderRadius: 3, fontWeight: 600,
               }}>
                 {t.vault_category}

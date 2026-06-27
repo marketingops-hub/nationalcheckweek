@@ -161,7 +161,7 @@ export default function RedirectsClient({ initial }: { initial: AdminRedirect[] 
                 </tr>
               )}
               {filtered.map(r => (
-                <tr key={r.id} style={editId === r.id ? { background: "rgba(89,37,244,0.04)" } : undefined}>
+                <tr key={r.id} style={editId === r.id ? { background: "rgba(19,181,234,0.04)" } : undefined}>
                   <td style={{ maxWidth: "200px" }}>
                     <div className="font-mono text-xs font-semibold truncate" style={{ color: "var(--admin-accent)" }}>{r.from_path}</div>
                     {r.note && <div className="text-xs mt-0.5 truncate" style={{ color: "var(--admin-text-faint)" }}>{r.note}</div>}
@@ -171,7 +171,7 @@ export default function RedirectsClient({ initial }: { initial: AdminRedirect[] 
                   </td>
                   <td>
                     <span className="admin-badge font-mono" style={r.status_code === 301
-                      ? { background: "rgba(89,37,244,0.1)", color: "#5925f4" }
+                      ? { background: "rgba(19,181,234,0.1)", color: "#13b5ea" }
                       : { background: "#fef9c3", color: "#854d0e" }}>
                       {r.status_code}
                     </span>
@@ -271,7 +271,7 @@ export default function RedirectsClient({ initial }: { initial: AdminRedirect[] 
                 checked={form.is_active}
                 onChange={e => setField("is_active", e.target.checked)}
                 className="w-4 h-4 rounded"
-                style={{ accentColor: "#5925f4" }}
+                style={{ accentColor: "#13b5ea" }}
               />
               <span className="text-sm font-medium" style={{ color: "var(--admin-text-secondary)" }}>Active</span>
             </label>

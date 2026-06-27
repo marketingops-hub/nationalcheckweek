@@ -278,7 +278,7 @@ export default function StateEditForm({ state }: { state: State | null }) {
             padding: "14px 18px",
             borderRadius: "var(--admin-radius-md)",
             background: "var(--admin-accent-bg)",
-            border: "1px solid rgba(89,37,244,0.2)",
+            border: "1px solid rgba(19,181,234,0.2)",
             display: "flex",
             alignItems: "center",
             gap: 12,

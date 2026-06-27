@@ -76,7 +76,7 @@ function CheckChip({ check }: { check: SeoCheck }) {
 }
 
 function typeTag(t: PageReport['type']) {
-  const map = { blog: ['Blog', '#eff6ff', '#3b82f6'], event: ['Event', '#fdf4ff', '#9333ea'], page: ['Page', '#f0fdf4', '#16a34a'] };
+  const map = { blog: ['Blog', '#eff6ff', '#3b82f6'], event: ['Event', '#fdf4ff', '#13b5ea'], page: ['Page', '#f0fdf4', '#16a34a'] };
   const [l, bg, col] = map[t];
   return <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: bg, color: col }}>{l}</span>;
 }
@@ -250,7 +250,7 @@ function PatchCard({
           <div style={{ fontWeight: 700, fontSize: 13, color: '#111' }}>{patch.field_label}</div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
             {patch.check_keys.map(k => (
-              <span key={k} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#e0e7ff', color: '#4338ca', fontWeight: 600 }}>
+              <span key={k} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#e0e7ff', color: '#0d8cb8', fontWeight: 600 }}>
                 {CHECK_LABELS[k] ?? k}
               </span>
             ))}
@@ -471,12 +471,12 @@ function OptimizeView({
           {/* Vault refs */}
           {result.vault_refs.length > 0 && (
             <div style={{ marginBottom: 16, padding: '10px 14px', background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 8, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9333ea', marginTop: 1 }}>lock</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#13b5ea', marginTop: 1 }}>lock</span>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#9333ea', marginBottom: 4 }}>VAULT SOURCES USED</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#13b5ea', marginBottom: 4 }}>VAULT SOURCES USED</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {result.vault_refs.map(v => (
-                    <span key={v.id} style={{ fontSize: 11, padding: '2px 8px', background: '#ede9fe', color: '#7c3aed', borderRadius: 10, fontWeight: 500 }}>{v.title || v.source || 'Vault document'}</span>
+                    <span key={v.id} style={{ fontSize: 11, padding: '2px 8px', background: '#d6eef7', color: '#13b5ea', borderRadius: 10, fontWeight: 500 }}>{v.title || v.source || 'Vault document'}</span>
                   ))}
                 </div>
               </div>

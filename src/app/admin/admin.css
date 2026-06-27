@@ -6,7 +6,7 @@
 /* ── Design Tokens v5.0 — Phase 1 Improvements ── */
 :root {
   /* Backgrounds - softer, more professional */
-  --admin-bg-page:     #f9fafb;
+  --admin-bg-page:     #eef3f8;
   --admin-bg-surface:  #ffffff;
   --admin-bg-elevated: #f3f4f6;
   --admin-bg-deep:     #e5e7eb;
@@ -23,12 +23,12 @@
   --admin-text-faint:     #d1d5db;
   
   /* Accent - softer indigo instead of harsh purple */
-  --admin-accent:          #6366f1;
-  --admin-accent-light:    #818cf8;
-  --admin-accent-dark:     #4f46e5;
-  --admin-accent-wash:     #a5b4fc;
-  --admin-accent-bg:       rgba(99, 102, 241, 0.08);
-  --admin-accent-gradient: linear-gradient(135deg, #6366f1, #818cf8);
+  --admin-accent:          #13b5ea;
+  --admin-accent-light:    #3eb5e9;
+  --admin-accent-dark:     #0d8cb8;
+  --admin-accent-wash:     #95d5f0;
+  --admin-accent-bg:       rgba(19,181,234, 0.08);
+  --admin-accent-gradient: linear-gradient(135deg, #13b5ea, #0d8cb8);
   
   /* Semantic colors */
   --admin-success:      #16a34a;
@@ -50,7 +50,7 @@
   --admin-shadow-card:  0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
   --admin-shadow-md:    0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
   --admin-shadow-lg:    0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
-  --admin-shadow-hover: 0 4px 12px rgba(99,102,241,0.15);
+  --admin-shadow-hover: 0 4px 12px rgba(19,181,234,0.15);
   
   /* Border radius - softer, more modern */
   --admin-radius-sm: 6px;
@@ -79,7 +79,7 @@
 }
 
 .admin-shell {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-body);
   color: var(--admin-text-secondary);
   background: var(--admin-bg-page);
   line-height: 1.6;
@@ -92,7 +92,7 @@
 .admin-shell *,
 .admin-shell *::before,
 .admin-shell *::after {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-body);
   box-sizing: border-box;
 }
 
@@ -148,7 +148,7 @@
 .admin-shell textarea:focus,
 .admin-shell select:focus {
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.15); /* ✅ More visible */
+  box-shadow: 0 0 0 4px rgba(19,181,234,0.15); /* ✅ More visible */
   outline: none;
 }
 .admin-shell input:disabled,
@@ -170,7 +170,7 @@
 .admin-shell button:focus-visible {
   outline: 3px solid var(--admin-accent); /* ✅ Thicker for visibility */
   outline-offset: 2px;
-  box-shadow: 0 0 0 5px rgba(99,102,241,0.2); /* ✅ More visible glow */
+  box-shadow: 0 0 0 5px rgba(19,181,234,0.2); /* ✅ More visible glow */
 }
 @media (forced-colors: active) {
   .admin-shell a:focus-visible,
@@ -437,7 +437,7 @@
 .admin-shell .admin-badge:hover {
   transform: scale(1.05); /* ✅ Subtle grow */
 }
-.admin-shell .admin-badge-indigo  { background: rgba(99,102,241,0.1);  color: #6366f1; } /* ✅ Updated to new indigo */
+.admin-shell .admin-badge-indigo  { background: rgba(19,181,234,0.1);  color: #13b5ea; } /* ✅ Updated to new indigo */
 .admin-shell .admin-badge-green   { background: #dcfce7; color: #166534; }
 .admin-shell .admin-badge-red     { background: #fee2e2; color: #991b1b; }
 .admin-shell .admin-badge-yellow  { background: #fef9c3; color: #854d0e; }
@@ -488,7 +488,7 @@
 .admin-shell .admin-alert-error   { background: var(--admin-danger-bg);  color: var(--admin-danger-text);  border: 1px solid #fecaca; }
 .admin-shell .admin-alert-success { background: var(--admin-success-bg); color: var(--admin-success-text); border: 1px solid #bbf7d0; }
 .admin-shell .admin-alert-warning { background: var(--admin-warning-bg); color: var(--admin-warning-text); border: 1px solid #fde68a; }
-.admin-shell .admin-alert-info    { background: var(--admin-accent-bg);  color: var(--admin-accent);       border: 1px solid rgba(99,102,241,0.2); } /* ✅ Updated */
+.admin-shell .admin-alert-info    { background: var(--admin-accent-bg);  color: var(--admin-accent);       border: 1px solid rgba(19,181,234,0.2); } /* ✅ Updated */
 
 /* ── Cards ── */
 .admin-shell .admin-card {
@@ -680,7 +680,7 @@
 }
 .admin-shell .admin-slug-field:focus-within {
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.1); /* ✅ Focus state */
+  box-shadow: 0 0 0 4px rgba(19,181,234,0.1); /* ✅ Focus state */
 }
 .admin-shell .admin-slug-field input {
   border: none;
@@ -749,7 +749,7 @@
 }
 .admin-shell .admin-block-pick-btn:hover {
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1); /* ✅ Updated color */
+  box-shadow: 0 0 0 3px rgba(19,181,234,0.1); /* ✅ Updated color */
   color: var(--admin-accent);
   transform: translateY(-2px); /* ✅ Lift effect */
 }
@@ -926,7 +926,7 @@
   padding: 0;
 }
 .admin-shell .admin-toggle:hover {
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.1); /* ✅ Hover glow */
+  box-shadow: 0 0 0 4px rgba(19,181,234,0.1); /* ✅ Hover glow */
 }
 .admin-shell .admin-toggle.on { background: var(--admin-accent); }
 .admin-shell .admin-toggle-thumb {
@@ -1392,7 +1392,7 @@
 }
 .admin-shell .rte-wrapper:focus-within {
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  box-shadow: 0 0 0 3px rgba(19,181,234,0.1);
 }
 .admin-shell .rte-toolbar {
   display: flex;
@@ -1962,7 +1962,7 @@
   background: var(--admin-accent);
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(99,102,241,0.35);
+  box-shadow: 0 2px 6px rgba(19,181,234,0.35);
 }
 
 /* Block type picker (popover from add button) */

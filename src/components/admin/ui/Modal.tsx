@@ -113,7 +113,7 @@ export function Modal({
                     style={{
                       fontSize: '18px',
                       fontWeight: 600,
-                      color: '#1e1040',
+                      color: '#1b4673',
                       margin: 0,
                     }}
                   >
@@ -132,7 +132,7 @@ export function Modal({
                       color: '#6b7280',
                       transition: 'color 0.15s',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#1e1040')}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#1b4673')}
                     onMouseLeave={(e) => (e.currentTarget.style.color = '#6b7280')}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 24 }}>

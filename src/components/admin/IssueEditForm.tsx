@@ -358,7 +358,7 @@ export default function IssueEditForm({ issue, initialSources = [] }: { issue: I
               <textarea
                 rows={5}
                 className={I}
-                style={{ ...IS, resize: "vertical", ...(pendingVerify?.section === sec.key ? { borderColor: "var(--admin-accent)", boxShadow: "0 0 0 2px rgba(89,37,244,0.15)" } : {}) }}
+                style={{ ...IS, resize: "vertical", ...(pendingVerify?.section === sec.key ? { borderColor: "var(--admin-accent)", boxShadow: "0 0 0 2px rgba(19,181,234,0.15)" } : {}) }}
                 value={form[sec.key as keyof typeof form] as string}
                 onChange={e => set(sec.key, e.target.value)}
                 placeholder={sec.placeholder}

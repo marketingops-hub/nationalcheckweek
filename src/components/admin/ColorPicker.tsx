@@ -43,7 +43,7 @@ export default function ColorPicker({ label, value, onChange, description }: Col
     "#FFFFFF", // White
     "#000000", // Black
     "#E50E7E", // Pink
-    "#A78BFA", // Purple
+    "#7094b8", // Purple
     "#10B981", // Green
     "#F59E0B", // Orange
     "#EF4444", // Red

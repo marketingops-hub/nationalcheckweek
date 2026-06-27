@@ -43,7 +43,7 @@ export const BLOCK_TYPES: BlockTypeMeta[] = [
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="5"/><path d="M15 12h4M17 10l2 2-2 2"/></svg> },
   { type: "callout",   label: "Callout",    color: "#10b981", defaults: { text: "", style: "info" }, editor: CalloutBlock,
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
-  { type: "two-col",   label: "2 Columns",  color: "#8b5cf6", defaults: { left: "", right: "" }, editor: TwoColBlock,
+  { type: "two-col",   label: "2 Columns",  color: "#3eb5e9", defaults: { left: "", right: "" }, editor: TwoColBlock,
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="9" height="16" rx="1"/><rect x="13" y="4" width="9" height="16" rx="1"/></svg> },
   { type: "divider",   label: "Divider",    color: "#94a3b8", defaults: {}, editor: DividerBlock,
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/></svg> },

@@ -78,6 +78,7 @@ export default function AdminSidebar({ userEmail, userRole }: { userEmail: strin
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -85,6 +86,10 @@ export default function AdminSidebar({ userEmail, userRole }: { userEmail: strin
     await supabase.auth.signOut();
     router.push('/admin/login');
     router.refresh();
+  }
+
+  function openSearch() {
+    window.dispatchEvent(new CustomEvent('admin:open-command-palette'));
   }
 
   const initials = userEmail ? userEmail.slice(0, 2).toUpperCase() : 'AD';
@@ -100,6 +105,13 @@ export default function AdminSidebar({ userEmail, userRole }: { userEmail: strin
         </div>
       </div>
 
+      {/* Search — opens the command palette */}
+      <button type="button" className="swa-sidebar__search" onClick={openSearch}>
+        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>search</span>
+        <span className="swa-sidebar__search-text">Search or jump to…</span>
+        <span className="swa-sidebar__search-kbd">⌘K</span>
+      </button>
+
       {/* Nav sections */}
       <nav className="swa-sidebar__nav">
         {SECTIONS.map((section) => {
@@ -109,10 +121,24 @@ export default function AdminSidebar({ userEmail, userRole }: { userEmail: strin
             )
           );
           if (visibleItems.length === 0) return null;
+          const isCollapsed = collapsed[section.label] ?? false;
           return (
           <div key={section.label}>
-            <div className="swa-sidebar__section-label">{section.label}</div>
-            {visibleItems.map((item) => {
+            <button
+              type="button"
+              className="swa-sidebar__section-label"
+              aria-expanded={!isCollapsed}
+              onClick={() => setCollapsed(c => ({ ...c, [section.label]: !isCollapsed }))}
+            >
+              <span>{section.label}</span>
+              <span
+                className="material-symbols-outlined swa-sidebar__section-caret"
+                style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'none' }}
+              >
+                expand_more
+              </span>
+            </button>
+            {!isCollapsed && visibleItems.map((item) => {
               const isActive = item.href === '/admin'
                 ? pathname === '/admin'
                 : pathname.startsWith(item.href);

@@ -111,12 +111,12 @@ export function StyleForm({ title, initial, onSubmit, onCancel }: StyleFormProps
     <form
       onSubmit={submit}
       style={{
-        background: '#fff', border: '2px solid #C4B5FD', borderRadius: 12,
+        background: '#fff', border: '2px solid #9fc9e6', borderRadius: 12,
         padding: 18, marginBottom: 16,
       }}
     >
       <h2 style={{
-        fontSize: 14, fontWeight: 700, color: '#1E1040',
+        fontSize: 14, fontWeight: 700, color: '#1b4673',
         margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: 0.5,
       }}>
         {title}
@@ -305,8 +305,8 @@ function ScopeChip({
       style={{
         padding: '6px 12px',
         borderRadius: 999,
-        border: `1px solid ${active ? '#5925F4' : '#D1D5DB'}`,
-        background: active ? '#EDE9FE' : '#fff',
+        border: `1px solid ${active ? '#13b5ea' : '#D1D5DB'}`,
+        background: active ? '#d6eef7' : '#fff',
         color:      active ? '#4C1D95' : '#374151',
         fontSize: 12,
         fontWeight: active ? 700 : 500,
