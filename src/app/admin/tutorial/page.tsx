@@ -48,7 +48,7 @@ interface Section {
 
 const SECTIONS: Section[] = [
   {
-    id: 'content', label: 'Content', icon: 'database', color: '#3b82f6',
+    id: 'content', label: 'Content', icon: 'database', color: '#13b5ea',
     features: [
       {
         id: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/admin',
@@ -228,7 +228,7 @@ const SECTIONS: Section[] = [
   },
 
   {
-    id: 'public', label: 'Public Pages', icon: 'public', color: '#3eb5e9',
+    id: 'public', label: 'Public Pages', icon: 'public', color: '#5ec6b6',
     features: [
       {
         id: 'events', icon: 'event', label: 'Events', href: '/admin/events',
@@ -431,7 +431,7 @@ const SECTIONS: Section[] = [
   },
 
   {
-    id: 'cms', label: 'CMS', icon: 'web', color: '#0891b2',
+    id: 'cms', label: 'CMS', icon: 'web', color: '#b58cd1',
     features: [
       {
         id: 'homepage-builder', icon: 'web', label: 'Homepage Builder', href: '/admin/homepage-builder',
@@ -630,7 +630,7 @@ const SECTIONS: Section[] = [
   },
 
   {
-    id: 'ai', label: 'AI', icon: 'auto_awesome', color: '#13b5ea',
+    id: 'ai', label: 'AI', icon: 'auto_awesome', color: '#1b4673',
     features: [
       {
         id: 'vault-sources', icon: 'lock', label: 'Vault Library', href: '/admin/vault/sources',
@@ -1061,30 +1061,32 @@ const SECTIONS: Section[] = [
       },
       {
         id: 'users', icon: 'group', label: 'Users', href: '/admin/users',
-        tagline: 'Admin account management',
-        what: 'This is where you create, edit, and deactivate admin accounts. Each account can log into this admin panel, and in the current build every account has full admin access — there is no role-based restriction between accounts. Because access is all-or-nothing, account hygiene is the main security control you have here.',
-        when: 'Add a user when onboarding a team member, and deactivate accounts immediately when someone leaves the organisation. Review the user list periodically to confirm only current people retain access.',
+        tagline: 'Accounts and role-based access',
+        what: 'This is where you create, edit, and deactivate accounts and assign each one a role. There are three roles: Editor (creates and submits content — the day-to-day content team), Admin (everything an editor can do, plus approval, publishing, and configuration), and Super Admin (everything, plus this Users page itself). The role decides which sections appear in a person\'s sidebar, so granting the right role is your main access-control lever — only a Super Admin can open this page.',
+        when: 'Add a user when onboarding a team member and pick the lowest role that lets them do their job. Change a role when someone\'s responsibilities shift, and deactivate accounts immediately when someone leaves. Review the list periodically to confirm only current people retain access.',
         steps: [
-          { icon: 'add', text: 'Click "Add User" — enter their email and a temporary password.' },
+          { icon: 'add', text: 'Click "Add User" — enter their email, a temporary password, and choose a role (Editor, Admin, or Super Admin).' },
+          { icon: 'badge', text: 'Pick the least access that fits: Editor for content creators, Admin for those who approve/publish/configure, Super Admin only for whoever manages accounts.' },
           { icon: 'mail', text: 'Send the new user their credentials and ask them to change the password on first login.' },
-          { icon: 'manage_accounts', text: 'Review the list periodically and confirm every active account belongs to a current team member.' },
+          { icon: 'manage_accounts', text: 'Change a role at any time by editing the user; their sidebar updates to match on next load.' },
           { icon: 'person_off', text: 'To deactivate: open the user and disable the account; they are immediately locked out.' },
           { icon: 'delete', text: 'Delete permanently removes the account and its session history.' },
         ],
         tips: [
-          { kind: 'warning', text: 'There is no granular role system — every admin can do everything. Only grant access to people who genuinely need it.' },
-          { kind: 'tip', text: 'Prefer individual accounts over shared aliases (team@org.com) — they make audit trails far clearer.' },
+          { kind: 'tip', text: 'Grant the least privilege that does the job — most content people only need Editor. Reserve Admin for approval/publishing and Super Admin for whoever manages accounts.' },
+          { kind: 'info', text: 'Roles drive the sidebar: Editors see content tools; Admins also see configuration and publishing; Super Admins additionally see Users. A hidden menu item means the role doesn\'t grant it — that is by design.' },
+          { kind: 'tip', text: 'Prefer individual accounts over shared aliases (team@org.com) — they make audit trails far clearer, and records are now stamped with who created them.' },
           { kind: 'warning', text: 'Deactivate departing staff the same day they leave; an active account is an open door.' },
-          { kind: 'info', text: 'A temporary password should be changed by the user on first login — never reuse one across accounts.' },
-          { kind: 'tip', text: 'Keep the list short. Fewer accounts means a smaller attack surface and less to audit.' },
+          { kind: 'warning', text: 'Keep the Super Admin list to a trusted few — it is the only role that can create accounts and hand out access.' },
         ],
         faqs: [
-          { q: 'Can I give someone read-only or limited access?', a: 'Not in the current build — there is no granular role system, so every account has full admin access. Because of this, only create accounts for people who genuinely need full control, and remove access the moment it is no longer needed.' },
+          { q: 'Can I give someone limited access instead of full admin?', a: 'Yes. Assign the Editor role: they can create, edit, generate, and submit content (Issues, Blog, Pages, the whole AI content pipeline) but cannot approve, publish, change site structure, or open Settings. Use Admin for people who own approval and configuration, and Super Admin only for whoever manages accounts.' },
+          { q: 'What is the difference between Editor, Admin, and Super Admin?', a: 'Editor = create and submit content. Admin = everything an editor can do, plus approval, publishing, and configuration (Votes, States, Areas, Schools, Homepage, branding, Redirects, Moderation, Prompts, SEO tooling, Typography, API keys, Settings). Super Admin = everything, plus the Users page. The principle is simple: editors create, admins approve.' },
+          { q: 'Why can only some people open this Users page?', a: 'Account management is restricted to Super Admins. If you can see this page you are a Super Admin; if a teammate cannot, they hold a lower role. Ask an existing Super Admin to create accounts or change roles.' },
           { q: 'Should I deactivate or delete a departing staff member?', a: 'Deactivate immediately on their last day to lock them out without losing audit history. Delete only later if you are sure you will never need their account or session records again.' },
-          { q: 'Is it okay to share one login across the team?', a: 'Avoid it. Shared logins destroy your audit trail and make it impossible to know who changed what. Create an individual account per person, even if everyone has the same permissions.' },
         ],
         combos: 'API Management, Settings',
-        outcome: 'Only current, authorised team members hold individual admin accounts, departing staff are locked out promptly, and the account list is short and auditable.',
+        outcome: 'Every person holds an individual account with the lowest role that fits their job, the sidebar each person sees matches their access, departing staff are locked out promptly, and the account list stays short and auditable.',
       },
       {
         id: 'api', icon: 'code', label: 'API Management', href: '/admin/api',
