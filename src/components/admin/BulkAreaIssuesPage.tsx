@@ -25,6 +25,12 @@ export default function BulkAreaIssuesPage() {
   const [docReady, setDocReady] = useState<{ id: string; title: string } | null>(null);
   const [urlError, setUrlError] = useState('');
 
+  /* ── Step 1 (alt): pick an existing Vault document ── */
+  const [sourceMode, setSourceMode] = useState<'vault' | 'url'>('vault');
+  const [vaultDocs, setVaultDocs] = useState<{ id: string; title: string; status: string }[]>([]);
+  const [loadingVault, setLoadingVault] = useState(false);
+  const [selectedVaultId, setSelectedVaultId] = useState('');
+
   /* ── Step 2: Area selection ── */
   const [areas, setAreas]         = useState<Area[]>([]);
   const [loadingAreas, setLoadingAreas] = useState(false);
@@ -45,6 +51,16 @@ export default function BulkAreaIssuesPage() {
       .then(d => setAreas(d.areas ?? []))
       .catch(() => {})
       .finally(() => setLoadingAreas(false));
+  }, []);
+
+  // Load ready Vault documents so they can be used as the rewrite source
+  useEffect(() => {
+    setLoadingVault(true);
+    adminFetch('/api/admin/vault/documents?status=ready&limit=200')
+      .then(r => r.json())
+      .then(d => setVaultDocs((d.documents ?? []).filter((x: { status: string }) => x.status === 'ready')))
+      .catch(() => {})
+      .finally(() => setLoadingVault(false));
   }, []);
 
   // Poll vault doc status
@@ -170,8 +186,8 @@ export default function BulkAreaIssuesPage() {
     <div>
       <div className="swa-page-header">
         <div>
-          <h1 className="swa-page-title">Bulk Generate Local Issues from URL</h1>
-          <p className="swa-page-subtitle">Paste a source URL — AI rewrites the local issues for every selected area using that page as a reference.</p>
+          <h1 className="swa-page-title">Bulk Generate Local Issues</h1>
+          <p className="swa-page-subtitle">Choose a Vault document or paste a source URL — AI rewrites the local issues for every selected area using it as a reference.</p>
         </div>
         <Link href="/admin/content" className="swa-btn swa-btn--secondary" style={{ textDecoration: 'none' }}>
           ← Back to Areas
@@ -189,43 +205,106 @@ export default function BulkAreaIssuesPage() {
         </div>
 
         {!docReady && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <input
-                className="swa-form-input"
-                type="url"
-                value={url}
-                onChange={e => setUrl(e.target.value)}
-                placeholder="https://www.aihw.gov.au/…"
-                style={{ flex: '1 1 320px' }}
-              />
-              <input
-                className="swa-form-input"
-                value={urlTitle}
-                onChange={e => setUrlTitle(e.target.value)}
-                placeholder="Document title (used in citations)"
-                style={{ flex: '1 1 240px' }}
-              />
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: -4 }}>
-              The title is used when citing stats — be specific, e.g. "AIHW Young Australians Report 2024"
-            </p>
-            {pollingId && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#13b5ea' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>refresh</span>
-                Indexing… <span style={{ padding: '1px 8px', borderRadius: 99, background: '#d6eef7', fontSize: 11, fontWeight: 600 }}>{pollingStatus}</span>
-              </div>
-            )}
-            {urlError && <p style={{ fontSize: 12, color: '#dc2626' }}>{urlError}</p>}
-            <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Source mode toggle */}
+            <div style={{ display: 'inline-flex', gap: 4, padding: 4, background: '#eef3f8', borderRadius: 10, alignSelf: 'flex-start' }}>
               <button
-                className="swa-btn swa-btn--primary"
-                onClick={handleIngest}
-                disabled={!url.trim() || ingesting || !!pollingId}
+                type="button"
+                onClick={() => { setSourceMode('vault'); setUrlError(''); }}
+                className="swa-btn"
+                style={{ fontSize: 13, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, background: sourceMode === 'vault' ? '#fff' : 'transparent', color: sourceMode === 'vault' ? '#1b4673' : 'var(--color-text-muted)', boxShadow: sourceMode === 'vault' ? 'var(--shadow-card)' : 'none', fontWeight: 600 }}
               >
-                {ingesting ? 'Fetching…' : pollingId ? 'Indexing…' : 'Fetch & Index URL'}
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>folder_open</span>
+                Use a Vault document
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSourceMode('url'); setUrlError(''); }}
+                className="swa-btn"
+                style={{ fontSize: 13, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, background: sourceMode === 'url' ? '#fff' : 'transparent', color: sourceMode === 'url' ? '#1b4673' : 'var(--color-text-muted)', boxShadow: sourceMode === 'url' ? 'var(--shadow-card)' : 'none', fontWeight: 600 }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>link</span>
+                Add a new URL
               </button>
             </div>
+
+            {sourceMode === 'vault' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0 }}>
+                  Pick a document already indexed in your Vault to use as the reference for the rewrite.
+                </p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <select
+                    className="swa-form-input"
+                    value={selectedVaultId}
+                    onChange={e => setSelectedVaultId(e.target.value)}
+                    disabled={loadingVault || vaultDocs.length === 0}
+                    style={{ flex: '1 1 320px', minWidth: 240 }}
+                  >
+                    <option value="">
+                      {loadingVault ? 'Loading documents…' : vaultDocs.length === 0 ? 'No ready documents in the Vault' : 'Select a Vault document…'}
+                    </option>
+                    {vaultDocs.map(doc => (
+                      <option key={doc.id} value={doc.id}>{doc.title}</option>
+                    ))}
+                  </select>
+                  <button
+                    className="swa-btn swa-btn--primary"
+                    disabled={!selectedVaultId}
+                    onClick={() => {
+                      const doc = vaultDocs.find(d => d.id === selectedVaultId);
+                      if (doc) setDocReady({ id: doc.id, title: doc.title });
+                    }}
+                  >
+                    Use this document
+                  </button>
+                </div>
+                {!loadingVault && vaultDocs.length === 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0 }}>
+                    No ready documents yet — add one in <Link href="/admin/vault/upload" style={{ color: '#13b5ea', fontWeight: 600 }}>Vault upload</Link>, or switch to “Add a new URL”.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <input
+                    className="swa-form-input"
+                    type="url"
+                    value={url}
+                    onChange={e => setUrl(e.target.value)}
+                    placeholder="https://www.aihw.gov.au/…"
+                    style={{ flex: '1 1 320px' }}
+                  />
+                  <input
+                    className="swa-form-input"
+                    value={urlTitle}
+                    onChange={e => setUrlTitle(e.target.value)}
+                    placeholder="Document title (used in citations)"
+                    style={{ flex: '1 1 240px' }}
+                  />
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: -4 }}>
+                  The title is used when citing stats — be specific, e.g. "AIHW Young Australians Report 2024"
+                </p>
+                {pollingId && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#13b5ea' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>refresh</span>
+                    Indexing… <span style={{ padding: '1px 8px', borderRadius: 99, background: '#d6eef7', fontSize: 11, fontWeight: 600 }}>{pollingStatus}</span>
+                  </div>
+                )}
+                {urlError && <p style={{ fontSize: 12, color: '#dc2626' }}>{urlError}</p>}
+                <div>
+                  <button
+                    className="swa-btn swa-btn--primary"
+                    onClick={handleIngest}
+                    disabled={!url.trim() || ingesting || !!pollingId}
+                  >
+                    {ingesting ? 'Fetching…' : pollingId ? 'Indexing…' : 'Fetch & Index URL'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
