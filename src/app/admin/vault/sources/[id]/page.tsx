@@ -212,12 +212,41 @@ export default function VaultDocumentDetailPage() {
       {error && <div className="swa-alert swa-alert--error" style={{ marginBottom: 20 }}>{error}</div>}
 
       {doc.status === 'failed' && doc.status_error && (
-        <div className="swa-alert swa-alert--error" style={{ marginBottom: 20 }}>
-          <strong>Indexing failed:</strong> {doc.status_error}
-          <button onClick={onReindex} className="swa-btn" style={{ marginLeft: 12, fontSize: 12, padding: '4px 10px' }}>
-            Retry
-          </button>
-        </div>
+        (() => {
+          const scanned = /scanned|ocr|no selectable text/i.test(doc.status_error ?? '');
+          return (
+            <div
+              className="swa-alert"
+              style={{
+                marginBottom: 20,
+                background: scanned ? '#FBF1E3' : undefined,
+                border: scanned ? '1px solid #F0D3A8' : undefined,
+                color: scanned ? '#7C3A06' : undefined,
+              }}
+            >
+              {scanned ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, marginBottom: 6 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>document_scanner</span>
+                    This looks like a scanned PDF
+                  </div>
+                  <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+                    No selectable text could be extracted, so it can&apos;t be indexed as-is. To use it:
+                    <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                      <li>Run it through OCR (Adobe Acrobat → <em>Scan &amp; Fix → OCR</em>, or a free online OCR tool) to add a text layer, then re-upload; or</li>
+                      <li>Paste the key passages directly via <strong>Vault upload → Paste text</strong>.</li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <><strong>Indexing failed:</strong> {doc.status_error}</>
+              )}
+              <button onClick={onReindex} className="swa-btn" style={{ marginTop: 10, fontSize: 12, padding: '4px 10px' }}>
+                Retry indexing
+              </button>
+            </div>
+          );
+        })()
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>

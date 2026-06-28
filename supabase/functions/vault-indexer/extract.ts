@@ -37,7 +37,9 @@ export async function extractPdf(bytes: Uint8Array): Promise<ExtractResult> {
   const cleaned = normaliseWhitespace(pages.join("\n\n"));
   if (cleaned.length === 0) {
     throw new Error(
-      "PDF extracted 0 characters. Scanned / image-only PDFs aren't supported — try OCR first.",
+      "This PDF appears to be scanned (image-only) — no selectable text could be extracted. " +
+      "Add a text layer with OCR (e.g. Adobe Acrobat → Scan & OCR, or a free online OCR tool), then re-upload. " +
+      "Alternatively, paste the key text directly via Vault upload → Paste text.",
     );
   }
   return { text: cleaned, char_count: cleaned.length, pages };
