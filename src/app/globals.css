@@ -45,3 +45,9 @@
 @media (max-width: 768px) {
   .ncw-collapse { grid-template-columns: 1fr !important; }
 }
+
+/* AmbassadorVoices testimonial cards: stack to one column on phones with the
+ * fixed-size photo centred (generic .ncw-collapse would stretch it). */
+@media (max-width: 768px) {
+  .ncw-voice-card { grid-template-columns: 1fr !important; justify-items: center; }
+}

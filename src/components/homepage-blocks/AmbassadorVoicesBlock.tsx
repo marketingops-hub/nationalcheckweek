@@ -89,6 +89,7 @@ export default function AmbassadorVoicesBlock({ content, accentColor = '#29B8E8'
               return (
                 <motion.div
                   key={ambassador.id}
+                  className="ncw-voice-card"
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
