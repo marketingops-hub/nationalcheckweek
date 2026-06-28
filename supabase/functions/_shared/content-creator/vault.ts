@@ -7,14 +7,13 @@
  *      build a query embedding from topic + keywords → match_vault_chunks()
  *      RPC returns top-k most similar chunks by cosine similarity.
  *
- *   2. FALLBACK — keyword scoring over vault_content (the legacy paste-only
- *      table). Triggered when:
+ *   2. FALLBACK — keyword scoring over vault_chunks. Triggered when:
  *        • OpenAI embedding call fails, OR
- *        • match_vault_chunks returns 0 results (empty new vault), OR
+ *        • match_vault_chunks returns 0 results, OR
  *        • OPENAI_API_KEY is missing.
  *
- *      Keeps the pipeline alive during the rollout window when vault_content
- *      has data but vault_documents is still empty / mid-backfill.
+ *      Single source of truth: the legacy vault_content table has been
+ *      retired (its rows were migrated into vault_documents).
  *
  * Return shape is stable (`VaultEntry[]`) — prompt builders don't care which
  * path produced the data.
@@ -279,21 +278,40 @@ async function keywordFallback(
   opts: FetchOpts,
   limit: number,
 ): Promise<VaultEntry[]> {
+  // Keyword scoring over vault_chunks (single source of truth). The legacy
+  // vault_content table has been retired; its rows were migrated into
+  // vault_documents by the RAG migration.
   let query = sb
-    .from("vault_content")
-    .select("id, title, content, source, category")
-    .eq("is_approved", true);
+    .from("vault_chunks")
+    .select("id, content, vault_documents!inner(id, title, source, kind, category, status)")
+    .eq("vault_documents.status", "ready")
+    .order("created_at", { ascending: false })
+    .limit(300);
 
-  if (opts.vault_category) query = query.eq("category", opts.vault_category);
+  if (opts.vault_category && opts.vault_category !== "all") {
+    query = query.eq("vault_documents.category", opts.vault_category);
+  }
 
-  const { data, error } = await query.order("updated_at", { ascending: false }).limit(200);
-  if (error) throw new Error(`vault_content fallback failed: ${error.message}`);
+  const { data, error } = await query;
+  if (error) throw new Error(`vault_chunks fallback failed: ${error.message}`);
   if (!data || data.length === 0) return [];
 
-  const needles = buildNeedles(opts.keywords, opts.topic);
-  if (needles.length === 0) return (data as VaultEntry[]).slice(0, limit);
+  const rows: VaultEntry[] = data.map((row) => {
+    const doc = Array.isArray(row.vault_documents) ? row.vault_documents[0] : row.vault_documents;
+    return {
+      id:          row.id as string,
+      document_id: doc?.id as string | undefined,
+      title:       doc?.title ?? "Untitled",
+      content:     row.content as string,
+      source:      doc?.source ?? doc?.kind ?? "",
+      category:    doc?.category ?? "general",
+    };
+  });
 
-  const scored = (data as VaultEntry[]).map((row) => {
+  const needles = buildNeedles(opts.keywords, opts.topic);
+  if (needles.length === 0) return rows.slice(0, limit);
+
+  const scored = rows.map((row) => {
     const hay = `${row.title}\n${row.content}`.toLowerCase();
     let score = 0;
     for (const n of needles) {

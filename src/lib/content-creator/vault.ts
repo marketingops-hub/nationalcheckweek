@@ -5,7 +5,8 @@
  * for use in Next.js API routes (Node runtime):
  *
  *   1. PRIMARY  — semantic search via pgvector (match_vault_chunks RPC)
- *   2. FALLBACK — keyword scoring over vault_content
+ *   2. FALLBACK — keyword scoring over vault_chunks (single source of truth;
+ *      the legacy vault_content table has been retired)
  *
  * Return shape is identical to the edge version so callers don't care
  * which path ran.
@@ -65,7 +66,7 @@ export async function fetchVaultContext(opts: FetchOpts): Promise<VaultEntry[]> 
     if (broad.length > 0) return broad;
   }
 
-  // ── Keyword scoring over vault_content ────────────────────────────────
+  // ── Keyword scoring over vault_chunks ─────────────────────────────────
   return keywordFallback(sb, opts, limit);
 }
 
@@ -151,20 +152,36 @@ async function keywordFallback(
   opts: FetchOpts,
   limit: number,
 ): Promise<VaultEntry[]> {
+  // Keyword scoring over the new vault_chunks table (status='ready'), so the
+  // pipeline stays resilient when the embedding call is unavailable without
+  // depending on the retired legacy vault_content table.
   let q = sb
-    .from('vault_content')
-    .select('id, title, content, source, category')
-    .eq('is_approved', true)
-    .order('updated_at', { ascending: false })
-    .limit(200);
-  if (opts.vault_category) q = q.eq('category', opts.vault_category) as typeof q;
+    .from('vault_chunks')
+    .select('id, content, vault_documents!inner(id, title, source, kind, category, status)')
+    .eq('vault_documents.status', 'ready')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (opts.vault_category && opts.vault_category !== 'all') {
+    q = q.eq('vault_documents.category', opts.vault_category) as typeof q;
+  }
   const { data, error } = await q;
   if (error || !data?.length) return [];
 
-  const needles = buildNeedles(opts.keywords, opts.topic);
-  if (needles.length === 0) return (data as VaultEntry[]).slice(0, limit);
+  const rows: VaultEntry[] = data.map((row) => {
+    const doc = Array.isArray(row.vault_documents) ? row.vault_documents[0] : row.vault_documents;
+    return {
+      id:       row.id as string,
+      title:    (doc as { title?: string })?.title ?? 'Untitled',
+      content:  row.content as string,
+      source:   (doc as { source?: string; kind?: string })?.source ?? (doc as { kind?: string })?.kind ?? '',
+      category: (doc as { category?: string })?.category ?? 'general',
+    };
+  });
 
-  return (data as VaultEntry[])
+  const needles = buildNeedles(opts.keywords, opts.topic);
+  if (needles.length === 0) return rows.slice(0, limit);
+
+  return rows
     .map((row) => {
       const hay = `${row.title}\n${row.content}`.toLowerCase();
       let score = 0;

@@ -1,0 +1,24 @@
+-- Retire the legacy vault_content table.
+--
+-- Its rows were migrated into vault_documents by the RAG migration
+-- (20260420000002), and no code path reads vault_content any more — both the
+-- edge and Node retrievers now keyword-fall-back over vault_chunks.
+--
+-- SAFETY: run the audit query below FIRST and confirm it returns 0 before
+-- applying the drop. Any unmigrated rows it surfaces should be re-added via
+-- Vault upload (so they get chunked + embedded) before dropping.
+--
+--   -- audit: vault_content rows whose text isn't represented in vault_documents
+--   select vc.id, vc.title
+--   from vault_content vc
+--   where not exists (
+--     select 1 from vault_documents d
+--     where d.raw_text = vc.content
+--        or d.title = vc.title
+--   );
+--
+-- content_drafts.vault_refs may hold historical vault_content ids — these are
+-- a plain uuid[] with no FK, so dropping the table leaves them as harmless
+-- dangling provenance markers.
+
+drop table if exists vault_content cascade;
