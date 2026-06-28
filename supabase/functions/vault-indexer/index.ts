@@ -135,6 +135,8 @@ async function indexDocument(document_id: string, ctx: Ctx) {
       token_count:  c.token_count,
       page:         c.page,
       embedding:    embeddings[i],
+      embedding_model: model,
+      embedding_dims:  embeddings[i]?.length ?? null,
     }));
     // Insert in batches of 100 to stay under Supabase row-size limits for
     // the combined payload (1536 floats × 100 = 614k values, JSON encoded
@@ -154,6 +156,7 @@ async function indexDocument(document_id: string, ctx: Ctx) {
         char_count:   extraction.char_count,
         chunk_count:  chunks.length,
         token_count:  total_tokens,
+        page_count:   extraction.pages?.length ?? null,
         raw_text:     null,
       })
       .eq("id", doc.id);

@@ -16,7 +16,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { adminClient } from '@/lib/adminClient';
 import { requireStaff, type AuthedRequest } from '@/lib/auth';
 import { create as createLimiter } from '@/lib/rateLimit';
@@ -54,7 +54,7 @@ export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   let q = sb
     .from('vault_documents')
-    .select('id, title, kind, source, reference, author, publisher, year, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, added_by, created_at, updated_at')
+    .select('id, title, kind, source, reference, author, publisher, year, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, page_count, byte_size, file_hash, use_count, last_used_at, added_by, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -163,6 +163,22 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
   const storage_path = `docs/${randomUUID()}-${filenameSafe}`;
 
   const bytes = new Uint8Array(await file.arrayBuffer());
+
+  // Duplicate detection: a file with identical bytes is already in the vault.
+  // Block it so the same source can't double its retrieval weight / cost.
+  const file_hash = createHash('sha256').update(Buffer.from(bytes)).digest('hex');
+  const { data: dupe } = await sb
+    .from('vault_documents')
+    .select('id, title')
+    .eq('file_hash', file_hash)
+    .maybeSingle();
+  if (dupe) {
+    return NextResponse.json(
+      { error: `This file is already in the vault as "${dupe.title}". Delete that first to replace it.`, existing_id: dupe.id },
+      { status: 409 },
+    );
+  }
+
   const { error: upErr } = await sb.storage
     .from(STORAGE_BUCKET)
     .upload(storage_path, bytes, { contentType: file.type, upsert: false });
@@ -183,6 +199,8 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
       category: metaParsed.data.category,
       tags,
       status: 'pending',
+      file_hash,
+      byte_size: file.size,
       reference:  metaParsed.data.reference  ?? null,
       author:     metaParsed.data.author     ?? null,
       publisher:  metaParsed.data.publisher  ?? null,
@@ -224,6 +242,19 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
   const sb = adminClient();
 
   if (parsed.data.kind === 'paste') {
+    // Duplicate detection on the pasted text.
+    const file_hash = createHash('sha256').update(parsed.data.content).digest('hex');
+    const { data: dupe } = await sb
+      .from('vault_documents')
+      .select('id, title')
+      .eq('file_hash', file_hash)
+      .maybeSingle();
+    if (dupe) {
+      return NextResponse.json(
+        { error: `This exact text is already in the vault as "${dupe.title}".`, existing_id: dupe.id },
+        { status: 409 },
+      );
+    }
     const { data: doc, error } = await sb
       .from('vault_documents')
       .insert({
@@ -234,6 +265,8 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
         tags:      parsed.data.tags,
         status:    'pending',
         raw_text:  parsed.data.content,
+        file_hash,
+        byte_size: Buffer.byteLength(parsed.data.content, 'utf8'),
         reference:  parsed.data.reference  ?? null,
         author:     parsed.data.author     ?? null,
         publisher:  parsed.data.publisher  ?? null,
@@ -252,7 +285,20 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ document: doc }, { status: 201 });
   }
 
-  // kind === 'url'
+  // kind === 'url' — duplicate detection on the exact source URL.
+  {
+    const { data: dupe } = await sb
+      .from('vault_documents')
+      .select('id, title')
+      .eq('source', parsed.data.url)
+      .maybeSingle();
+    if (dupe) {
+      return NextResponse.json(
+        { error: `That URL is already in the vault as "${dupe.title}".`, existing_id: dupe.id },
+        { status: 409 },
+      );
+    }
+  }
   const { data: doc, error } = await sb
     .from('vault_documents')
     .insert({

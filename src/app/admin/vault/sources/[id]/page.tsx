@@ -416,6 +416,9 @@ export default function VaultDocumentDetailPage() {
               <dt>Kind</dt>    <dd>{DOCUMENT_KIND_LABELS[doc.kind]}</dd>
               <dt>Source</dt>  <dd style={{ wordBreak: 'break-all' }}>{doc.source ?? '—'}</dd>
               <dt>Status</dt>  <dd>{doc.status}</dd>
+              {doc.page_count != null && (<><dt>Pages</dt> <dd>{doc.page_count}</dd></>)}
+              {doc.byte_size != null && (<><dt>Size</dt> <dd>{formatBytes(doc.byte_size)}</dd></>)}
+              <dt>Cited</dt>   <dd>{doc.use_count > 0 ? `${doc.use_count}× ${doc.last_used_at ? `· last ${new Date(doc.last_used_at).toLocaleDateString()}` : ''}` : 'never'}</dd>
               <dt>Created</dt> <dd>{new Date(doc.created_at).toLocaleString()}</dd>
               <dt>Updated</dt> <dd>{new Date(doc.updated_at).toLocaleString()}</dd>
             </dl>
@@ -424,6 +427,12 @@ export default function VaultDocumentDetailPage() {
       </div>
     </div>
   );
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function Meta({ label, value }: { label: string; value: number | string }) {

@@ -38,6 +38,15 @@ export interface VaultDocument {
   char_count:   number | null;
   chunk_count:  number;
   token_count:  number | null;
+  /** PDF page count (null for non-paged sources / pre-page-tracking rows). */
+  page_count:   number | null;
+  /** Source size in bytes (files). */
+  byte_size:    number | null;
+  /** sha-256 of the source — used for duplicate detection. */
+  file_hash:    string | null;
+  /** How many generations have cited this source, + when last cited. */
+  use_count:    number;
+  last_used_at: string | null;
   added_by:     string | null;
   created_at:   string;
   updated_at:   string;
@@ -51,6 +60,8 @@ export interface VaultChunk {
   token_count: number;
   /** 1-based source page (PDFs); null otherwise / until re-indexed. */
   page:        number | null;
+  embedding_model: string | null;
+  embedding_dims:  number | null;
   created_at:  string;
 }
 

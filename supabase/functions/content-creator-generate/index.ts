@@ -469,5 +469,22 @@ async function handleGenerate(body: Record<string, unknown>, ctx: Ctx, log: Logg
     .select().single();
   if (upErr) throw new Error(`update draft failed: ${upErr.message}`);
 
+  // #14 usage tracking: bump use_count / last_used_at for the documents that
+  // were actually cited (distinct), so the library shows which sources earn
+  // their keep. Best-effort — never fail a generation over telemetry.
+  try {
+    const citedChunks = new Set(cited.ordered_vault_ids);
+    const citedDocIds = [...new Set(
+      vault
+        .filter((v) => citedChunks.has(v.id) && v.document_id)
+        .map((v) => v.document_id as string),
+    )];
+    if (citedDocIds.length > 0) {
+      await sb.rpc("increment_vault_usage", { doc_ids: citedDocIds });
+    }
+  } catch (err) {
+    console.error("[generate] usage increment failed:", err instanceof Error ? err.message : err);
+  }
+
   return { draft: updated };
 }

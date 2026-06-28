@@ -24,6 +24,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export interface VaultEntry {
   id:       string;      // chunk id (new path) or vault_content id (fallback)
+  document_id?: string;  // parent document (used for usage tracking + diversity)
   title:    string;      // document title
   content:  string;      // the actual text the prompt will read
   source:   string;      // URL, filename, or citation
@@ -59,6 +60,11 @@ const EMBED_MODEL   = "text-embedding-3-small";
 // topics. 0.22 is permissive enough for short briefs while still filtering
 // obvious noise.
 const MIN_SIMILARITY = 0.22;
+// Diversity: cap how many chunks a single document can contribute so one big
+// report can't dominate every generation. We over-fetch (limit × OVERFETCH)
+// from the vector search, then trim to `limit` after applying the cap.
+const MAX_CHUNKS_PER_DOC = 3;
+const OVERFETCH = 3;
 
 export async function fetchVaultContext(
   sbUrl: string,
@@ -79,15 +85,18 @@ export async function fetchVaultContext(
         const embedding = await embed(openaiKey, query);
         const { data, error } = await sb.rpc("match_vault_chunks", {
           query_embedding: embedding,
-          match_k:         limit,
+          match_k:         limit * OVERFETCH,
           min_similarity:  MIN_SIMILARITY,
           category_filter: opts.vault_category ?? null,
         });
 
         if (!error && Array.isArray(data) && data.length > 0) {
+          // Apply per-document diversity cap (rows arrive similarity-ordered),
+          // then trim to the requested limit.
+          const diverse = capPerDocument(data as MatchRow[], MAX_CHUNKS_PER_DOC, limit);
           // Enrich with the parent documents' reference/url/page so citations
           // can render real references. Keeps match_vault_chunks untouched.
-          return await enrichWithDocs(sb, data as MatchRow[]);
+          return await enrichWithDocs(sb, diverse);
         }
         // error OR 0 rows → fall through to keyword fallback.
       }
@@ -144,6 +153,7 @@ async function broadSample(
     const doc = Array.isArray(row.vault_documents) ? row.vault_documents[0] : row.vault_documents;
     return {
       id:       row.id as string,
+      document_id: doc?.id as string | undefined,
       title:    doc?.title ?? "Untitled",
       content:  row.content as string,
       source:   doc?.source ?? doc?.kind ?? "",
@@ -199,6 +209,24 @@ interface MatchRow {
 }
 
 /**
+ * Keep at most `perDoc` chunks from any single document, preserving the
+ * incoming (similarity) order, then trim to `limit`. Stops one large source
+ * from dominating the context window.
+ */
+function capPerDocument(rows: MatchRow[], perDoc: number, limit: number): MatchRow[] {
+  const counts = new Map<string, number>();
+  const out: MatchRow[] = [];
+  for (const r of rows) {
+    const n = counts.get(r.document_id) ?? 0;
+    if (n >= perDoc) continue;
+    counts.set(r.document_id, n + 1);
+    out.push(r);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/**
  * Map match_vault_chunks rows to VaultEntry, enriching each with its parent
  * document's reference / source_url / page_ref in a single batched lookup so
  * citations can render real references. The RPC itself is left unchanged.
@@ -223,7 +251,8 @@ async function enrichWithDocs(
   return rows.map((row) => {
     const d = byDoc.get(row.document_id);
     return {
-      id:        row.chunk_id,
+      id:          row.chunk_id,
+      document_id: row.document_id,
       title:     d?.title ?? row.document_title,
       content:   row.content,
       source:    d?.source ?? row.document_source ?? row.document_kind,
