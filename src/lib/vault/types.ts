@@ -60,6 +60,8 @@ export interface VaultChunk {
   token_count: number;
   /** 1-based source page (PDFs); null otherwise / until re-indexed. */
   page:        number | null;
+  /** Nearest preceding heading/section, when detected. */
+  heading:     string | null;
   embedding_model: string | null;
   embedding_dims:  number | null;
   created_at:  string;
@@ -73,6 +75,7 @@ export interface VaultSearchHit {
   document_source:  string | null;
   document_kind:    DocumentKind;
   chunk_page:       number | null;
+  chunk_heading:    string | null;
   content:          string;
   similarity:       number;
 }

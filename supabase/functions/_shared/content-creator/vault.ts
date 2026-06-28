@@ -38,6 +38,7 @@ export interface VaultEntry {
   year?:      string | null;  // structured citation: year
   url?:       string | null;  // canonical public link
   page?:      string | null;  // page / locator, e.g. "14" (auto) or "p. 14" (manual)
+  heading?:   string | null;  // nearest section/heading for this chunk
 }
 
 interface FetchOpts {
@@ -130,7 +131,7 @@ async function broadSample(
   // slice without a full random-on-DB table scan.
   let q = sb
     .from("vault_chunks")
-    .select("id, content, page, vault_documents!inner(id, title, source, reference, author, publisher, year, source_url, page_ref, kind, category, status)")
+    .select("id, content, page, heading, vault_documents!inner(id, title, source, reference, author, publisher, year, source_url, page_ref, kind, category, status)")
     .eq("vault_documents.status", "ready")
     .order("created_at", { ascending: false })
     .limit(limit * 4);
@@ -164,6 +165,7 @@ async function broadSample(
       year:      doc?.year        ?? null,
       url:       doc?.source_url ?? null,
       page:      row.page != null ? String(row.page) : (doc?.page_ref ?? null),
+      heading:   (row.heading as string | null) ?? null,
     };
   });
 }
@@ -204,6 +206,7 @@ interface MatchRow {
   document_source:  string | null;
   document_kind:    string;
   chunk_page:       number | null;
+  chunk_heading:    string | null;
   content:          string;
   similarity:       number;
 }
@@ -264,6 +267,7 @@ async function enrichWithDocs(
       url:       d?.source_url ?? null,
       // Auto per-chunk page (PDF) wins; otherwise the document's manual locator.
       page:      row.chunk_page != null ? String(row.chunk_page) : (d?.page_ref ?? null),
+      heading:   row.chunk_heading ?? null,
     };
   });
 }
@@ -328,6 +332,10 @@ export function formatVaultContext(entries: VaultEntry[]): string {
     return "(No vault entries matched the brief. Treat claims as provisional.)";
   }
   return entries
-    .map((e, i) => `[V${i + 1}] ${e.title}\nsource: ${e.source}\nid: ${e.id}\n${e.content}`)
+    .map((e, i) => {
+      const loc = [e.heading?.trim(), e.page ? `p. ${e.page}` : null].filter(Boolean).join(", ");
+      const header = loc ? `[V${i + 1}] ${e.title} (${loc})` : `[V${i + 1}] ${e.title}`;
+      return `${header}\nsource: ${e.source}\nid: ${e.id}\n${e.content}`;
+    })
     .join("\n\n---\n\n");
 }

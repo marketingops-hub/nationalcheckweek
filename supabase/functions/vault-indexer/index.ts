@@ -134,6 +134,7 @@ async function indexDocument(document_id: string, ctx: Ctx) {
       content:      c.content,
       token_count:  c.token_count,
       page:         c.page,
+      heading:      c.heading ?? null,
       embedding:    embeddings[i],
       embedding_model: model,
       embedding_dims:  embeddings[i]?.length ?? null,
