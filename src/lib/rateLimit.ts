@@ -34,7 +34,7 @@ function getStore(name: string): Map<string, Entry> {
   return store;
 }
 
-function getClientIp(req: NextRequest): string {
+export function getClientIp(req: NextRequest): string {
   // `x-real-ip` is set by the Vercel edge to the true client IP and cannot
   // be spoofed by the client, so prefer it. Fall back to the LAST entry of
   // `x-forwarded-for` (the value appended by our own proxy) rather than the

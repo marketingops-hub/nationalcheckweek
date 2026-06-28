@@ -24,7 +24,11 @@ export default function VoteFeedback({
   const [contact, setContact]   = useState("");
   const [sending, setSending]   = useState(false);
   const [done, setDone]         = useState(false);
+  const [error, setError]       = useState("");
   const dialogRef               = useRef<HTMLDivElement>(null);
+  // Records the down vote exactly once — the votes API only inserts, so we
+  // must not POST both a bare vote and a feedback vote (would double-count).
+  const resolvedRef             = useRef(false);
 
   // Load counts on mount
   useEffect(() => {
@@ -37,10 +41,32 @@ export default function VoteFeedback({
   // Close on Escape
   useEffect(() => {
     if (!showForm) return;
-    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") setShowForm(false); };
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); };
     document.addEventListener("keydown", fn);
     return () => document.removeEventListener("keydown", fn);
   }, [showForm]);
+
+  // Records the down vote exactly once (bare, or enriched with feedback).
+  async function recordDown(withFeedback: boolean): Promise<boolean> {
+    if (resolvedRef.current) return true;
+    try {
+      const res = await fetch("/api/votes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entity_type: entityType,
+          entity_slug: entitySlug,
+          vote: "down",
+          ...(withFeedback ? { feedback, contact } : {}),
+        }),
+      });
+      if (!res.ok) return false;
+      resolvedRef.current = true;
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   async function castVote(v: "up" | "down") {
     if (voted) return;
@@ -49,6 +75,8 @@ export default function VoteFeedback({
     setCounts((c) => ({ ...c, [v]: c[v] + 1, total: c.total + 1 }));
 
     if (v === "down") {
+      // Don't POST yet — recorded on resolve (feedback submit OR dismiss),
+      // so the vote is captured either way without double-counting.
       setShowForm(true);
       return;
     }
@@ -60,21 +88,23 @@ export default function VoteFeedback({
     }).catch(() => {});
   }
 
+  // Closing the dialog still records the bare down vote so a thumbs-down is
+  // never silently dropped when the user skips the feedback form.
+  function dismiss() {
+    setShowForm(false);
+    void recordDown(false);
+  }
+
   async function submitFeedback(e: React.FormEvent) {
     e.preventDefault();
     setSending(true);
-    await fetch("/api/votes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        entity_type: entityType,
-        entity_slug: entitySlug,
-        vote: "down",
-        feedback,
-        contact,
-      }),
-    }).catch(() => {});
+    setError("");
+    const ok = await recordDown(true);
     setSending(false);
+    if (!ok) {
+      setError("Sorry — we couldn't send that just now. Please try again.");
+      return;
+    }
     setDone(true);
     setTimeout(() => setShowForm(false), 2000);
   }
@@ -126,12 +156,12 @@ export default function VoteFeedback({
           role="dialog"
           aria-modal="true"
           aria-label="Data feedback"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}
         >
           <div className="vote-dialog" ref={dialogRef}>
             <button
               className="vote-dialog__close"
-              onClick={() => setShowForm(false)}
+              onClick={dismiss}
               aria-label="Close"
             >✕</button>
 
@@ -177,11 +207,14 @@ export default function VoteFeedback({
                     />
                   </label>
 
+                  {error && (
+                    <p role="alert" style={{ color: "#dc2626", fontSize: 13, margin: "4px 0 0" }}>{error}</p>
+                  )}
                   <div className="vote-dialog__footer">
                     <button
                       type="button"
                       className="vote-dialog__cancel"
-                      onClick={() => setShowForm(false)}
+                      onClick={dismiss}
                     >
                       Cancel
                     </button>

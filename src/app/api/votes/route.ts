@@ -35,9 +35,10 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
   const { entity_type, entity_slug, vote, feedback, contact } = parsed.data;
 
-  // Hash IP for privacy — we store it only to detect obvious spam
-  const forwarded = req.headers.get("x-forwarded-for") ?? "";
-  const ip = forwarded.split(",")[0].trim() || "unknown";
+  // Hash IP for privacy — we store it only to detect obvious spam. Use the
+  // hardened client-IP resolver (x-real-ip / last XFF entry); the first XFF
+  // entry is attacker-controlled and would let spam rotate IPs trivially.
+  const ip = rateLimit.getClientIp(req) || "unknown";
   const ip_hash = await hashIp(ip, entity_slug);
 
   const sb = anonClient();
