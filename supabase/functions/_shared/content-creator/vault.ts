@@ -83,10 +83,12 @@ export async function fetchVaultContext(
       const query = buildQueryString(opts);
       if (query.length > 0) {
         const embedding = await embed(openaiKey, query);
-        const { data, error } = await sb.rpc("match_vault_chunks", {
+        // Hybrid: fuse vector similarity with full-text so exact tokens
+        // (names, acronyms, "ABS 2023") that embeddings miss still match.
+        const { data, error } = await sb.rpc("hybrid_match_vault_chunks", {
           query_embedding: embedding,
+          query_text:      query,
           match_k:         limit * OVERFETCH,
-          min_similarity:  MIN_SIMILARITY,
           category_filter: opts.vault_category ?? null,
         });
 
