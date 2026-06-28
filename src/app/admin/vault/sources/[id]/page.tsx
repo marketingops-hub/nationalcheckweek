@@ -29,6 +29,7 @@ import {
   type VaultDocumentDetail,
 } from "@/lib/vault/types";
 import { StatusChip } from "../../upload/page";
+import { VAULT_CATEGORIES } from "@/lib/vault/categories";
 
 export default function VaultDocumentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -336,6 +337,20 @@ export default function VaultDocumentDetailPage() {
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
               </label>
+              {(() => {
+                const y = parseInt(yearDraft, 10);
+                if (!y || y < 1900 || y > 2100) return null;
+                const age = new Date().getFullYear() - y;
+                if (age < 3) {
+                  return <div style={{ fontSize: 11, color: '#3a9e6e' }}>Published {y}{age > 0 ? ` · ${age}y old` : ' · current'}</div>;
+                }
+                return (
+                  <div style={{ fontSize: 11, color: '#B45309', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+                    Source is {age} years old — double-check its statistics are still current.
+                  </div>
+                );
+              })()}
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Reference override</span>
                 <input
@@ -369,12 +384,17 @@ export default function VaultDocumentDetailPage() {
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category</span>
-                <input
-                  value={categoryDraft}
-                  onChange={(e) => setCategoryDraft(e.target.value)}
+                <select
+                  value={VAULT_CATEGORIES.includes(categoryDraft as never) ? categoryDraft : '__legacy'}
+                  onChange={(e) => { setCategoryDraft(e.target.value); }}
                   onBlur={saveMeta}
-                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
-                />
+                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13, background: '#fff' }}
+                >
+                  {!VAULT_CATEGORIES.includes(categoryDraft as never) && categoryDraft && (
+                    <option value="__legacy" disabled>{categoryDraft} (legacy)</option>
+                  )}
+                  {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Tags</span>

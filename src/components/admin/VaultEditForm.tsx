@@ -9,7 +9,7 @@ import {
   type AdminVaultSource,
 } from "@/components/admin/ui";
 
-const CATEGORIES = ["general", "mental health", "education", "government", "research", "statistics", "other"];
+import { VAULT_CATEGORIES as CATEGORIES } from "@/lib/vault/categories";
 
 interface VaultEditFormProps {
   source: AdminVaultSource;

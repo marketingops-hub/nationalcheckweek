@@ -27,6 +27,7 @@ import {
   type VaultDocument,
   type DocumentStatus,
 } from "@/lib/vault/types";
+import { VAULT_CATEGORIES } from "@/lib/vault/categories";
 
 const ACCEPT_MIME = ".pdf,.docx,.txt,.md";
 const MAX_FILES   = 10;
@@ -247,12 +248,9 @@ export default function VaultUploadPage() {
                 style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
               >
                 <Field label="Category for new uploads">
-                  <input
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="general"
-                    style={inputStyle}
-                  />
+                  <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
+                    {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </Field>
                 <Field label="Tags (comma-separated)">
                   <input
@@ -295,7 +293,9 @@ export default function VaultUploadPage() {
                   <input value={pasteSource} onChange={(e) => setPasteSource(e.target.value)} style={inputStyle} />
                 </Field>
                 <Field label="Category">
-                  <input value={pasteCategory} onChange={(e) => setPasteCategory(e.target.value)} style={inputStyle} />
+                  <select value={pasteCategory} onChange={(e) => setPasteCategory(e.target.value)} style={inputStyle}>
+                    {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </Field>
                 <Field label="Tags">
                   <input value={pasteTags} onChange={(e) => setPasteTags(e.target.value)} style={inputStyle} placeholder="comma,separated" />
@@ -329,7 +329,9 @@ export default function VaultUploadPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <Field label="Category">
-                  <input value={urlCat} onChange={(e) => setUrlCat(e.target.value)} style={inputStyle} />
+                  <select value={urlCat} onChange={(e) => setUrlCat(e.target.value)} style={inputStyle}>
+                    {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </Field>
                 <Field label="Tags">
                   <input value={urlTags} onChange={(e) => setUrlTags(e.target.value)} style={inputStyle} placeholder="comma,separated" />
