@@ -31,9 +31,12 @@ export interface VaultEntry {
   // Richer citation fields (new vault path). Optional so the legacy
   // fallback paths can omit them; the citation formatter degrades to
   // title + source when absent.
-  reference?: string | null;  // human reference, preferred over title
+  reference?: string | null;  // manual reference override, preferred over composed
+  author?:    string | null;  // structured citation: author / org
+  publisher?: string | null;  // structured citation: publisher
+  year?:      string | null;  // structured citation: year
   url?:       string | null;  // canonical public link
-  page?:      string | null;  // page / locator, e.g. "p. 14"
+  page?:      string | null;  // page / locator, e.g. "14" (auto) or "p. 14" (manual)
 }
 
 interface FetchOpts {
@@ -118,7 +121,7 @@ async function broadSample(
   // slice without a full random-on-DB table scan.
   let q = sb
     .from("vault_chunks")
-    .select("id, content, vault_documents!inner(id, title, source, reference, source_url, page_ref, kind, category, status)")
+    .select("id, content, page, vault_documents!inner(id, title, source, reference, author, publisher, year, source_url, page_ref, kind, category, status)")
     .eq("vault_documents.status", "ready")
     .order("created_at", { ascending: false })
     .limit(limit * 4);
@@ -146,8 +149,11 @@ async function broadSample(
       source:   doc?.source ?? doc?.kind ?? "",
       category: doc?.category ?? "general",
       reference: doc?.reference  ?? null,
+      author:    doc?.author     ?? null,
+      publisher: doc?.publisher  ?? null,
+      year:      doc?.year        ?? null,
       url:       doc?.source_url ?? null,
-      page:      doc?.page_ref   ?? null,
+      page:      row.page != null ? String(row.page) : (doc?.page_ref ?? null),
     };
   });
 }
@@ -187,6 +193,7 @@ interface MatchRow {
   document_title:   string;
   document_source:  string | null;
   document_kind:    string;
+  chunk_page:       number | null;
   content:          string;
   similarity:       number;
 }
@@ -203,12 +210,13 @@ async function enrichWithDocs(
   const docIds = [...new Set(rows.map((r) => r.document_id))];
   const byDoc = new Map<string, {
     title?: string; source?: string | null;
-    reference?: string | null; source_url?: string | null; page_ref?: string | null;
+    reference?: string | null; author?: string | null; publisher?: string | null;
+    year?: string | null; source_url?: string | null; page_ref?: string | null;
   }>();
   if (docIds.length > 0) {
     const { data: docs } = await sb
       .from("vault_documents")
-      .select("id, title, source, reference, source_url, page_ref")
+      .select("id, title, source, reference, author, publisher, year, source_url, page_ref")
       .in("id", docIds);
     for (const d of docs ?? []) byDoc.set(d.id as string, d);
   }
@@ -221,8 +229,12 @@ async function enrichWithDocs(
       source:    d?.source ?? row.document_source ?? row.document_kind,
       category:  "general",
       reference: d?.reference  ?? null,
+      author:    d?.author     ?? null,
+      publisher: d?.publisher  ?? null,
+      year:      d?.year        ?? null,
       url:       d?.source_url ?? null,
-      page:      d?.page_ref   ?? null,
+      // Auto per-chunk page (PDF) wins; otherwise the document's manual locator.
+      page:      row.chunk_page != null ? String(row.chunk_page) : (d?.page_ref ?? null),
     };
   });
 }

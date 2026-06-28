@@ -30,12 +30,47 @@ export interface CitationVaultEntry {
   id:     string;
   title?: string | null;
   source?: string | null;   // URL, doc kind, or free text
-  /** Human-facing citation; preferred over title in the Sources list. */
+  /** Manual reference override; preferred over the composed reference. */
   reference?: string | null;
+  /** Structured citation parts — composed into a formal reference. */
+  author?: string | null;
+  publisher?: string | null;
+  year?: string | null;
   /** Canonical public URL to link the citation to. */
   url?: string | null;
-  /** Optional page / locator, e.g. "p. 14". */
+  /** Page / locator: a bare number ("14", auto from PDFs) or free text ("p. 14"). */
   page?: string | null;
+}
+
+/**
+ * Compose a formal, APA-ish reference from the structured fields, falling
+ * back to a manual override, then the bare title.
+ *   "AIHW (2024). Australia's youth: mental health. AIHW."
+ */
+function buildReference(e: CitationVaultEntry): string {
+  const override = (e.reference ?? '').trim();
+  if (override) return override;
+  const author    = (e.author ?? '').trim();
+  const year      = (e.year ?? '').trim();
+  const title     = (e.title ?? '').trim();
+  const publisher = (e.publisher ?? '').trim();
+  const parts: string[] = [];
+  if (author && year) parts.push(`${author} (${year}).`);
+  else if (author)    parts.push(`${author}.`);
+  else if (year)      parts.push(`(${year}).`);
+  if (title)     parts.push(`${title}.`);
+  if (publisher) parts.push(`${publisher}.`);
+  const ref = parts.join(' ').replace(/\s+/g, ' ').trim();
+  return ref || title || 'Untitled source';
+}
+
+/** Bare page number → "p. 14"; ranges → "pp. 14–16"; free text passes through. */
+function formatPage(p: string): string {
+  const v = (p ?? '').trim();
+  if (!v) return '';
+  if (/^\d+$/.test(v)) return `p. ${v}`;
+  if (/^\d+\s*[-–]\s*\d+$/.test(v)) return `pp. ${v.replace(/\s*[-–]\s*/, '–')}`;
+  return v;
 }
 
 export interface FormatCitationsResult {
@@ -133,17 +168,16 @@ export function formatCitations(
   let out = replaced;
   if (verbose && !hasTrailingSourcesBlock(replaced)) {
     const lines = uniqueOrder.map((id, i) => {
-      const e = byId.get(id);
-      // Prefer an explicit human reference over the raw document title.
-      const label = (e?.reference ?? '').trim() || (e?.title ?? '').trim() || 'Untitled source';
-      const page  = (e?.page ?? '').trim();
+      const e = byId.get(id) ?? { id };
+      const label = buildReference(e);
+      const page  = formatPage((e.page ?? '').trim());
       // Prefer an explicit canonical URL; fall back to the source field when
       // it's itself a link, otherwise to the free-text source.
-      const src   = (e?.source ?? '').trim();
-      const link  = (e?.url ?? '').trim() || (isUrl(src) ? src : '');
+      const src   = (e.source ?? '').trim();
+      const link  = (e.url ?? '').trim() || (isUrl(src) ? src : '');
       const tail  = link || (src && !isUrl(src) ? src : '');
-      // [N] {reference}{, p. 14}{ — url-or-source}
-      return `[${i + 1}] ${label}${page ? `, ${page}` : ''}${tail ? ` — ${tail}` : ''}`;
+      // [N] {reference}{ (p. 14)}{ — url-or-source}
+      return `[${i + 1}] ${label}${page ? ` (${page})` : ''}${tail ? ` — ${tail}` : ''}`;
     });
     // Trim trailing whitespace before appending so we don't end up with
     // three blank lines.

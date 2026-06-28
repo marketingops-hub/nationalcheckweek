@@ -43,6 +43,9 @@ export default function VaultDocumentDetailPage() {
   const [categoryDraft, setCategoryDraft] = useState("");
   const [tagsDraft,    setTagsDraft]    = useState("");
   const [referenceDraft, setReferenceDraft] = useState("");
+  const [authorDraft,    setAuthorDraft]    = useState("");
+  const [publisherDraft, setPublisherDraft] = useState("");
+  const [yearDraft,      setYearDraft]      = useState("");
   const [sourceUrlDraft, setSourceUrlDraft] = useState("");
   const [pageRefDraft,   setPageRefDraft]   = useState("");
   const [savingMeta,   setSavingMeta]   = useState(false);
@@ -57,6 +60,9 @@ export default function VaultDocumentDetailPage() {
       setCategoryDraft(d.category);
       setTagsDraft(d.tags.join(', '));
       setReferenceDraft(d.reference ?? '');
+      setAuthorDraft(d.author ?? '');
+      setPublisherDraft(d.publisher ?? '');
+      setYearDraft(d.year ?? '');
       setSourceUrlDraft(d.source_url ?? '');
       setPageRefDraft(d.page_ref ?? '');
       setError("");
@@ -103,6 +109,9 @@ export default function VaultDocumentDetailPage() {
         category: categoryDraft.trim() || 'general',
         tags,
         reference:  referenceDraft.trim(),
+        author:     authorDraft.trim(),
+        publisher:  publisherDraft.trim(),
+        year:       yearDraft.trim(),
         source_url: sourceUrlDraft.trim(),
         page_ref:   pageRefDraft.trim(),
       });
@@ -290,18 +299,52 @@ export default function VaultDocumentDetailPage() {
           </div>
 
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Metadata</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Citation</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <span style={{ fontSize: 11, color: '#9CA3AF', marginTop: -4 }}>
+                Used to build a formal reference like <em>Author (Year). Title. Publisher.</em> in generated content. Leave blank to fall back to the title.
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: 8 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Author</span>
+                  <input
+                    value={authorDraft}
+                    onChange={(e) => setAuthorDraft(e.target.value)}
+                    onBlur={saveMeta}
+                    placeholder="e.g. AIHW"
+                    style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Year</span>
+                  <input
+                    value={yearDraft}
+                    onChange={(e) => setYearDraft(e.target.value)}
+                    onBlur={saveMeta}
+                    placeholder="2024"
+                    style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                  />
+                </label>
+              </div>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Reference</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Publisher</span>
+                <input
+                  value={publisherDraft}
+                  onChange={(e) => setPublisherDraft(e.target.value)}
+                  onBlur={saveMeta}
+                  placeholder="e.g. Australian Institute of Health and Welfare"
+                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Reference override</span>
                 <input
                   value={referenceDraft}
                   onChange={(e) => setReferenceDraft(e.target.value)}
                   onBlur={saveMeta}
-                  placeholder="e.g. AIHW. Australia's youth: mental health. 2024"
+                  placeholder="Optional — overrides the composed reference"
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
-                <span style={{ fontSize: 11, color: '#9CA3AF' }}>How this source is cited in generated content. Falls back to the title if blank.</span>
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Source URL</span>

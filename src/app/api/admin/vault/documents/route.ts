@@ -54,7 +54,7 @@ export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   let q = sb
     .from('vault_documents')
-    .select('id, title, kind, source, reference, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, added_by, created_at, updated_at')
+    .select('id, title, kind, source, reference, author, publisher, year, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, added_by, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -139,6 +139,9 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
   const metaParsed = FileUploadMetaSchema.safeParse({
     title:      form.get('title') ?? undefined,
     reference:  form.get('reference') ?? undefined,
+    author:     form.get('author') ?? undefined,
+    publisher:  form.get('publisher') ?? undefined,
+    year:       form.get('year') ?? undefined,
     source_url: form.get('source_url') ?? undefined,
     page_ref:   form.get('page_ref') ?? undefined,
     category:   form.get('category') ?? 'general',
@@ -181,6 +184,9 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
       tags,
       status: 'pending',
       reference:  metaParsed.data.reference  ?? null,
+      author:     metaParsed.data.author     ?? null,
+      publisher:  metaParsed.data.publisher  ?? null,
+      year:       metaParsed.data.year        ?? null,
       source_url: metaParsed.data.source_url ?? null,
       page_ref:   metaParsed.data.page_ref   ?? null,
       added_by: (req as AuthedRequest).user.id,
@@ -229,6 +235,9 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
         status:    'pending',
         raw_text:  parsed.data.content,
         reference:  parsed.data.reference  ?? null,
+        author:     parsed.data.author     ?? null,
+        publisher:  parsed.data.publisher  ?? null,
+        year:       parsed.data.year        ?? null,
         source_url: parsed.data.source_url ?? null,
         page_ref:   parsed.data.page_ref   ?? null,
         added_by:  (req as AuthedRequest).user.id,
@@ -256,6 +265,9 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
       tags:     parsed.data.tags,
       status:   'pending',
       reference:  parsed.data.reference  ?? null,
+      author:     parsed.data.author     ?? null,
+      publisher:  parsed.data.publisher  ?? null,
+      year:       parsed.data.year        ?? null,
       source_url: parsed.data.source_url ?? null,
       page_ref:   parsed.data.page_ref   ?? null,
       added_by: (req as AuthedRequest).user.id,

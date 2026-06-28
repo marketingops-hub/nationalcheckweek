@@ -20,7 +20,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { extractPdf, extractDocx, extractTxt, extractUrl } from "./extract.ts";
-import { chunkDocument } from "./chunk.ts";
+import { chunkDocument, chunkPages } from "./chunk.ts";
 import { embedBatch }     from "./embed.ts";
 
 const corsHeaders = {
@@ -105,9 +105,13 @@ async function indexDocument(document_id: string, ctx: Ctx) {
       await sb.from("vault_documents").update({ title: extraction.title }).eq("id", doc.id);
     }
 
-    // 3. CHUNK — split extracted text into overlapping slices.
+    // 3. CHUNK — split extracted text into overlapping slices. When the
+    // extractor exposed per-page text (PDFs), chunk per page so every chunk
+    // carries the source page for page-level citations.
     await setStatus(sb, doc.id, "chunking");
-    const chunks = chunkDocument(extraction.text);
+    const chunks = extraction.pages && extraction.pages.length > 0
+      ? chunkPages(extraction.pages)
+      : chunkDocument(extraction.text);
     if (chunks.length === 0) throw new Error("Chunker produced 0 chunks.");
 
     // Wipe any previous chunks (re-index case).
@@ -129,6 +133,7 @@ async function indexDocument(document_id: string, ctx: Ctx) {
       chunk_index:  i,
       content:      c.content,
       token_count:  c.token_count,
+      page:         c.page,
       embedding:    embeddings[i],
     }));
     // Insert in batches of 100 to stay under Supabase row-size limits for

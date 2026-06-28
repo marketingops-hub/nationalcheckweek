@@ -15,21 +15,32 @@ import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@1.6.0";
 export interface ExtractResult {
   text:       string;
   char_count: number;
+  /**
+   * Per-page cleaned text, 1-based by array position (pages[0] = page 1).
+   * Only set for PDFs — lets the chunker tag each chunk with its source
+   * page. Undefined for sources without a meaningful page concept
+   * (docx / txt / url).
+   */
+  pages?:     string[];
 }
 
 /* ─── PDF ────────────────────────────────────────────────────────────────── */
 
 export async function extractPdf(bytes: Uint8Array): Promise<ExtractResult> {
   const pdf = await getDocumentProxy(bytes);
-  const { text } = await extractText(pdf, { mergePages: true });
-  const merged = typeof text === "string" ? text : text.join("\n\n");
-  const cleaned = normaliseWhitespace(merged);
+  // mergePages:false → `text` is an array, one entry per page. We keep the
+  // per-page split for page-level citations and also build a merged string
+  // for the char_count / fallback path.
+  const { text } = await extractText(pdf, { mergePages: false });
+  const rawPages = Array.isArray(text) ? text : [text];
+  const pages = rawPages.map((p) => normaliseWhitespace(typeof p === "string" ? p : ""));
+  const cleaned = normaliseWhitespace(pages.join("\n\n"));
   if (cleaned.length === 0) {
     throw new Error(
       "PDF extracted 0 characters. Scanned / image-only PDFs aren't supported — try OCR first.",
     );
   }
-  return { text: cleaned, char_count: cleaned.length };
+  return { text: cleaned, char_count: cleaned.length, pages };
 }
 
 /* ─── DOCX (mammoth, via esm.sh — no Node fs dependency) ─────────────────── */

@@ -20,8 +20,12 @@ export interface VaultDocument {
   title:        string;
   kind:         DocumentKind;
   source:       string | null;
-  /** Human-facing citation/reference; preferred over title in Sources lists. */
+  /** Manual reference override; preferred over the composed reference. */
   reference:    string | null;
+  /** Structured citation parts. */
+  author:       string | null;
+  publisher:    string | null;
+  year:         string | null;
   /** Canonical public URL the citation links to. */
   source_url:   string | null;
   /** Optional page / locator shown in citations, e.g. "p. 14". */
@@ -45,6 +49,8 @@ export interface VaultChunk {
   chunk_index: number;
   content:     string;
   token_count: number;
+  /** 1-based source page (PDFs); null otherwise / until re-indexed. */
+  page:        number | null;
   created_at:  string;
 }
 
@@ -55,6 +61,7 @@ export interface VaultSearchHit {
   document_title:   string;
   document_source:  string | null;
   document_kind:    DocumentKind;
+  chunk_page:       number | null;
   content:          string;
   similarity:       number;
 }

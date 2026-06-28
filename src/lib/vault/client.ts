@@ -136,7 +136,7 @@ export async function uploadFile(input: FileUploadInput): Promise<VaultDocument>
 
 export async function patchDocument(
   id: string,
-  patch: { title?: string; category?: string; tags?: string[]; reference?: string; source_url?: string; page_ref?: string },
+  patch: { title?: string; category?: string; tags?: string[]; reference?: string; author?: string; publisher?: string; year?: string; source_url?: string; page_ref?: string },
 ): Promise<VaultDocument> {
   const res = await adminFetch(`${BASE}/${id}`, {
     method: 'PATCH',

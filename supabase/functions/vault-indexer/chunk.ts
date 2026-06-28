@@ -26,6 +26,24 @@ const OVERLAP_CHARS = Math.floor(OVERLAP_TOKENS * CHARS_PER_TOKEN);
 export interface Chunk {
   content:     string;
   token_count: number;
+  /** 1-based source page when known (PDF path); NULL otherwise. */
+  page:        number | null;
+}
+
+/**
+ * Chunk a document that has per-page text (PDFs). Each page is chunked
+ * independently so every chunk maps cleanly to exactly one source page,
+ * which is what page-level citations need. Empty pages are skipped.
+ */
+export function chunkPages(pages: string[]): Chunk[] {
+  const out: Chunk[] = [];
+  pages.forEach((pageText, idx) => {
+    const pageNo = idx + 1; // 1-based
+    for (const c of chunkDocument(pageText)) {
+      out.push({ ...c, page: pageNo });
+    }
+  });
+  return out;
 }
 
 /**
@@ -38,7 +56,7 @@ export function chunkDocument(text: string): Chunk[] {
 
   // Fast path: tiny docs fit in a single chunk.
   if (clean.length <= MAX_CHARS) {
-    return [{ content: clean, token_count: approxTokens(clean) }];
+    return [{ content: clean, token_count: approxTokens(clean), page: null }];
   }
 
   const chunks: Chunk[] = [];
@@ -51,7 +69,7 @@ export function chunkDocument(text: string): Chunk[] {
   const flushBuffer = () => {
     const content = buffer.trim();
     if (content.length > 0) {
-      chunks.push({ content, token_count: approxTokens(content) });
+      chunks.push({ content, token_count: approxTokens(content), page: null });
     }
     // Keep the tail of the previous chunk as overlap seed for the next one.
     buffer = content.slice(-OVERLAP_CHARS);
@@ -85,7 +103,7 @@ export function chunkDocument(text: string): Chunk[] {
   }
 
   if (buffer.trim().length > 0) {
-    chunks.push({ content: buffer.trim(), token_count: approxTokens(buffer.trim()) });
+    chunks.push({ content: buffer.trim(), token_count: approxTokens(buffer.trim()), page: null });
   }
 
   return chunks;

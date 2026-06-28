@@ -14,9 +14,22 @@ const categorySchema = nonEmpty.max(100).default('general');
 const tagsSchema  = z.array(z.string().trim().min(1).max(50)).max(20).default([]);
 
 // Richer reference fields — all optional, used to render real citations.
-const referenceSchema = z.string().trim().max(500).optional();   // "AIHW. Australia's youth: mental health. 2024"
+const referenceSchema = z.string().trim().max(500).optional();   // manual full-citation override
+const authorSchema    = z.string().trim().max(300).optional();   // "AIHW"
+const publisherSchema = z.string().trim().max(300).optional();   // "Australian Institute of Health and Welfare"
+const yearSchema      = z.string().trim().max(20).optional();    // "2024", "n.d."
 const sourceUrlSchema = z.string().trim().max(2000).optional();  // canonical public link
-const pageRefSchema   = z.string().trim().max(120).optional();   // "p. 14", "Table 3"
+const pageRefSchema   = z.string().trim().max(120).optional();   // "p. 14", "Table 3" (manual locator)
+
+/** Reusable block of structured-citation fields shared across schemas. */
+const citationFields = {
+  reference:  referenceSchema,
+  author:     authorSchema,
+  publisher:  publisherSchema,
+  year:       yearSchema,
+  source_url: sourceUrlSchema,
+  page_ref:   pageRefSchema,
+};
 
 /** POST /api/admin/vault/documents — paste variant. */
 export const PasteDocumentSchema = z.object({
@@ -24,9 +37,7 @@ export const PasteDocumentSchema = z.object({
   title:      titleSchema,
   content:    nonEmpty.max(500_000),   // ~125k tokens, hard ceiling before chunking
   source:     z.string().trim().max(500).optional(),
-  reference:  referenceSchema,
-  source_url: sourceUrlSchema,
-  page_ref:   pageRefSchema,
+  ...citationFields,
   category:   categorySchema,
   tags:       tagsSchema,
 });
@@ -36,9 +47,7 @@ export const UrlDocumentSchema = z.object({
   kind:       z.literal('url'),
   url:        z.string().url().max(2000),
   title:      titleSchema.optional(),   // auto-filled from the crawl if omitted
-  reference:  referenceSchema,
-  source_url: sourceUrlSchema,
-  page_ref:   pageRefSchema,
+  ...citationFields,
   category:   categorySchema,
   tags:       tagsSchema,
 });
@@ -51,9 +60,7 @@ export const CreateDocumentSchema = z.discriminatedUnion('kind', [
 /** Multipart form fields that accompany a file upload. */
 export const FileUploadMetaSchema = z.object({
   title:      titleSchema.optional(),
-  reference:  referenceSchema,
-  source_url: sourceUrlSchema,
-  page_ref:   pageRefSchema,
+  ...citationFields,
   category:   categorySchema,
   tags:       z.string().optional(),     // comma-separated in the form
 });
@@ -61,9 +68,7 @@ export const FileUploadMetaSchema = z.object({
 /** PATCH /api/admin/vault/documents/[id] */
 export const PatchDocumentSchema = z.object({
   title:      titleSchema.optional(),
-  reference:  referenceSchema,
-  source_url: sourceUrlSchema,
-  page_ref:   pageRefSchema,
+  ...citationFields,
   category:   nonEmpty.max(100).optional(),
   tags:       tagsSchema.optional(),
 }).strict();
