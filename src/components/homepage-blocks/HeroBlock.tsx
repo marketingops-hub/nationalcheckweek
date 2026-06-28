@@ -175,10 +175,10 @@ export default function HeroBlock({ content, globalColors }: HeroBlockProps) {
         </div>
       )}
 
-      <div style={{ 
-        position: 'relative', 
-        zIndex: 1, 
-        maxWidth: '1280px', 
+      <div className="ncw-collapse" style={{
+        position: 'relative',
+        zIndex: 1,
+        maxWidth: '1280px',
         margin: '0 auto',
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',

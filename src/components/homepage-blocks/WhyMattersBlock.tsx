@@ -43,7 +43,7 @@ export default function WhyMattersBlock({ content, accentColor: globalAccent }: 
           </p>
         </motion.div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '32px' }}>
+        <div className="ncw-collapse" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '32px' }}>
           {content.cards.map((card, i) => (
             <motion.div
               key={i}

@@ -36,7 +36,7 @@ export default async function AmbassadorsPage() {
       <main className="inner-content inner-content--wide">
 
         {/* ── CTAs ── */}
-        <div style={{
+        <div className="ncw-collapse" style={{
           display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 48,
         }}>
           <Link href="/ambassadors/apply" style={{

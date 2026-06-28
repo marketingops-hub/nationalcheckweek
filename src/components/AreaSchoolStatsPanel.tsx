@@ -56,7 +56,7 @@ export default async function AreaSchoolStatsPanel({ areaSlug, areaName }: { are
       </div>
 
       {/* ── Stat row ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+      <div className="ncw-collapse" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
           { icon: "school",     color: "#2563eb", label: "Schools",       value: fmt(total),         sub: "in this area" },
           { icon: "groups",     color: "#7c3aed", label: "Students",      value: fmt(totalStudents), sub: "total enrolments" },
@@ -80,7 +80,7 @@ export default async function AreaSchoolStatsPanel({ areaSlug, areaName }: { are
       </div>
 
       {/* ── Sector breakdown + Equity side by side ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+      <div className="ncw-collapse" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
 
         {/* Sector */}
         <div style={{

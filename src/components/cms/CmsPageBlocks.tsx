@@ -89,7 +89,7 @@ export function RenderBlock({ block }: { block: Block }) {
     }
     case "two-col":
       return (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", marginBottom: "1.5rem" }}>
+        <div className="ncw-collapse" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", marginBottom: "1.5rem" }}>
           <div style={{ color: "var(--text-mid)", lineHeight: 1.8 }}>{block.data.left}</div>
           <div style={{ color: "var(--text-mid)", lineHeight: 1.8 }}>{block.data.right}</div>
         </div>

@@ -110,7 +110,7 @@ export default function NominateForm({ categories }: { categories: Category[] })
       {/* Nominee Details */}
       <div>
         <div className="section-heading section-heading--tight">About the Person You're Nominating</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
+        <div className="ncw-collapse" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
           <Field label="First Name" required htmlFor="nominee_first_name">
             <FocusInput id="nominee_first_name" value={form.nominee_first_name} onChange={e => set('nominee_first_name', e.target.value)} placeholder="John" required />
           </Field>
@@ -170,7 +170,7 @@ export default function NominateForm({ categories }: { categories: Category[] })
       {/* Nominator Details */}
       <div>
         <div className="section-heading section-heading--tight">Your Details</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
+        <div className="ncw-collapse" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
           <Field label="Your Full Name" required htmlFor="nominator_name">
             <FocusInput id="nominator_name" value={form.nominator_name} onChange={e => set('nominator_name', e.target.value)} placeholder="Your name" required />
           </Field>

@@ -173,6 +173,7 @@ export default function WellbeingAcrossAustraliaBlock({ content, accentColor: gl
 
               {/* Stats */}
               <div
+                className="ncw-collapse"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',

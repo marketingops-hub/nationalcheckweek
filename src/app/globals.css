@@ -36,3 +36,12 @@
  * the same @keyframes in five different component files. */
 @keyframes swa-spin { to { transform: rotate(360deg); } }
 .swa-spin { animation: swa-spin 1s linear infinite; }
+
+/* ── Responsive grid collapse ──────────────────────────────────────────────
+ * Many public sections set multi-column `gridTemplateColumns` via inline
+ * styles, which cannot carry media queries and so stay multi-column (and
+ * crush/overflow) on phones. Add className="ncw-collapse" to such a grid to
+ * force a single column at <=768px without touching its desktop template. */
+@media (max-width: 768px) {
+  .ncw-collapse { grid-template-columns: 1fr !important; }
+}

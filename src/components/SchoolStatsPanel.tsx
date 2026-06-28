@@ -130,7 +130,7 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
       </div>
 
       {/* ── Row 1: 2 headline stats + ICSEA card ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 16, marginTop: 28, marginBottom: 24 }}>
+      <div className="ncw-collapse" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 16, marginTop: 28, marginBottom: 24 }}>
 
         {/* Schools */}
         <div className="card" style={{ padding: "20px 22px", borderTop: "3px solid #2563eb" }}>
@@ -172,7 +172,7 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
       </div>
 
       {/* ── Row 2: Sector + Location breakdowns side by side ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+      <div className="ncw-collapse" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
 
         <div className="card" style={{ padding: "20px 22px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 18 }}>
@@ -206,7 +206,7 @@ export default async function SchoolStatsPanel({ slug, stateName }: { slug: stri
           These indicators highlight student groups that research shows are at higher risk of wellbeing challenges and may require additional support. Averages are across all schools in {stateName}.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <div className="ncw-collapse" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {/* Most critical — disadvantaged quarter */}
           <div style={{
             background: "#fff",

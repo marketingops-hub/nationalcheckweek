@@ -115,7 +115,7 @@ export default function ApplyForm({ categories }: { categories: Category[] }) {
       {/* Personal Details */}
       <div>
         <div className="section-heading section-heading--tight">Personal Details</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
+        <div className="ncw-collapse" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
           <Field label="First Name" required htmlFor="first_name">
             <FocusInput id="first_name" value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="Jane" required />
           </Field>
@@ -134,7 +134,7 @@ export default function ApplyForm({ categories }: { categories: Category[] }) {
       {/* Professional Background */}
       <div>
         <div className="section-heading section-heading--tight">Professional Background</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
+        <div className="ncw-collapse" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
           <Field label="Organisation / School" htmlFor="organisation">
             <FocusInput id="organisation" value={form.organisation} onChange={e => set('organisation', e.target.value)} placeholder="e.g. Sunrise Primary School" />
           </Field>
