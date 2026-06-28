@@ -209,9 +209,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Top-level success must reflect the Zoom outcome, not be hardcoded — a
+    // caller keying off `success` was treating Zoom auth/registration failures
+    // as success.
+    const zoomOk = !results.zoom_error && results.zoom.every((r: { success?: boolean }) => r.success !== false);
     return NextResponse.json({
-      success: true,
-      message: 'Registration completed',
+      success: zoomOk,
+      message: zoomOk ? 'Registration completed' : 'Registration completed, but some webinar sign-ups failed',
       results,
     });
 

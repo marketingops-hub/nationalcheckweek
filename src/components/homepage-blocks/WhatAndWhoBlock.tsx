@@ -18,7 +18,7 @@ export default function WhatAndWhoBlock({ content, accentColor: globalAccent }: 
   return (
     <section style={{ padding: '80px 20px', background: '#fff' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '48px', marginBottom: '64px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))', gap: '48px', marginBottom: '64px' }}>
           {/* Column 1: Who You'll Hear From */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}

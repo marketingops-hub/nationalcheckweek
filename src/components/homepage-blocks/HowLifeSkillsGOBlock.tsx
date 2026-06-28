@@ -17,7 +17,7 @@ export default function HowLifeSkillsGOBlock({ content, accentColor: globalAccen
   return (
     <section style={{ padding: '80px 20px', background: '#f8f9fa' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '48px', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))', gap: '48px', alignItems: 'center' }}>
           {/* Left Column: Text Content */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}

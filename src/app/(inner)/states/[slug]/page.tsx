@@ -157,7 +157,7 @@ export default async function StatePage({ params }: Props) {
                   </div>
                   <div className="area-link-card__name">{area.name}</div>
                   <div className="area-link-card__meta">
-                    {area.population} · {area.issues.length} priority issues
+                    {area.population} · {Array.isArray(area.issues) ? area.issues.length : 0} priority issues
                   </div>
                   <div className="area-link-card__cta">View report →</div>
                 </Link>

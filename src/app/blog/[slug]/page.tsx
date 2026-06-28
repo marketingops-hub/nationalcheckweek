@@ -182,7 +182,8 @@ export default async function BlogPostPage({ params }: Props) {
           touching global inner.css. Uses variables already defined there
           where possible. */}
       <style>{`
-        .blog-article { max-width: 880px; margin: 0 auto; padding: 0 20px 64px; }
+        /* Top padding clears the fixed 110px header so the title isn't hidden behind the menu. */
+        .blog-article { max-width: 880px; margin: 0 auto; padding: 110px 20px 64px; }
         .blog-article__hero { padding: 48px 0 24px; }
         .blog-article__hero-inner { display: flex; flex-direction: column; gap: 14px; }
         .blog-article__back { color: #6366F1; font-size: 13px; font-weight: 600; text-decoration: none; }

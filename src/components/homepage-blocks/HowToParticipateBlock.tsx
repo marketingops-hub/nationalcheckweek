@@ -20,7 +20,7 @@ export default function HowToParticipateBlock({ content, accentColor: globalAcce
   return (
     <section style={{ padding: '80px 20px 0', background: bgColor }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))', gap: '32px' }}>
           {/* Left Column: How to Participate — white card */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}

@@ -24,7 +24,7 @@ export default function TestimonialsBlock({ content, accentColor: globalAccent }
     <section style={{ padding: '80px 20px', background: '#f8f9fa' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <h2 style={{ fontSize: '2.5rem', fontWeight: 700, textAlign: 'center', marginBottom: '48px' }}>{content.heading}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))', gap: '32px' }}>
           {content.testimonials.map((t, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '32px', background: '#fff', borderRadius: '12px', border: '1px solid #e4e2ec' }}>
               <p style={{ fontSize: '1.0625rem', lineHeight: 1.6, marginBottom: '24px', color: '#1e1b33' }}>"{t.quote}"</p>

@@ -167,7 +167,7 @@ export default async function AreaPage({ params }: Props) {
                 <Link key={a.slug} href={`/areas/${a.slug}`} className="area-related-card">
                   <div className="area-related-card__name">{a.name}</div>
                   <div className="area-related-card__meta">
-                    {a.type === "city" ? "City" : a.type === "lga" ? "LGA" : "Region"} · {a.issues.length} issues
+                    {a.type === "city" ? "City" : a.type === "lga" ? "LGA" : "Region"} · {Array.isArray(a.issues) ? a.issues.length : 0} issues
                   </div>
                 </Link>
               ))}
