@@ -13,23 +13,34 @@ const titleSchema = nonEmpty.max(500);
 const categorySchema = nonEmpty.max(100).default('general');
 const tagsSchema  = z.array(z.string().trim().min(1).max(50)).max(20).default([]);
 
+// Richer reference fields — all optional, used to render real citations.
+const referenceSchema = z.string().trim().max(500).optional();   // "AIHW. Australia's youth: mental health. 2024"
+const sourceUrlSchema = z.string().trim().max(2000).optional();  // canonical public link
+const pageRefSchema   = z.string().trim().max(120).optional();   // "p. 14", "Table 3"
+
 /** POST /api/admin/vault/documents — paste variant. */
 export const PasteDocumentSchema = z.object({
-  kind:     z.literal('paste'),
-  title:    titleSchema,
-  content:  nonEmpty.max(500_000),   // ~125k tokens, hard ceiling before chunking
-  source:   z.string().trim().max(500).optional(),
-  category: categorySchema,
-  tags:     tagsSchema,
+  kind:       z.literal('paste'),
+  title:      titleSchema,
+  content:    nonEmpty.max(500_000),   // ~125k tokens, hard ceiling before chunking
+  source:     z.string().trim().max(500).optional(),
+  reference:  referenceSchema,
+  source_url: sourceUrlSchema,
+  page_ref:   pageRefSchema,
+  category:   categorySchema,
+  tags:       tagsSchema,
 });
 
 /** POST /api/admin/vault/documents — url variant (crawled via Firecrawl). */
 export const UrlDocumentSchema = z.object({
-  kind:     z.literal('url'),
-  url:      z.string().url().max(2000),
-  title:    titleSchema.optional(),   // auto-filled from the crawl if omitted
-  category: categorySchema,
-  tags:     tagsSchema,
+  kind:       z.literal('url'),
+  url:        z.string().url().max(2000),
+  title:      titleSchema.optional(),   // auto-filled from the crawl if omitted
+  reference:  referenceSchema,
+  source_url: sourceUrlSchema,
+  page_ref:   pageRefSchema,
+  category:   categorySchema,
+  tags:       tagsSchema,
 });
 
 export const CreateDocumentSchema = z.discriminatedUnion('kind', [
@@ -39,16 +50,22 @@ export const CreateDocumentSchema = z.discriminatedUnion('kind', [
 
 /** Multipart form fields that accompany a file upload. */
 export const FileUploadMetaSchema = z.object({
-  title:    titleSchema.optional(),
-  category: categorySchema,
-  tags:     z.string().optional(),     // comma-separated in the form
+  title:      titleSchema.optional(),
+  reference:  referenceSchema,
+  source_url: sourceUrlSchema,
+  page_ref:   pageRefSchema,
+  category:   categorySchema,
+  tags:       z.string().optional(),     // comma-separated in the form
 });
 
 /** PATCH /api/admin/vault/documents/[id] */
 export const PatchDocumentSchema = z.object({
-  title:    titleSchema.optional(),
-  category: nonEmpty.max(100).optional(),
-  tags:     tagsSchema.optional(),
+  title:      titleSchema.optional(),
+  reference:  referenceSchema,
+  source_url: sourceUrlSchema,
+  page_ref:   pageRefSchema,
+  category:   nonEmpty.max(100).optional(),
+  tags:       tagsSchema.optional(),
 }).strict();
 
 /** Hard limits applied at the route layer. */

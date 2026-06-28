@@ -30,6 +30,12 @@ export interface CitationVaultEntry {
   id:     string;
   title?: string | null;
   source?: string | null;   // URL, doc kind, or free text
+  /** Human-facing citation; preferred over title in the Sources list. */
+  reference?: string | null;
+  /** Canonical public URL to link the citation to. */
+  url?: string | null;
+  /** Optional page / locator, e.g. "p. 14". */
+  page?: string | null;
 }
 
 export interface FormatCitationsResult {
@@ -128,14 +134,16 @@ export function formatCitations(
   if (verbose && !hasTrailingSourcesBlock(replaced)) {
     const lines = uniqueOrder.map((id, i) => {
       const e = byId.get(id);
-      const title = (e?.title  ?? '').trim() || 'Untitled source';
+      // Prefer an explicit human reference over the raw document title.
+      const label = (e?.reference ?? '').trim() || (e?.title ?? '').trim() || 'Untitled source';
+      const page  = (e?.page ?? '').trim();
+      // Prefer an explicit canonical URL; fall back to the source field when
+      // it's itself a link, otherwise to the free-text source.
       const src   = (e?.source ?? '').trim();
-      // If source is a URL, render as a plain URL so the detail UI can
-      // linkify it; otherwise render the free text (e.g. "Mission
-      // Australia Youth Survey 2024").
-      return src
-        ? `[${i + 1}] ${title} — ${src}`
-        : `[${i + 1}] ${title}`;
+      const link  = (e?.url ?? '').trim() || (isUrl(src) ? src : '');
+      const tail  = link || (src && !isUrl(src) ? src : '');
+      // [N] {reference}{, p. 14}{ — url-or-source}
+      return `[${i + 1}] ${label}${page ? `, ${page}` : ''}${tail ? ` — ${tail}` : ''}`;
     });
     // Trim trailing whitespace before appending so we don't end up with
     // three blank lines.
@@ -155,6 +163,11 @@ export function formatCitations(
  * The 40% tail window is important — we don't want "References:" in
  * body prose to block the append.
  */
+/** True when a string looks like an http(s) URL we can link to. */
+function isUrl(s: string): boolean {
+  return /^https?:\/\/\S+$/i.test(s.trim());
+}
+
 function hasTrailingSourcesBlock(body: string): boolean {
   const lines = body.split('\n');
   if (lines.length === 0) return false;

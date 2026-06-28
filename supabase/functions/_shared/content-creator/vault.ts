@@ -28,6 +28,12 @@ export interface VaultEntry {
   content:  string;      // the actual text the prompt will read
   source:   string;      // URL, filename, or citation
   category: string;      // kept for compatibility; ignored in the new path
+  // Richer citation fields (new vault path). Optional so the legacy
+  // fallback paths can omit them; the citation formatter degrades to
+  // title + source when absent.
+  reference?: string | null;  // human reference, preferred over title
+  url?:       string | null;  // canonical public link
+  page?:      string | null;  // page / locator, e.g. "p. 14"
 }
 
 interface FetchOpts {
@@ -76,7 +82,9 @@ export async function fetchVaultContext(
         });
 
         if (!error && Array.isArray(data) && data.length > 0) {
-          return data.map(rowToEntry);
+          // Enrich with the parent documents' reference/url/page so citations
+          // can render real references. Keeps match_vault_chunks untouched.
+          return await enrichWithDocs(sb, data as MatchRow[]);
         }
         // error OR 0 rows → fall through to keyword fallback.
       }
@@ -110,7 +118,7 @@ async function broadSample(
   // slice without a full random-on-DB table scan.
   let q = sb
     .from("vault_chunks")
-    .select("id, content, vault_documents!inner(id, title, source, kind, category, status)")
+    .select("id, content, vault_documents!inner(id, title, source, reference, source_url, page_ref, kind, category, status)")
     .eq("vault_documents.status", "ready")
     .order("created_at", { ascending: false })
     .limit(limit * 4);
@@ -137,6 +145,9 @@ async function broadSample(
       content:  row.content as string,
       source:   doc?.source ?? doc?.kind ?? "",
       category: doc?.category ?? "general",
+      reference: doc?.reference  ?? null,
+      url:       doc?.source_url ?? null,
+      page:      doc?.page_ref   ?? null,
     };
   });
 }
@@ -180,16 +191,40 @@ interface MatchRow {
   similarity:       number;
 }
 
-function rowToEntry(row: MatchRow): VaultEntry {
-  return {
-    id:       row.chunk_id,
-    title:    row.document_title,
-    content:  row.content,
-    source:   row.document_source ?? row.document_kind,
-    // match_vault_chunks doesn't return category — it's already been filtered
-    // server-side if a category_filter was passed.
-    category: "general",
-  };
+/**
+ * Map match_vault_chunks rows to VaultEntry, enriching each with its parent
+ * document's reference / source_url / page_ref in a single batched lookup so
+ * citations can render real references. The RPC itself is left unchanged.
+ */
+async function enrichWithDocs(
+  sb: ReturnType<typeof createClient>,
+  rows: MatchRow[],
+): Promise<VaultEntry[]> {
+  const docIds = [...new Set(rows.map((r) => r.document_id))];
+  const byDoc = new Map<string, {
+    title?: string; source?: string | null;
+    reference?: string | null; source_url?: string | null; page_ref?: string | null;
+  }>();
+  if (docIds.length > 0) {
+    const { data: docs } = await sb
+      .from("vault_documents")
+      .select("id, title, source, reference, source_url, page_ref")
+      .in("id", docIds);
+    for (const d of docs ?? []) byDoc.set(d.id as string, d);
+  }
+  return rows.map((row) => {
+    const d = byDoc.get(row.document_id);
+    return {
+      id:        row.chunk_id,
+      title:     d?.title ?? row.document_title,
+      content:   row.content,
+      source:    d?.source ?? row.document_source ?? row.document_kind,
+      category:  "general",
+      reference: d?.reference  ?? null,
+      url:       d?.source_url ?? null,
+      page:      d?.page_ref   ?? null,
+    };
+  });
 }
 
 /* ─── Fallback: legacy keyword retriever ────────────────────────────────── */

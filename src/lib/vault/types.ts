@@ -20,6 +20,12 @@ export interface VaultDocument {
   title:        string;
   kind:         DocumentKind;
   source:       string | null;
+  /** Human-facing citation/reference; preferred over title in Sources lists. */
+  reference:    string | null;
+  /** Canonical public URL the citation links to. */
+  source_url:   string | null;
+  /** Optional page / locator shown in citations, e.g. "p. 14". */
+  page_ref:     string | null;
   storage_path: string | null;
   category:     string;
   tags:         string[];

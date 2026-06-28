@@ -54,7 +54,7 @@ export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   let q = sb
     .from('vault_documents')
-    .select('id, title, kind, source, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, added_by, created_at, updated_at')
+    .select('id, title, kind, source, reference, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, added_by, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -137,9 +137,12 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
 
   // Metadata fields (title, category, tags) come as form strings.
   const metaParsed = FileUploadMetaSchema.safeParse({
-    title:    form.get('title') ?? undefined,
-    category: form.get('category') ?? 'general',
-    tags:     form.get('tags') ?? undefined,
+    title:      form.get('title') ?? undefined,
+    reference:  form.get('reference') ?? undefined,
+    source_url: form.get('source_url') ?? undefined,
+    page_ref:   form.get('page_ref') ?? undefined,
+    category:   form.get('category') ?? 'general',
+    tags:       form.get('tags') ?? undefined,
   });
   if (!metaParsed.success) {
     return NextResponse.json(
@@ -177,6 +180,9 @@ async function handleFileUpload(req: NextRequest): Promise<NextResponse> {
       category: metaParsed.data.category,
       tags,
       status: 'pending',
+      reference:  metaParsed.data.reference  ?? null,
+      source_url: metaParsed.data.source_url ?? null,
+      page_ref:   metaParsed.data.page_ref   ?? null,
       added_by: (req as AuthedRequest).user.id,
     })
     .select()
@@ -222,6 +228,9 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
         tags:      parsed.data.tags,
         status:    'pending',
         raw_text:  parsed.data.content,
+        reference:  parsed.data.reference  ?? null,
+        source_url: parsed.data.source_url ?? null,
+        page_ref:   parsed.data.page_ref   ?? null,
         added_by:  (req as AuthedRequest).user.id,
       })
       .select()
@@ -246,6 +255,9 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
       category: parsed.data.category,
       tags:     parsed.data.tags,
       status:   'pending',
+      reference:  parsed.data.reference  ?? null,
+      source_url: parsed.data.source_url ?? null,
+      page_ref:   parsed.data.page_ref   ?? null,
       added_by: (req as AuthedRequest).user.id,
     })
     .select()

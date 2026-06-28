@@ -42,6 +42,9 @@ export default function VaultDocumentDetailPage() {
   const [titleDraft,   setTitleDraft]   = useState("");
   const [categoryDraft, setCategoryDraft] = useState("");
   const [tagsDraft,    setTagsDraft]    = useState("");
+  const [referenceDraft, setReferenceDraft] = useState("");
+  const [sourceUrlDraft, setSourceUrlDraft] = useState("");
+  const [pageRefDraft,   setPageRefDraft]   = useState("");
   const [savingMeta,   setSavingMeta]   = useState(false);
 
   const [expandedChunks, setExpandedChunks] = useState<Set<string>>(new Set());
@@ -53,6 +56,9 @@ export default function VaultDocumentDetailPage() {
       setTitleDraft(d.title);
       setCategoryDraft(d.category);
       setTagsDraft(d.tags.join(', '));
+      setReferenceDraft(d.reference ?? '');
+      setSourceUrlDraft(d.source_url ?? '');
+      setPageRefDraft(d.page_ref ?? '');
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -96,6 +102,9 @@ export default function VaultDocumentDetailPage() {
       const updated = await patchDocument(doc.id, {
         category: categoryDraft.trim() || 'general',
         tags,
+        reference:  referenceDraft.trim(),
+        source_url: sourceUrlDraft.trim(),
+        page_ref:   pageRefDraft.trim(),
       });
       setDoc((d) => (d ? { ...d, ...updated } : d));
     } catch (e) {
@@ -283,6 +292,38 @@ export default function VaultDocumentDetailPage() {
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Metadata</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Reference</span>
+                <input
+                  value={referenceDraft}
+                  onChange={(e) => setReferenceDraft(e.target.value)}
+                  onBlur={saveMeta}
+                  placeholder="e.g. AIHW. Australia's youth: mental health. 2024"
+                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                />
+                <span style={{ fontSize: 11, color: '#9CA3AF' }}>How this source is cited in generated content. Falls back to the title if blank.</span>
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Source URL</span>
+                <input
+                  type="url"
+                  value={sourceUrlDraft}
+                  onChange={(e) => setSourceUrlDraft(e.target.value)}
+                  onBlur={saveMeta}
+                  placeholder="https://www.aihw.gov.au/…"
+                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Page / locator</span>
+                <input
+                  value={pageRefDraft}
+                  onChange={(e) => setPageRefDraft(e.target.value)}
+                  onBlur={saveMeta}
+                  placeholder="e.g. p. 14 or Table 3"
+                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                />
+              </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category</span>
                 <input
