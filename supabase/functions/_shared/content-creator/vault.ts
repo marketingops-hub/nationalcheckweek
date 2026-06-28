@@ -65,6 +65,12 @@ const MIN_SIMILARITY = 0.22;
 // from the vector search, then trim to `limit` after applying the cap.
 const MAX_CHUNKS_PER_DOC = 3;
 const OVERFETCH = 3;
+// Re-ranking: hand a larger diverse pool to a cheap LLM judge, which orders
+// them by how well they actually support the brief, then keep the top `limit`.
+// Pure vector/keyword rank surfaces plausible-but-off chunks; this sharpens
+// which facts make it into the draft.
+const RERANK_POOL  = 24;
+const RERANK_MODEL = "gpt-4o-mini";
 
 export async function fetchVaultContext(
   sbUrl: string,
@@ -93,12 +99,13 @@ export async function fetchVaultContext(
         });
 
         if (!error && Array.isArray(data) && data.length > 0) {
-          // Apply per-document diversity cap (rows arrive similarity-ordered),
-          // then trim to the requested limit.
-          const diverse = capPerDocument(data as MatchRow[], MAX_CHUNKS_PER_DOC, limit);
-          // Enrich with the parent documents' reference/url/page so citations
-          // can render real references. Keeps match_vault_chunks untouched.
-          return await enrichWithDocs(sb, diverse);
+          // Diversity cap to a candidate pool, enrich with reference/url/page,
+          // then LLM re-rank down to the requested limit.
+          const pool = capPerDocument(data as MatchRow[], MAX_CHUNKS_PER_DOC, RERANK_POOL);
+          const entries = await enrichWithDocs(sb, pool);
+          return entries.length > limit
+            ? await rerank(openaiKey, query, entries, limit)
+            : entries;
         }
         // error OR 0 rows → fall through to keyword fallback.
       }
@@ -188,6 +195,69 @@ async function embed(apiKey: string, text: string): Promise<number[]> {
   const payload = await res.json() as { data: { embedding: number[] }[] };
   if (!payload.data?.[0]?.embedding) throw new Error("openai returned no embedding");
   return payload.data[0].embedding;
+}
+
+/* ─── LLM re-ranker ──────────────────────────────────────────────────────── */
+
+/**
+ * Re-rank a candidate pool by how well each passage actually supports the
+ * brief, keeping the top `topN`. Best-effort: any failure (bad key, parse
+ * error, model hiccup) falls back to the incoming fused order, so retrieval
+ * never breaks over the reranker.
+ */
+async function rerank(
+  apiKey: string,
+  query: string,
+  entries: VaultEntry[],
+  topN: number,
+): Promise<VaultEntry[]> {
+  try {
+    const passages = entries
+      .map((e, i) => `[${i}] ${e.title}${e.heading ? ` — ${e.heading}` : ""}: ${e.content.slice(0, 350).replace(/\s+/g, " ").trim()}`)
+      .join("\n");
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: RERANK_MODEL,
+        temperature: 0,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You re-rank source passages by how well they support a content brief. " +
+              "Reply with ONLY a JSON array of passage indices (integers), most relevant first, " +
+              "omitting passages that don't genuinely support the brief.",
+          },
+          {
+            role: "user",
+            content: `BRIEF:\n${query}\n\nPASSAGES:\n${passages}\n\nReturn the top ${topN} indices as a JSON array, e.g. [3,0,7].`,
+          },
+        ],
+      }),
+    });
+    if (!res.ok) return entries.slice(0, topN);
+    const j = await res.json() as { choices?: { message?: { content?: string } }[] };
+    const txt = j.choices?.[0]?.message?.content ?? "";
+    const m = txt.match(/\[[\s\S]*?\]/);
+    if (!m) return entries.slice(0, topN);
+    const idx = JSON.parse(m[0]) as unknown;
+    if (!Array.isArray(idx)) return entries.slice(0, topN);
+    const seen = new Set<number>();
+    const out: VaultEntry[] = [];
+    for (const raw of idx) {
+      const i = Number(raw);
+      if (Number.isInteger(i) && i >= 0 && i < entries.length && !seen.has(i)) {
+        seen.add(i);
+        out.push(entries[i]);
+      }
+      if (out.length >= topN) break;
+    }
+    return out.length > 0 ? out : entries.slice(0, topN);
+  } catch (err) {
+    console.error("[vault] rerank failed, using fused order:", err instanceof Error ? err.message : err);
+    return entries.slice(0, topN);
+  }
 }
 
 /** Combine topic + keywords into a single query string for embedding. */
