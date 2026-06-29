@@ -165,6 +165,21 @@ export async function callEdge(
         body: { error: 'Edge fn returned an unexpected response shape.', preview: raw.slice(0, 300) },
       };
     }
+    // The edge function authenticates the caller by comparing the bearer to
+    // its own SUPABASE_SERVICE_ROLE_KEY. A 401 here means the key Vercel sends
+    // doesn't match the project's key — a config mismatch, NOT a user
+    // permission problem. Translate the cryptic "Unauthorized." accordingly.
+    if (res.status === 401) {
+      return {
+        status: 500,
+        body: {
+          error:
+            'Content engine rejected the request: the SUPABASE_SERVICE_ROLE_KEY in the app environment ' +
+            "doesn't match the Supabase project's service_role key. Update it in the hosting env (Vercel) " +
+            'and redeploy. (This is a configuration issue, not your account permissions.)',
+        },
+      };
+    }
     return { status: res.ok ? 200 : res.status, body: data };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
