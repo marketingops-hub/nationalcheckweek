@@ -413,17 +413,17 @@ export default function VaultDocumentDetailPage() {
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category</span>
-                <select
-                  value={VAULT_CATEGORIES.includes(categoryDraft as never) ? categoryDraft : '__legacy'}
-                  onChange={(e) => { setCategoryDraft(e.target.value); }}
+                <input
+                  list="vault-category-suggestions"
+                  value={categoryDraft}
+                  onChange={(e) => setCategoryDraft(e.target.value)}
                   onBlur={saveMeta}
-                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13, background: '#fff' }}
-                >
-                  {!VAULT_CATEGORIES.includes(categoryDraft as never) && categoryDraft && (
-                    <option value="__legacy" disabled>{categoryDraft} (legacy)</option>
-                  )}
-                  {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                  placeholder="general — or type your own"
+                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                />
+                <datalist id="vault-category-suggestions">
+                  {VAULT_CATEGORIES.map((c) => <option key={c} value={c} />)}
+                </datalist>
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Tags</span>

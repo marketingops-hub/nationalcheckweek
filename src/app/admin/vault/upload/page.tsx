@@ -156,6 +156,10 @@ export default function VaultUploadPage() {
 
   return (
     <div>
+      {/* Category suggestions — typing a new value is allowed (free-form). */}
+      <datalist id="vault-category-suggestions">
+        {VAULT_CATEGORIES.map((c) => <option key={c} value={c} />)}
+      </datalist>
       <div className="swa-page-header">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -248,9 +252,13 @@ export default function VaultUploadPage() {
                 style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
               >
                 <Field label="Category for new uploads">
-                  <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
-                    {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <input
+                    list="vault-category-suggestions"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="general — or type your own"
+                    style={inputStyle}
+                  />
                 </Field>
                 <Field label="Tags (comma-separated)">
                   <input
@@ -293,9 +301,13 @@ export default function VaultUploadPage() {
                   <input value={pasteSource} onChange={(e) => setPasteSource(e.target.value)} style={inputStyle} />
                 </Field>
                 <Field label="Category">
-                  <select value={pasteCategory} onChange={(e) => setPasteCategory(e.target.value)} style={inputStyle}>
-                    {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <input
+                    list="vault-category-suggestions"
+                    value={pasteCategory}
+                    onChange={(e) => setPasteCategory(e.target.value)}
+                    placeholder="general — or type your own"
+                    style={inputStyle}
+                  />
                 </Field>
                 <Field label="Tags">
                   <input value={pasteTags} onChange={(e) => setPasteTags(e.target.value)} style={inputStyle} placeholder="comma,separated" />
@@ -329,9 +341,13 @@ export default function VaultUploadPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <Field label="Category">
-                  <select value={urlCat} onChange={(e) => setUrlCat(e.target.value)} style={inputStyle}>
-                    {VAULT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <input
+                    list="vault-category-suggestions"
+                    value={urlCat}
+                    onChange={(e) => setUrlCat(e.target.value)}
+                    placeholder="general — or type your own"
+                    style={inputStyle}
+                  />
                 </Field>
                 <Field label="Tags">
                   <input value={urlTags} onChange={(e) => setUrlTags(e.target.value)} style={inputStyle} placeholder="comma,separated" />
