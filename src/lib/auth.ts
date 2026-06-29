@@ -23,44 +23,75 @@ export interface AuthedRequest extends NextRequest {
  * Verify a Bearer token and return the user IF their role is in `allowed`.
  * Returns the authenticated user (with role + email) or null.
  */
+type AuthResult =
+  | { ok: true; user: AdminUser }
+  | { ok: false; reason: string; status: number };
+
+/**
+ * Full auth check that reports WHY it failed (token vs profile vs role), so
+ * the 401/403 the client sees names the cause instead of a generic
+ * "Unauthorized". Never throws — any unexpected error becomes a reason.
+ */
+async function verifyAuthDetailed(
+  req: NextRequest,
+  allowed: readonly StaffRole[],
+): Promise<AuthResult> {
+  try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return { ok: false, reason: 'no bearer token on request', status: 401 };
+    }
+    const token = authHeader.substring(7);
+
+    // Verify the token via the anon client.
+    const anonClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const { data: { user }, error } = await anonClient.auth.getUser(token);
+    if (error || !user) {
+      return { ok: false, reason: `invalid session token${error ? ` (${error.message})` : ''}`, status: 401 };
+    }
+
+    // Resolve role via service-role client (bypasses RLS on user_profiles).
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { data: profile, error: pErr } = await serviceClient
+      .from('user_profiles')
+      .select('role, email')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (pErr) {
+      return { ok: false, reason: `profile lookup failed (${pErr.message})`, status: 500 };
+    }
+    if (!profile) {
+      return { ok: false, reason: 'no user_profiles row for this account', status: 403 };
+    }
+
+    // Normalise the stored role — tolerate casing/whitespace ("Editor", "admin ").
+    const role = (profile.role ?? '').toString().trim().toLowerCase() as StaffRole;
+    if (!allowed.includes(role)) {
+      return { ok: false, reason: `role '${role || '(empty)'}' not permitted (need ${allowed.join('/')})`, status: 403 };
+    }
+
+    return { ok: true, user: { ...user, role, email: profile.email || user.email || '' } as AdminUser };
+  } catch (e) {
+    return { ok: false, reason: `auth check errored (${e instanceof Error ? e.message : String(e)})`, status: 500 };
+  }
+}
+
+/**
+ * Verify a Bearer token and return the user IF their role is in `allowed`.
+ * Returns the authenticated user (with role + email) or null. Thin wrapper
+ * kept for existing callers that only need user|null.
+ */
 async function verifyAuth(req: NextRequest, allowed: readonly StaffRole[]) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-
-  // Verify the token via the anon client
-  const anonClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-  const { data: { user }, error } = await anonClient.auth.getUser(token);
-  if (error || !user) {
-    return null;
-  }
-
-  // Check role via service-role client (bypasses RLS on user_profiles)
-  const serviceClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-  const { data: profile } = await serviceClient
-    .from('user_profiles')
-    .select('role, email')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  // Normalise the stored role — tolerate casing/whitespace ("Editor", "admin ")
-  // so dirty data set via SQL doesn't lock a legitimate staff member out.
-  const role = (profile?.role ?? '').toString().trim().toLowerCase() as StaffRole;
-  if (!profile || !allowed.includes(role)) {
-    return null;
-  }
-
-  return { ...user, role, email: profile.email || user.email || '' };
+  const r = await verifyAuthDetailed(req, allowed);
+  return r.ok ? r.user : null;
 }
 
 /**
@@ -89,15 +120,15 @@ export function requireAdmin<T = any>(
   handler: (req: NextRequest, context?: T) => Promise<NextResponse>
 ) {
   return async (req: NextRequest, context?: T) => {
-    const user = await verifyAdminAuth(req);
-    if (!user) {
+    const r = await verifyAuthDetailed(req, ['admin', 'super_admin']);
+    if (!r.ok) {
       return NextResponse.json(
-        { error: 'Unauthorized. Admin access required.' },
-        { status: 401 }
+        { error: `Unauthorized — ${r.reason}.` },
+        { status: r.status }
       );
     }
     // Expose the verified user so handlers can attribute records.
-    (req as AuthedRequest).user = user;
+    (req as AuthedRequest).user = r.user;
     return handler(req, context);
   };
 }
@@ -110,15 +141,15 @@ export function requireStaff<T = any>(
   handler: (req: NextRequest, context?: T) => Promise<NextResponse>
 ) {
   return async (req: NextRequest, context?: T) => {
-    const user = await verifyStaffAuth(req);
-    if (!user) {
+    const r = await verifyAuthDetailed(req, ['editor', 'admin', 'super_admin']);
+    if (!r.ok) {
       return NextResponse.json(
-        { error: 'Unauthorized. Staff access required.' },
-        { status: 401 }
+        { error: `Unauthorized — ${r.reason}.` },
+        { status: r.status }
       );
     }
     // Expose the verified user so handlers can attribute records.
-    (req as AuthedRequest).user = user;
+    (req as AuthedRequest).user = r.user;
     return handler(req, context);
   };
 }
