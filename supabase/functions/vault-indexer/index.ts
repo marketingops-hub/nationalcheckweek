@@ -287,7 +287,7 @@ async function runExtract(
   sb: SbClient,
   doc: DocumentRow,
   ctx: Ctx,
-): Promise<{ text: string; char_count: number; title?: string; pages?: { page: number; text: string }[] }> {
+): Promise<{ text: string; char_count: number; title?: string; pages?: string[] }> {
   switch (doc.kind) {
     case "paste": {
       if (!doc.raw_text || doc.raw_text.trim().length === 0) {

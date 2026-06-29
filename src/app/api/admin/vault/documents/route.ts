@@ -64,7 +64,12 @@ export const GET = requireStaff(async (req: NextRequest) => {
   if (search) {
     // Title-and-source ilike search. Keeps the query simple; for more advanced
     // needs we'll move to the chunks-level vector search already wired up.
-    const like = `%${search.replace(/[%_]/g, '\\$&')}%`;
+    //   • escape % and _ so they're literal in LIKE
+    //   • strip , ( ) " which are PostgREST .or() syntax — an un-stripped comma
+    //     would split the term into bogus extra filter conditions (broken query
+    //     / filter injection), not a literal search.
+    const term = search.replace(/[%_]/g, '\\$&').replace(/[,()"]/g, ' ').trim();
+    const like = `%${term}%`;
     q = q.or(`title.ilike.${like},source.ilike.${like}`);
   }
 

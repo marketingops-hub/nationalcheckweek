@@ -19,7 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { adminClient } from '@/lib/adminClient';
-import { requireStaff } from '@/lib/auth';
+import { requireStaff, type AuthedRequest } from '@/lib/auth';
 import {
   SignedUploadRequestSchema,
   UPLOAD_LIMITS,
@@ -50,7 +50,7 @@ export const POST = requireStaff(async (req: NextRequest) => {
 
   // `size` is validated inside SignedUploadRequestSchema (positive int, <= max).
   // We don't persist it — Storage enforces the actual byte limit at upload time.
-  const { filename, mime, title, category, tags } = parsed.data;
+  const { filename, mime, title, category, tags, size } = parsed.data;
 
   if (!UPLOAD_LIMITS.ALLOWED_MIME.has(mime)) {
     return NextResponse.json(
@@ -96,6 +96,11 @@ export const POST = requireStaff(async (req: NextRequest) => {
       category,
       tags,
       status:       'pending',
+      // Parity with the multipart + paste/url paths: attribute the upload and
+      // record the size. (file_hash isn't computed here because this flow never
+      // sees the bytes — they go straight to Storage. See the indexer for hash.)
+      byte_size:    size,
+      added_by:     (req as AuthedRequest).user.id,
     })
     .select()
     .single<VaultDocument>();
