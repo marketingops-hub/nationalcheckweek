@@ -60,7 +60,10 @@ function buildReference(e: CitationVaultEntry): string {
   else if (year)      parts.push(`(${year}).`);
   if (title)     parts.push(`${title}.`);
   if (publisher) parts.push(`${publisher}.`);
-  const ref = parts.join(' ').replace(/\s+/g, ' ').trim();
+  // Strip the single trailing period: the Sources line appends "{ref} — {url}"
+  // (or ends the line), so a trailing "." reads as "Title. — url" / "Title.".
+  // Internal APA periods between segments are preserved.
+  const ref = parts.join(' ').replace(/\s+/g, ' ').trim().replace(/\.\s*$/, '');
   return ref || title || 'Untitled source';
 }
 
