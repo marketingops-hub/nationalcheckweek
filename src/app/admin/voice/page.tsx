@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "@/lib/adminFetch";
 import VoiceBlock, { VOICE_DEFAULTS, type VoiceBlockData } from "@/components/VoiceBlock";
 
 type Fields = Omit<VoiceBlockData, "enabled"> & { enabled: boolean };
@@ -29,7 +30,7 @@ export default function AdminVoicePage() {
   const [success,  setSuccess]  = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/voice")
+    adminFetch("/api/admin/voice")
       .then(r => r.json())
       .then((d: Record<string, string>) => {
         const f = toFields(d);
@@ -50,7 +51,7 @@ export default function AdminVoicePage() {
   async function handleSave() {
     setSaving(true); setError(""); setSuccess("");
     try {
-      const res = await fetch("/api/admin/voice", {
+      const res = await adminFetch("/api/admin/voice", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import { type AmbassadorCategory } from './types';
 
 const ICON_OPTIONS = ['school','cast_for_education','psychology','business_center','star','science','diversity_3','person','health_and_safety','sports','music_note','mic','public','volunteer_activism'];
@@ -53,7 +54,7 @@ export default function CategoriesManager({
     try {
       const url = editCat ? `/api/admin/ambassadors/categories/${editCat.id}` : '/api/admin/ambassadors/categories';
       const method = editCat ? 'PATCH' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const res = await adminFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || 'Save failed');
       onUpdated();
@@ -66,9 +67,10 @@ export default function CategoriesManager({
     if (!confirm(`Delete category "${c.name}"? Ambassadors in this category will be uncategorised.`)) return;
     setDeletingId(c.id);
     try {
-      await fetch(`/api/admin/ambassadors/categories/${c.id}`, { method: 'DELETE' });
+      await adminFetch(`/api/admin/ambassadors/categories/${c.id}`, { method: 'DELETE' });
       onUpdated();
-    } finally { setDeletingId(null); }
+    } catch { /* surfaced by the row staying put */ }
+    finally { setDeletingId(null); }
   }
 
   return (

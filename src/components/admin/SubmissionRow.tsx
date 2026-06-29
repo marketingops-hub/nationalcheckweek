@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "@/lib/adminFetch";
 
 export interface Category {
   id: string;
@@ -94,26 +95,32 @@ export function ApplicationRow({ item, onUpdate, onDelete }: {
 
   async function saveNotes() {
     setSaving(true);
-    const res = await fetch(`/api/admin/submissions/${item.id}?type=applications`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ admin_notes: notes }),
-    });
-    if (res.ok) onUpdate(item.id, { admin_notes: notes });
+    try {
+      await adminFetch(`/api/admin/submissions/${item.id}?type=applications`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_notes: notes }),
+      });
+      onUpdate(item.id, { admin_notes: notes });
+    } catch { /* leave row unchanged on failure */ }
     setSaving(false);
   }
 
   async function setStatus(status: string) {
-    const res = await fetch(`/api/admin/submissions/${item.id}?type=applications`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) onUpdate(item.id, { status });
+    try {
+      await adminFetch(`/api/admin/submissions/${item.id}?type=applications`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      onUpdate(item.id, { status });
+    } catch { /* leave row unchanged on failure */ }
   }
 
   async function del() {
     if (!confirm(`Delete application from ${item.first_name} ${item.last_name}?`)) return;
-    const res = await fetch(`/api/admin/submissions/${item.id}?type=applications`, { method: "DELETE" });
-    if (res.ok) onDelete(item.id);
+    try {
+      await adminFetch(`/api/admin/submissions/${item.id}?type=applications`, { method: "DELETE" });
+      onDelete(item.id);
+    } catch { /* leave row in place on failure */ }
   }
 
   return (
@@ -212,26 +219,32 @@ export function NominationRow({ item, onUpdate, onDelete }: {
 
   async function saveNotes() {
     setSaving(true);
-    const res = await fetch(`/api/admin/submissions/${item.id}?type=nominations`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ admin_notes: notes }),
-    });
-    if (res.ok) onUpdate(item.id, { admin_notes: notes });
+    try {
+      await adminFetch(`/api/admin/submissions/${item.id}?type=nominations`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_notes: notes }),
+      });
+      onUpdate(item.id, { admin_notes: notes });
+    } catch { /* leave row unchanged on failure */ }
     setSaving(false);
   }
 
   async function setStatus(status: string) {
-    const res = await fetch(`/api/admin/submissions/${item.id}?type=nominations`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) onUpdate(item.id, { status });
+    try {
+      await adminFetch(`/api/admin/submissions/${item.id}?type=nominations`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      onUpdate(item.id, { status });
+    } catch { /* leave row unchanged on failure */ }
   }
 
   async function del() {
     if (!confirm(`Delete nomination of ${item.nominee_first_name} ${item.nominee_last_name}?`)) return;
-    const res = await fetch(`/api/admin/submissions/${item.id}?type=nominations`, { method: "DELETE" });
-    if (res.ok) onDelete(item.id);
+    try {
+      await adminFetch(`/api/admin/submissions/${item.id}?type=nominations`, { method: "DELETE" });
+      onDelete(item.id);
+    } catch { /* leave row in place on failure */ }
   }
 
   return (

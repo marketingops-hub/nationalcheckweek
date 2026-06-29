@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   ApplicationRow, NominationRow,
   APP_STATUSES, NOM_STATUSES, STATUS_COLORS,
@@ -19,8 +20,8 @@ export default function SubmissionsClient() {
     setLoading(true);
     try {
       const [appRes, nomRes] = await Promise.all([
-        fetch('/api/admin/submissions?type=applications'),
-        fetch('/api/admin/submissions?type=nominations'),
+        adminFetch('/api/admin/submissions?type=applications'),
+        adminFetch('/api/admin/submissions?type=nominations'),
       ]);
       const appData = await appRes.json();
       const nomData = await nomRes.json();
