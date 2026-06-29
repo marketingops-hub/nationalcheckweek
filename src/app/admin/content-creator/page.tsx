@@ -50,12 +50,17 @@ export default function ContentCreatorOverview() {
     let cancelled = false;
     async function load() {
       try {
-        const [counts, recentRows, modRes] = await Promise.all([
+        const [counts, recentRows] = await Promise.all([
           getStats(),
           listDrafts({ limit: 20 }),
-          adminFetch('/api/admin/content-moderation'),
         ]);
-        const modData = await asJson<{ drafts: ContentDraft[] }>(modRes).catch(() => ({ drafts: [] }));
+        // The in-review queue is an admin-only moderation view. Editors get
+        // a 403 here — that's expected, so we treat it as an empty queue
+        // rather than letting it fail the whole dashboard. (Keeping it out
+        // of the Promise.all above means a 403 can't reject the lot.)
+        const modData = await adminFetch('/api/admin/content-moderation')
+          .then((res) => asJson<{ drafts: ContentDraft[] }>(res))
+          .catch(() => ({ drafts: [] as ContentDraft[] }));
         if (cancelled) return;
         setStages((prev) =>
           prev.map((s) => ({
