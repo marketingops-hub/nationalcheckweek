@@ -1,0 +1,31 @@
+# Supabase project config.
+#
+# Only the bits we rely on are set here; everything else uses CLI defaults.
+# This file is read by `supabase functions deploy` in the Deploy Edge Functions
+# GitHub Action.
+
+project_id = "qxcdeyvfeipyfojpxosh"
+
+# ─── Edge Function gateway auth ──────────────────────────────────────────────
+# The four content-creator-* functions are invoked server-to-server by our
+# Next.js API route, which authenticates with EDGE_SHARED_SECRET (a plain
+# secret we control on both sides — see requireAuth in
+# supabase/functions/_shared/content-creator/common.ts).
+#
+# That secret is NOT a Supabase-issued JWT, so the platform gateway's default
+# JWT verification would 401 the request before our code runs. Disabling
+# verify_jwt hands authentication entirely to requireAuth, which asserts the
+# bearer equals the shared secret (constant-time). Every other function keeps
+# the default (verify_jwt = true).
+
+[functions.content-creator-topics]
+verify_jwt = false
+
+[functions.content-creator-ideas]
+verify_jwt = false
+
+[functions.content-creator-generate]
+verify_jwt = false
+
+[functions.content-creator-verify]
+verify_jwt = false

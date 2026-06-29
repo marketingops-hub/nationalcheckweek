@@ -151,14 +151,29 @@ function timingSafeEqual(a: string, b: string): boolean {
 
 /**
  * Shared auth gate. Every content-creator-* fn is called by a Next.js API
- * route that forwards the service-role key as `Authorization: Bearer <key>`.
+ * route that forwards a secret as `Authorization: Bearer <secret>`.
  *
- * Supabase's gateway verifies the JWT *signature*, but that accepts ANY
- * Supabase-issued token (anon key, a signed-in user's access token) — not
- * specifically the service-role key. These functions must only ever be
- * invoked by our trusted server route, so we assert the bearer equals the
- * service-role key (constant-time) rather than merely checking the header
- * exists.
+ * We accept the bearer if it matches EITHER of:
+ *
+ *   1. EDGE_SHARED_SECRET  (preferred) — a secret you set identically in the
+ *      app env (Vercel) and the Supabase Edge Function secrets. This is the
+ *      reliable path: you own both values, so there's no auto-injection magic
+ *      to fight. NOTE: because this secret is not a Supabase-issued JWT, the
+ *      four content-creator-* functions must be deployed with verify_jwt=false
+ *      (see supabase/config.toml) so the gateway doesn't reject it before this
+ *      code runs.
+ *
+ *   2. SUPABASE_SERVICE_ROLE_KEY (legacy fallback) — the original behaviour,
+ *      kept so nothing breaks before EDGE_SHARED_SECRET is configured. This
+ *      is fragile: inside an edge function SUPABASE_SERVICE_ROLE_KEY is
+ *      auto-injected by Supabase (the SUPABASE_ prefix is reserved and cannot
+ *      be overridden), and on projects migrated to the new API-key system the
+ *      injected value may be an `sb_secret_…` key rather than the legacy
+ *      `eyJ…` JWT — which is why matching it from Vercel can silently fail.
+ *
+ * Either way these functions must only ever be invoked by our trusted server
+ * route, so we assert (constant-time) that the bearer equals a known secret
+ * rather than merely checking the header exists.
  */
 export function requireAuth(req: Request): Response | null {
   const header = req.headers.get("Authorization");
@@ -166,11 +181,14 @@ export function requireAuth(req: Request): Response | null {
     return json({ error: "Missing Authorization header." }, 401);
   }
   const token = header.replace(/^Bearer\s+/i, "").trim();
+
+  const sharedSecret = Deno.env.get("EDGE_SHARED_SECRET") ?? "";
+  if (sharedSecret && timingSafeEqual(token, sharedSecret)) return null;
+
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (!serviceKey || !timingSafeEqual(token, serviceKey)) {
-    return json({ error: "Unauthorized." }, 401);
-  }
-  return null;
+  if (serviceKey && timingSafeEqual(token, serviceKey)) return null;
+
+  return json({ error: "Unauthorized." }, 401);
 }
 
 /* ─── Request-scoped logging ────────────────────────────────────────────── */

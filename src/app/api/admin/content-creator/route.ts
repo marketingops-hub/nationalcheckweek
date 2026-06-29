@@ -126,9 +126,12 @@ export async function callEdge(
   payload: Record<string, unknown>,
 ) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) {
-    return { status: 500, body: { error: 'Supabase env vars missing.' } };
+  // Prefer the shared secret we control on both sides; fall back to the
+  // service-role key for backward compat. See requireAuth in
+  // supabase/functions/_shared/content-creator/common.ts.
+  const bearer = process.env.EDGE_SHARED_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !bearer) {
+    return { status: 500, body: { error: 'Supabase env vars missing (need NEXT_PUBLIC_SUPABASE_URL and EDGE_SHARED_SECRET or SUPABASE_SERVICE_ROLE_KEY).' } };
   }
 
   const controller = new AbortController();
@@ -139,7 +142,7 @@ export async function callEdge(
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',
-        Authorization:   `Bearer ${serviceKey}`,
+        Authorization:   `Bearer ${bearer}`,
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
@@ -165,18 +168,19 @@ export async function callEdge(
         body: { error: 'Edge fn returned an unexpected response shape.', preview: raw.slice(0, 300) },
       };
     }
-    // The edge function authenticates the caller by comparing the bearer to
-    // its own SUPABASE_SERVICE_ROLE_KEY. A 401 here means the key Vercel sends
-    // doesn't match the project's key — a config mismatch, NOT a user
+    // The edge function authenticates the caller by comparing the bearer to a
+    // shared secret. A 401 here means the secret the app sends doesn't match
+    // the one configured on the edge function — a config mismatch, NOT a user
     // permission problem. Translate the cryptic "Unauthorized." accordingly.
     if (res.status === 401) {
       return {
         status: 500,
         body: {
           error:
-            'Content engine rejected the request: the SUPABASE_SERVICE_ROLE_KEY in the app environment ' +
-            "doesn't match the Supabase project's service_role key. Update it in the hosting env (Vercel) " +
-            'and redeploy. (This is a configuration issue, not your account permissions.)',
+            'Content engine rejected the request (config mismatch, not your account permissions): the ' +
+            'secret the app sends does not match the edge function. Set EDGE_SHARED_SECRET to the same value ' +
+            'in BOTH Vercel (env var) and Supabase (Edge Function secrets), redeploy the edge functions, and ' +
+            'redeploy Vercel.',
         },
       };
     }
