@@ -2,6 +2,7 @@
 
 import { type ComponentType } from 'react';
 import dynamic from 'next/dynamic';
+import { MotionConfig } from 'framer-motion';
 import type { BlockType, BlockContent } from '@/types/homepage-blocks';
 
 // HeroBlock is above-the-fold — keep it in the initial bundle for fastest LCP
@@ -92,7 +93,7 @@ export default function BlockRenderer({ blocks, globalColors, partners, ambassad
   };
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       {blocks.map((block) => {
         const Component = BLOCK_REGISTRY[block.block_type];
         if (!Component) {
@@ -115,6 +116,6 @@ export default function BlockRenderer({ blocks, globalColors, partners, ambassad
 
         return <Component key={block.id} {...props} />;
       })}
-    </>
+    </MotionConfig>
   );
 }

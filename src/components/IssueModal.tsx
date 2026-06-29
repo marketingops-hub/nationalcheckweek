@@ -75,7 +75,7 @@ export default function IssueModal({ issue, onClose }: Props) {
             <h3>Sources</h3>
             <div className="src-list">
               {issue.sources.map((s) => (
-                <div key={s} className="src-item">↗ {s}</div>
+                <div key={s} className="src-item"><span aria-hidden="true">↗</span> {s}</div>
               ))}
             </div>
           </div>

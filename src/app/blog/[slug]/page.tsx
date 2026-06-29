@@ -140,7 +140,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <>
-      <article className="blog-article">
+      <article id="main-content" className="blog-article">
         {/* Hero */}
         <header className="blog-article__hero">
           <div className="blog-article__hero-inner">

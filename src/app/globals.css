@@ -51,3 +51,17 @@
 @media (max-width: 768px) {
   .ncw-voice-card { grid-template-columns: 1fr !important; justify-items: center; }
 }
+
+/* ── Respect reduced-motion (a11y / vestibular safety) ─────────────────────
+ * The site had no prefers-reduced-motion handling. This neutralises CSS
+ * transitions/animations and smooth scrolling for users who ask for it.
+ * (framer-motion is additionally gated via <MotionConfig reducedMotion="user">
+ * around the homepage blocks.) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  html { scroll-behavior: auto !important; }
+}

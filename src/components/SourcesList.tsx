@@ -81,7 +81,7 @@ function SourceGroup({ title, sources, variant }: {
               className={`${styles.sourceLink} ${styles[variant]}`}
             >
               {source.title}
-              <span className={styles.externalIcon}>↗</span>
+              <span className={styles.externalIcon} aria-hidden="true">↗</span>
             </a>
             {source.description && variant === 'primary' && (
               <p className={styles.description}>{source.description}</p>

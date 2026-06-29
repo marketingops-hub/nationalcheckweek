@@ -28,7 +28,7 @@
   /* â”€â”€ Semantic text â”€â”€ */
   --text:           #3D3D3D;
   --text-mid:       #6B6B6B;
-  --text-light:     #9B9B9B;
+  --text-light:     #6e6e6e; /* was #9B9B9B (2.8:1, failed WCAG AA); now ~5:1 on white */
   --text-body:      #3D3D3D;
 
   /* â”€â”€ Semantic aliases (backward compat) â”€â”€ */
