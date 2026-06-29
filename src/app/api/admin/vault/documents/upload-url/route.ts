@@ -50,7 +50,7 @@ export const POST = requireStaff(async (req: NextRequest) => {
 
   // `size` is validated inside SignedUploadRequestSchema (positive int, <= max).
   // We don't persist it — Storage enforces the actual byte limit at upload time.
-  const { filename, mime, title, category, tags, size } = parsed.data;
+  const { filename, mime, title, category, tags, size, hash } = parsed.data;
 
   if (!UPLOAD_LIMITS.ALLOWED_MIME.has(mime)) {
     return NextResponse.json(
@@ -61,6 +61,24 @@ export const POST = requireStaff(async (req: NextRequest) => {
   const kind: DocumentKind = MIME_TO_KIND[mime];
 
   const sb = adminClient();
+
+  // Duplicate detection (parity with the paste/url create paths). The browser
+  // hashes the bytes since this flow never sends them through the server. If
+  // the same content is already in the vault, block before minting a signed
+  // URL so we don't create an orphan row or a duplicate document.
+  if (hash) {
+    const { data: dupe } = await sb
+      .from('vault_documents')
+      .select('id, title')
+      .eq('file_hash', hash)
+      .maybeSingle();
+    if (dupe) {
+      return NextResponse.json(
+        { error: `This file is already in the vault as "${dupe.title}". Delete that first to replace it.`, existing_id: dupe.id },
+        { status: 409 },
+      );
+    }
+  }
 
   // Deterministic, collision-proof path. UUID prefix matters: the admin might
   // upload two files with the same filename and we don't want them overwriting.
@@ -96,10 +114,11 @@ export const POST = requireStaff(async (req: NextRequest) => {
       category,
       tags,
       status:       'pending',
-      // Parity with the multipart + paste/url paths: attribute the upload and
-      // record the size. (file_hash isn't computed here because this flow never
-      // sees the bytes — they go straight to Storage. See the indexer for hash.)
+      // Parity with the multipart + paste/url paths: attribute the upload,
+      // record the size, and store the client-computed content hash for
+      // duplicate detection.
       byte_size:    size,
+      file_hash:    hash ?? null,
       added_by:     (req as AuthedRequest).user.id,
     })
     .select()

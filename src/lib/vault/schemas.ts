@@ -108,6 +108,11 @@ export const SignedUploadRequestSchema = z.object({
   filename: z.string().trim().min(1).max(255),
   mime:     z.string().trim().min(1).max(200),
   size:     z.number().int().positive().max(UPLOAD_LIMITS.MAX_FILE_BYTES),
+  // sha-256 of the file bytes, computed in the browser (this flow uploads
+  // direct to Storage, so the server never sees the bytes). Used for duplicate
+  // detection — parity with the paste/url create paths. Optional so older
+  // clients still work; dedup is simply skipped when absent.
+  hash:     z.string().trim().regex(/^[a-f0-9]{64}$/, 'hash must be a hex sha-256').optional(),
   title:    titleSchema.optional(),
   category: categorySchema,
   tags:     tagsSchema,

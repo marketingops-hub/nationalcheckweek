@@ -11,6 +11,14 @@ import type { VaultDocument, VaultDocumentDetail, DocumentStatus, DocumentKind }
 
 const BASE = '/api/admin/vault/documents';
 
+/** Hex sha-256 of a buffer, via the Web Crypto API (browser). */
+async function sha256Hex(buf: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 async function asJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -93,6 +101,12 @@ export interface FileUploadInput {
  * doesn't fill with broken 'pending' entries.
  */
 export async function uploadFile(input: FileUploadInput): Promise<VaultDocument> {
+  // Hash the bytes in the browser so the server can dedupe before minting a
+  // signed URL (this flow uploads direct to Storage, so the server never sees
+  // the bytes). Same sha-256 the paste/url paths store as file_hash.
+  const buf  = await input.file.arrayBuffer();
+  const hash = await sha256Hex(buf);
+
   // ── Step 1: signed URL + document row ────────────────────────────────
   const signRes = await adminFetch(`${BASE}/upload-url`, {
     method: 'POST',
@@ -101,6 +115,7 @@ export async function uploadFile(input: FileUploadInput): Promise<VaultDocument>
       filename: input.file.name,
       mime:     input.file.type || 'application/octet-stream',
       size:     input.file.size,
+      hash,
       title:    input.title,
       category: input.category,
       tags:     input.tags ?? [],
