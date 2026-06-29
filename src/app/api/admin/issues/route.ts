@@ -10,9 +10,9 @@
 
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 
-export const GET = requireAdmin(async () => {
+export const GET = requireStaff(async () => {
   const sb = adminClient();
   const { data, error } = await sb
     .from('issues')

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { adminClient } from '@/lib/adminClient';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireStaff } from '@/lib/auth';
 
 export const runtime = 'edge';
 
@@ -32,7 +32,9 @@ const CreateAreaSchema = z.object({
  * GET /api/admin/areas
  * List all areas with authentication
  */
-export const GET = requireAdmin(async (req: NextRequest) => {
+// Read access for staff (editors need area slugs to build a GEO content
+// brief); creating/editing areas stays admin-only via POST below.
+export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   const { searchParams } = new URL(req.url);
   const limit  = Math.min(Math.max(parseInt(searchParams.get('limit')  ?? '100', 10), 1), 500);
