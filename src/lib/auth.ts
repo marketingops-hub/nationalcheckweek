@@ -51,13 +51,16 @@ async function verifyAuth(req: NextRequest, allowed: readonly StaffRole[]) {
     .from('user_profiles')
     .select('role, email')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
-  if (!profile || !allowed.includes(profile.role as StaffRole)) {
+  // Normalise the stored role — tolerate casing/whitespace ("Editor", "admin ")
+  // so dirty data set via SQL doesn't lock a legitimate staff member out.
+  const role = (profile?.role ?? '').toString().trim().toLowerCase() as StaffRole;
+  if (!profile || !allowed.includes(role)) {
     return null;
   }
 
-  return { ...user, role: profile.role as StaffRole, email: profile.email || user.email || '' };
+  return { ...user, role, email: profile.email || user.email || '' };
 }
 
 /**

@@ -145,7 +145,8 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle();
 
-    const role = profile?.role as Role | undefined;
+    // Normalise to tolerate dirty role data ("Editor", "admin ") set via SQL.
+    const role = (profile?.role ?? '').toString().trim().toLowerCase() as Role;
     if (!role || !['editor', 'admin', 'super_admin'].includes(role)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = '/admin/login';
