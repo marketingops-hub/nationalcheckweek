@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 
 interface Props {
   entitySlug: string;
@@ -25,7 +26,7 @@ export default function VoteFeedback({
   const [sending, setSending]   = useState(false);
   const [done, setDone]         = useState(false);
   const [error, setError]       = useState("");
-  const dialogRef               = useRef<HTMLDivElement>(null);
+  const dialogRef               = useFocusTrap<HTMLDivElement>(showForm);
   // Records the down vote exactly once — the votes API only inserts, so we
   // must not POST both a bare vote and a feedback vote (would double-count).
   const resolvedRef             = useRef(false);

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { Issue } from "@/lib/types";
+import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 
 interface Props {
   issue: Issue | null;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function IssueModal({ issue, onClose }: Props) {
+  const trapRef = useFocusTrap<HTMLDivElement>(!!issue);
   useEffect(() => {
     if (!issue) return;
     document.body.style.overflow = "hidden";
@@ -26,10 +28,10 @@ export default function IssueModal({ issue, onClose }: Props) {
 
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal">
+      <div className="modal" ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="issue-modal-title" tabIndex={-1}>
         <div className="modal-header">
           <div className="modal-num">Issue #{issue.rank} of 15 · {severityLabel}</div>
-          <h2>{issue.title}</h2>
+          <h2 id="issue-modal-title">{issue.title}</h2>
           <div className="modal-anchor">
             <strong>Key Data Signal:</strong> {issue.anchorStat}
           </div>

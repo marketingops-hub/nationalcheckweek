@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 
 /**
  * Navigation link type
@@ -56,6 +57,15 @@ export default function HeaderClient({
   ctaLink,
 }: HeaderClientProps) {
   const [open, setOpen] = useState(false);
+  const drawerRef = useFocusTrap<HTMLDivElement>(open);
+
+  // Escape closes the mobile drawer.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header className="nav">
@@ -92,12 +102,21 @@ export default function HeaderClient({
         onClick={() => setOpen(!open)}
         className="nav-hamburger"
         aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
       >
         {open ? <X size={24} /> : <Menu size={24} />}
       </button>
       {open && (
         <div className="nav-drawer" onClick={() => setOpen(false)}>
-          <div className="nav-drawer-inner" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="nav-drawer-inner"
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+            tabIndex={-1}
+            onClick={(e) => e.stopPropagation()}
+          >
             {links.map((link) => (
               <Link
                 key={link.id}
