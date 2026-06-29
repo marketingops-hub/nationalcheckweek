@@ -18,6 +18,7 @@ import {
   DOCUMENT_KIND_ICONS,
   DOCUMENT_KIND_LABELS,
   STATUS_IS_TERMINAL,
+  isDocStuck,
   type VaultDocument,
   type DocumentStatus,
   type DocumentKind,
@@ -216,6 +217,7 @@ function DocumentCard({
   onReindex: (d: VaultDocument) => void;
 }) {
   const failed = doc.status === 'failed';
+  const stuck  = isDocStuck(doc);
   return (
     <div style={{
       background: '#fff', borderRadius: 12, padding: 16,
@@ -257,9 +259,9 @@ function DocumentCard({
 
       {/* Footer actions */}
       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-        {failed && (
+        {(failed || stuck) && (
           <button onClick={() => onReindex(doc)} className="swa-btn" style={{ fontSize: 12, padding: '4px 10px' }}>
-            Retry
+            {stuck ? 'Re-index (stuck)' : 'Retry'}
           </button>
         )}
         <button

@@ -26,6 +26,7 @@ import {
   DOCUMENT_KIND_ICONS,
   DOCUMENT_KIND_LABELS,
   STATUS_IS_TERMINAL,
+  isDocStuck,
   type VaultDocumentDetail,
 } from "@/lib/vault/types";
 import { StatusChip } from "../../upload/page";
@@ -76,10 +77,12 @@ export default function VaultDocumentDetailPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  // Poll while the pipeline is running.
+  // Poll while the pipeline is running — but stop once the row looks stuck
+  // (non-terminal yet stale past the edge fn's ceiling), otherwise we'd poll
+  // a dead indexer forever. A stuck row surfaces the Re-index action instead.
   useEffect(() => {
     if (!doc) return;
-    if (STATUS_IS_TERMINAL[doc.status]) return;
+    if (STATUS_IS_TERMINAL[doc.status] || isDocStuck(doc)) return;
     const t = setInterval(refresh, 3000);
     return () => clearInterval(t);
   }, [doc, refresh]);
@@ -211,6 +214,22 @@ export default function VaultDocumentDetailPage() {
 
       {error && <div className="swa-alert swa-alert--error" style={{ marginBottom: 20 }}>{error}</div>}
 
+      {isDocStuck(doc) && (
+        <div className="swa-alert" style={{ marginBottom: 20, background: '#FEF3C7', border: '1px solid #FDE68A', color: '#92400E' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, marginBottom: 6 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>hourglass_disabled</span>
+            Indexing looks stuck (status: {doc.status})
+          </div>
+          <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+            This document hasn&apos;t progressed in several minutes. The indexer likely timed out on a large file.
+            Click <strong>Re-index</strong> to retry — it wipes any partial chunks and starts the pipeline over.
+          </div>
+          <button onClick={onReindex} className="swa-btn" style={{ marginTop: 10, fontSize: 12, padding: '4px 10px' }}>
+            Re-index now
+          </button>
+        </div>
+      )}
+
       {doc.status === 'failed' && doc.status_error && (
         (() => {
           const scanned = /scanned|ocr|no selectable text/i.test(doc.status_error ?? '');
@@ -317,7 +336,7 @@ export default function VaultDocumentDetailPage() {
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1b4673', marginBottom: 10 }}>Actions</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={onReindex} className="swa-btn" disabled={!STATUS_IS_TERMINAL[doc.status]}>
+              <button onClick={onReindex} className="swa-btn" disabled={!STATUS_IS_TERMINAL[doc.status] && !isDocStuck(doc)}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>refresh</span>
                 Re-index
               </button>

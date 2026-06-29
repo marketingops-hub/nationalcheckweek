@@ -109,3 +109,20 @@ export const STATUS_IS_TERMINAL: Record<DocumentStatus, boolean> = {
   ready:      true,
   failed:     true,
 };
+
+/**
+ * A non-terminal document whose `updated_at` is older than this is almost
+ * certainly stuck. The indexer runs the whole extract→chunk→embed→store
+ * pipeline in a single edge-function invocation; if that invocation is
+ * hard-killed (wall-clock/OOM) part way through, the row is stranded in
+ * 'chunking'/'embedding'/'extracting' with no error and nothing to retry it.
+ * The edge fn's ceiling is ~150s, so 4 min leaves comfortable headroom over
+ * a slow-but-still-alive run before we offer a recovery (Re-index) action.
+ */
+export const STUCK_AFTER_MS = 4 * 60 * 1000;
+
+/** True when a doc is non-terminal but hasn't advanced in STUCK_AFTER_MS. */
+export function isDocStuck(doc: { status: DocumentStatus; updated_at: string }): boolean {
+  if (STATUS_IS_TERMINAL[doc.status]) return false;
+  return Date.now() - new Date(doc.updated_at).getTime() > STUCK_AFTER_MS;
+}
