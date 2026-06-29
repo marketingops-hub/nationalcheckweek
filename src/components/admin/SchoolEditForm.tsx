@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import { useRouter } from 'next/navigation';
 import type { SchoolProfile } from '@/types/school';
 
@@ -82,7 +83,7 @@ export default function SchoolEditForm({ school }: { school: SchoolProfile }) {
     setError('');
     setSuccess(false);
     try {
-      const res = await fetch(`/api/admin/schools/${school.id}`, {
+      const res = await adminFetch(`/api/admin/schools/${school.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -104,7 +105,7 @@ export default function SchoolEditForm({ school }: { school: SchoolProfile }) {
     if (!confirm(`Delete "${school.school_name}"? This cannot be undone.`)) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/schools/${school.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/schools/${school.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error ?? 'Delete failed');

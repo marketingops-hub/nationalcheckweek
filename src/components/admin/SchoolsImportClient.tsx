@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import { useRouter } from 'next/navigation';
 
 interface ImportResult {
@@ -38,7 +39,7 @@ export default function SchoolsImportClient() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/admin/schools/import', { method: 'POST', body: fd });
+      const res = await adminFetch('/api/admin/schools/import', { method: 'POST', body: fd });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Upload failed');
       setResult(json);

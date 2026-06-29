@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "@/lib/adminFetch";
 import { FormField, TextInput, TextArea, Button, Alert } from "@/components/shared/forms";
 import { useFormState, useValidation } from "@/hooks/shared";
 import { z } from "zod";
@@ -44,7 +45,7 @@ export default function AdminYourVoicePage() {
   const { errors: validationErrors, validateForm, clearError } = useValidation(yourVoiceSchema);
 
   useEffect(() => {
-    fetch("/api/admin/your-voice")
+    adminFetch("/api/admin/your-voice")
       .then(r => r.json())
       .then((data: YourVoiceData) => {
         setFormData(data);
@@ -67,7 +68,7 @@ export default function AdminYourVoicePage() {
     setSuccess("");
 
     try {
-      const res = await fetch("/api/admin/your-voice", {
+      const res = await adminFetch("/api/admin/your-voice", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

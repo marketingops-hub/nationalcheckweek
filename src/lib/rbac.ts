@@ -46,6 +46,7 @@ const ADMIN_PATHS = [
   '/admin/typography',
   '/admin/api',
   '/admin/settings',
+  '/admin/your-voice',           // public "Have Your Say" page content + HubSpot form config
 ];
 
 const SUPER_ADMIN_PATHS = [

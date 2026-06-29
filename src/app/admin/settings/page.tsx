@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import Link from 'next/link';
 
 const LABEL: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--color-text-faint)', letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 14 };
@@ -32,7 +33,7 @@ export default function AdminSettingsPage() {
   const [success, setSuccess]   = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/settings')
+    adminFetch('/api/admin/settings')
       .then(r => r.json())
       .then((d: Partial<Settings>) => {
         const merged = { ...DEFAULTS, ...d };
@@ -48,7 +49,7 @@ export default function AdminSettingsPage() {
   async function handleSave() {
     setSaving(true); setError(''); setSuccess('');
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await adminFetch('/api/admin/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),

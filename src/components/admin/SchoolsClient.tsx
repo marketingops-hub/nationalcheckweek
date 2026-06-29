@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -63,13 +64,14 @@ export default function SchoolsClient({
         if (search.trim()) params.set('q', search.trim());
         if (stateFilter)  params.set('state', stateFilter);
         if (sectorFilter) params.set('sector', sectorFilter);
-        const res = await fetch(`/api/admin/schools?${params}`);
-        if (!res.ok) return;
+        const res = await adminFetch(`/api/admin/schools?${params}`);
         const json = await res.json();
         const rows: SchoolRow[] = json.data ?? [];
         // Apply type filter client-side (not supported by API)
         setFiltered(typeFilter ? rows.filter((s) => s.school_type === typeFilter) : rows);
         setTotalCount(json.count ?? rows.length);
+      } catch {
+        // adminFetch throws on non-2xx — leave the current list in place.
       } finally {
         setSearching(false);
       }
@@ -88,7 +90,7 @@ export default function SchoolsClient({
       setDeleting(id);
       setDeleteError('');
       try {
-        const res = await fetch(`/api/admin/schools/${id}`, { method: 'DELETE' });
+        const res = await adminFetch(`/api/admin/schools/${id}`, { method: 'DELETE' });
         if (!res.ok) {
           const j = await res.json().catch(() => ({}));
           throw new Error(j.error ?? 'Delete failed');
