@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { FaqPatchSchema, parseBody } from "@/lib/adminSchemas";
 import { revalidateEntity } from "@/lib/revalidate";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
 // PATCH /api/admin/faq/[id]
-export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
+export const PATCH = requireStaff(async (req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -29,7 +29,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
 });
 
 // DELETE /api/admin/faq/[id]
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: RouteCtx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: RouteCtx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
   const { error } = await sb.from("Faq").delete().eq("id", id);

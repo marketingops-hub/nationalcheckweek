@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { EventPutSchema, parseBody } from "@/lib/adminSchemas";
 import { revalidateEntity } from "@/lib/revalidate";
 
-export const GET = requireAdmin(async () => {
+export const GET = requireStaff(async () => {
   const sb = adminClient();
   const { data, error } = await sb
     .from("events")
@@ -14,7 +14,7 @@ export const GET = requireAdmin(async () => {
   return NextResponse.json(data);
 });
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 

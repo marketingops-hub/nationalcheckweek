@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
-export const GET = requireAdmin(async () => {
+export const GET = requireStaff(async () => {
   const sb = adminClient();
   const { data, error } = await sb
     .from("pages")
@@ -12,7 +12,7 @@ export const GET = requireAdmin(async () => {
   return NextResponse.json(data);
 });
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   const { slug, title, description, content, status, show_in_menu, meta_title, meta_desc, og_image } = body;

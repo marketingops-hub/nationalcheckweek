@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { aiService } from "@/lib/ai/ai-service";
 
 const FIELD_PROMPTS: Record<string, string> = {
@@ -10,7 +10,7 @@ const FIELD_PROMPTS: Record<string, string> = {
   mechanisms:      "Explain the mechanisms by which this issue affects student learning and wellbeing in Australian schools. Focus on the causal pathways — how does it actually impair learning? 3-5 sentences.",
 };
 
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 

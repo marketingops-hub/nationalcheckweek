@@ -90,7 +90,7 @@ export default function IssuesBulkRewrite({ issues }: Props) {
 
     for (const issue of queue) {
       try {
-        const res = await fetch("/api/admin/issues/bulk-rewrite", {
+        const res = await adminFetch("/api/admin/issues/bulk-rewrite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

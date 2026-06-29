@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import FirecrawlApp from "@mendable/firecrawl-js";
-import { requireAdmin, validateUrl } from "@/lib/auth";
+import { requireStaff, validateUrl } from "@/lib/auth";
 
 /**
  * POST /api/admin/firecrawl/crawl
@@ -10,7 +10,7 @@ import { requireAdmin, validateUrl } from "@/lib/auth";
  * Scrapes the given URL using Firecrawl and returns the markdown content,
  * page title, and description. The API key is kept server-side only.
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "FIRECRAWL_API_KEY is not configured on the server." }, { status: 500 });

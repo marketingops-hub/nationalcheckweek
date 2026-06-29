@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin, sanitizeFilename } from "@/lib/auth";
+import { requireStaff, sanitizeFilename } from "@/lib/auth";
 
 const BUCKET = "avatars";
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 // POST /api/admin/upload — upload an image to Supabase Storage
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
 
   // Ensure the bucket exists (idempotent)

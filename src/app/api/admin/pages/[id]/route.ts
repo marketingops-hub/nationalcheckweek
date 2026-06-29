@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { pickPageFields } from "@/lib/pageSchema";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -11,7 +11,7 @@ async function resolveId(ctx: Ctx | undefined): Promise<string | null> {
   return id ?? null;
 }
 
-export const GET = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const GET = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const id = await resolveId(ctx);
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   const sb = adminClient();
@@ -20,7 +20,7 @@ export const GET = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
   return NextResponse.json(data);
 });
 
-export const PUT = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
+export const PUT = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   const id = await resolveId(ctx);
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   const body = await req.json().catch(() => null);
@@ -43,7 +43,7 @@ export const PUT = requireAdmin(async (req: NextRequest, ctx?: Ctx) => {
   return NextResponse.json(data);
 });
 
-export const DELETE = requireAdmin(async (_req: NextRequest, ctx?: Ctx) => {
+export const DELETE = requireStaff(async (_req: NextRequest, ctx?: Ctx) => {
   const id = await resolveId(ctx);
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   const sb = adminClient();

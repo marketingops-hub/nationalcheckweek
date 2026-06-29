@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { revalidateEntity } from "@/lib/revalidate";
 
 // GET /api/admin/faq
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   const showAll = req.nextUrl.searchParams.get("all") === "true";
 
@@ -29,7 +29,7 @@ export const GET = requireAdmin(async (req: NextRequest) => {
 });
 
 // POST /api/admin/faq
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   const body = await req.json();
 

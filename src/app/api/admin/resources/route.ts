@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/adminClient";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { ResourcePostSchema, parseBody } from "@/lib/adminSchemas";
 
 export const runtime = "edge";
 
 // GET /api/admin/resources
-export const GET = requireAdmin(async (req: NextRequest) => {
+export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   const showAll = req.nextUrl.searchParams.get("all") === "true";
 
@@ -31,7 +31,7 @@ export const GET = requireAdmin(async (req: NextRequest) => {
 });
 
 // POST /api/admin/resources
-export const POST = requireAdmin(async (req: NextRequest) => {
+export const POST = requireStaff(async (req: NextRequest) => {
   const raw = await req.json().catch(() => null);
   if (!raw) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
 
