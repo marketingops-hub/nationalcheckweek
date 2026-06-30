@@ -2,33 +2,38 @@
  * vault-indexer edge function.
  *
  * Invoked fire-and-forget by POST /api/admin/vault/documents (and on-demand by
- * POST /api/admin/vault/documents/[id]/reindex). Given a document_id, runs the
- * pipeline in two resumable phases so a single edge invocation never has to
- * fit the whole job inside its ~150s wall-clock ceiling:
+ * POST /api/admin/vault/documents/[id]/reindex). Runs a fully resumable
+ * pipeline so a single edge invocation never has to fit the whole job inside
+ * its ~150s wall-clock ceiling:
  *
- *   phase 'prepare' (default):   extract → chunk → persist chunk rows WITHOUT
- *                                embeddings (embedding = NULL), status='embedding'
- *   phase 'embed'   (repeating): embed the next slice of NULL-embedding chunks,
- *                                fill them in, then either self-retrigger for the
- *                                next slice or mark the document 'ready'.
+ *   phase 'prepare' (default): extract + chunk. For PDFs this is page-ranged
+ *     and resumable — each invocation processes a slice of pages, persists
+ *     their chunks (embedding = NULL), advances vault_documents.extract_cursor,
+ *     and self-retriggers ('prepare') until every page is done. Non-PDF
+ *     sources (docx/txt/url/paste) are small single-call extractions, so they
+ *     stay one-shot. On completion: status='embedding'.
+ *   phase 'embed' (repeating): embed the next slice of NULL-embedding chunks,
+ *     fill them in, then self-retrigger ('embed') or mark the doc 'ready'.
  *
- * Because chunks are persisted before embedding, an invocation that is killed
- * part-way is fully resumable: the next 'embed' pass simply picks up the chunks
- * that still have a NULL embedding. The match_* RPCs already ignore NULL-
- * embedding chunks, so a half-embedded document is never returned by search.
+ * Resumability invariants:
+ *   - Chunks persist before embedding; the match_* RPCs ignore NULL-embedding
+ *     rows, so a partially-indexed doc never surfaces in search.
+ *   - Extraction commits per page-batch and advances extract_cursor. On resume
+ *     we delete any chunks with page > extract_cursor (a batch that committed
+ *     before its watermark update) and recompute the chunk index, so retries
+ *     never duplicate or gap chunks.
  *
- * Each stage updates `vault_documents.status` for the admin UI. A *caught*
- * failure lands the row in status='failed' with a readable status_error.
+ * A *caught* failure lands the row in status='failed' with a readable
+ * status_error.
  *
- * ENV required:
- *   SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY · OPENAI_API_KEY
- *   FIRECRAWL_API_KEY (only for kind='url')
+ * ENV: SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY · OPENAI_API_KEY
+ *      FIRECRAWL_API_KEY (only for kind='url')
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { extractPdf, extractDocx, extractTxt, extractUrl } from "./extract.ts";
-import { chunkDocument, chunkPages } from "./chunk.ts";
-import { embedBatch }     from "./embed.ts";
+import { extractDocx, extractTxt, extractUrl, loadPdf, extractPdfPageRange } from "./extract.ts";
+import { chunkDocument } from "./chunk.ts";
+import { embedBatch } from "./embed.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin":  "*",
@@ -38,14 +43,14 @@ const corsHeaders = {
 
 const STORAGE_BUCKET = "vault";
 
-// How long a single invocation may spend embedding before it persists progress,
-// fires a continuation, and returns. Comfortably under the ~150s edge ceiling
-// so the in-flight slice + the continuation trigger both finish in time.
-const EMBED_TIME_BUDGET_MS = 110_000;
-
-// Chunks pulled per embed round. embedBatch sub-batches these by 64 to OpenAI;
-// 192 = up to 3 OpenAI calls per DB round-trip.
+// Per-invocation wall-clock budget for the actual work. Comfortably under the
+// ~150s edge ceiling so the in-flight batch + the self-retrigger both finish.
+const BUDGET_MS = 100_000;
+// Pages extracted per commit. Small so we checkpoint (and can stop) often.
+const PAGE_BATCH = 8;
+// Chunks embedded per DB round. embedBatch sub-batches these by 64 to OpenAI.
 const EMBED_SLICE = 192;
+const UPDATE_CONCURRENCY = 25;
 
 interface Ctx {
   sbUrl:         string;
@@ -55,22 +60,26 @@ interface Ctx {
 }
 
 interface DocumentRow {
-  id:           string;
-  kind:         "pdf" | "docx" | "txt" | "url" | "paste";
-  storage_path: string | null;
-  source:       string | null;
-  title:        string;
-  raw_text:     string | null;
-  status:       string;
+  id:             string;
+  kind:           "pdf" | "docx" | "txt" | "url" | "paste";
+  storage_path:   string | null;
+  source:         string | null;
+  title:          string;
+  raw_text:       string | null;
+  status:         string;
+  extract_cursor: number;
 }
 
 type SbClient = ReturnType<typeof createClient>;
 
+const SCANNED_PDF_MSG =
+  "This PDF appears to be scanned (image-only) — no selectable text could be extracted. " +
+  "Add a text layer with OCR (e.g. Adobe Acrobat → Scan & OCR, or a free online OCR tool), then re-upload. " +
+  "Alternatively, paste the key text directly via Vault upload → Paste text.";
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") {
-    return json({ error: "Only POST is supported." }, 405);
-  }
+  if (req.method !== "POST") return json({ error: "Only POST is supported." }, 405);
 
   const ctx: Ctx = {
     sbUrl:        Deno.env.get("SUPABASE_URL") ?? "",
@@ -90,10 +99,6 @@ Deno.serve(async (req: Request) => {
   if (!document_id) return json({ error: "document_id is required." }, 400);
   const phase = body.phase === "embed" ? "embed" : "prepare";
 
-  // Run the (potentially long) work as a background task so the HTTP response
-  // returns immediately — this keeps the self-retrigger non-blocking (the
-  // continuation call gets a fast 202 instead of waiting out the slice). Falls
-  // back to awaiting inline when the runtime doesn't expose waitUntil.
   const work = runPhase(document_id, phase, ctx).catch((err) => {
     console.error(`[vault-indexer] ${phase} failed for ${document_id}:`, err);
   });
@@ -114,95 +119,148 @@ async function runPhase(document_id: string, phase: "prepare" | "embed", ctx: Ct
   const sb = createClient(ctx.sbUrl, ctx.sbKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+  const invocationStart = Date.now();
 
   const { data: doc, error: loadErr } = await sb
     .from("vault_documents")
-    .select("id, kind, storage_path, source, title, raw_text, status")
+    .select("id, kind, storage_path, source, title, raw_text, status, extract_cursor")
     .eq("id", document_id)
     .single<DocumentRow>();
   if (loadErr || !doc) throw new Error(`Document not found: ${loadErr?.message ?? "no row"}`);
 
   try {
-    if (phase === "prepare") {
-      await prepareDocument(sb, doc, ctx);
+    if (phase !== "embed") {
+      const completed = await extractAndChunk(sb, doc, ctx, invocationStart);
+      if (!completed) return;  // extraction re-triggered 'prepare' for more pages
+      // Extraction finished; if we're low on budget hand embedding to a fresh
+      // invocation rather than risk overrunning the wall-clock here.
+      if (Date.now() - invocationStart > BUDGET_MS) {
+        await fireContinuation(ctx, doc.id, "embed");
+        return;
+      }
     }
-    // Both phases finish by draining whatever NULL-embedding chunks remain.
-    await embedLoop(sb, ctx, doc.id);
+    await embedLoop(sb, ctx, doc.id, invocationStart);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    await sb
-      .from("vault_documents")
-      .update({ status: "failed", status_error: msg })
-      .eq("id", doc.id);
+    await sb.from("vault_documents").update({ status: "failed", status_error: msg }).eq("id", doc.id);
     throw err;
   }
 }
 
-/* ─── Phase 1: prepare (extract + chunk + persist chunk rows) ─────────────── */
+/* ─── Extract + chunk (resumable for PDF, one-shot otherwise) ─────────────── */
 
-async function prepareDocument(sb: SbClient, doc: DocumentRow, ctx: Ctx) {
-  // EXTRACT
+/** Returns true when extraction+chunking is fully done (status set to
+ *  'embedding'); false when it re-triggered itself for more PDF pages. */
+async function extractAndChunk(
+  sb: SbClient, doc: DocumentRow, ctx: Ctx, invocationStart: number,
+): Promise<boolean> {
+  if (doc.kind !== "pdf") {
+    await oneShotExtract(sb, doc, ctx);
+    return true;
+  }
+
+  // ── PDF: page-ranged, resumable ──────────────────────────────────────────
+  if (!doc.storage_path) throw new Error("PDF document has no storage_path.");
+  const bytes = await downloadFromStorage(sb, doc.storage_path);
+  const { pdf, numPages } = await loadPdf(bytes);
+  if (!numPages || numPages < 1) throw new Error("PDF has no pages.");
+
+  let cursor: number;
+  if (doc.status === "pending") {
+    // Fresh start: wipe any prior chunks and reset the watermark.
+    await sb.from("vault_chunks").delete().eq("document_id", doc.id);
+    await sb.from("vault_documents")
+      .update({ status: "extracting", status_error: null, extract_cursor: 0, page_count: numPages })
+      .eq("id", doc.id);
+    cursor = 0;
+  } else {
+    // Resume: trust the committed watermark, and drop any chunks past it that
+    // a previous run inserted before it could advance the cursor.
+    cursor = doc.extract_cursor ?? 0;
+    await sb.from("vault_chunks").delete().eq("document_id", doc.id).gt("page", cursor);
+    await setStatus(sb, doc.id, "extracting"); // heartbeat updated_at
+  }
+
+  // Next contiguous chunk_index = count of chunks at/under the watermark.
+  const { count: existing } = await sb.from("vault_chunks")
+    .select("id", { count: "exact", head: true }).eq("document_id", doc.id);
+  let nextIdx = existing ?? 0;
+
+  while (cursor < numPages) {
+    const end = Math.min(cursor + PAGE_BATCH, numPages);
+    const pageTexts = await extractPdfPageRange(pdf, cursor + 1, end);
+
+    const rows = pageTexts.flatMap((text, k) => {
+      const pageNo = cursor + 1 + k;
+      return chunkDocument(text).map((c) => ({
+        document_id: doc.id,
+        chunk_index: nextIdx++,
+        content:     c.content,
+        token_count: c.token_count,
+        page:        pageNo,
+        heading:     c.heading ?? null,
+        embedding:   null,
+      }));
+    });
+    if (rows.length > 0) {
+      const { error } = await sb.from("vault_chunks").insert(rows); // atomic batch
+      if (error) throw new Error(`chunk insert failed: ${error.message}`);
+    }
+
+    cursor = end;
+    // Persist the watermark AFTER the chunks commit. A crash between the two
+    // is handled on resume by the delete-past-cursor above.
+    await sb.from("vault_documents").update({ extract_cursor: cursor }).eq("id", doc.id);
+
+    if (cursor < numPages && Date.now() - invocationStart > BUDGET_MS) {
+      await fireContinuation(ctx, doc.id, "prepare");
+      return false;
+    }
+  }
+
+  // All pages processed.
+  const { count: total } = await sb.from("vault_chunks")
+    .select("id", { count: "exact", head: true }).eq("document_id", doc.id);
+  if (!total || total === 0) throw new Error(SCANNED_PDF_MSG);
+
+  await sb.from("vault_documents")
+    .update({ status: "embedding", status_error: null, page_count: numPages, chunk_count: total })
+    .eq("id", doc.id);
+  return true;
+}
+
+/** Non-PDF: small single-call extraction (docx/txt/url/paste). */
+async function oneShotExtract(sb: SbClient, doc: DocumentRow, ctx: Ctx) {
   await setStatus(sb, doc.id, "extracting");
   const extraction = await runExtract(sb, doc, ctx);
   if (extraction.title && doc.title.startsWith("Untitled")) {
     await sb.from("vault_documents").update({ title: extraction.title }).eq("id", doc.id);
   }
 
-  // CHUNK
   await setStatus(sb, doc.id, "chunking");
-  const chunks = extraction.pages && extraction.pages.length > 0
-    ? chunkPages(extraction.pages)
-    : chunkDocument(extraction.text);
+  const chunks = chunkDocument(extraction.text);
   if (chunks.length === 0) throw new Error("Chunker produced 0 chunks.");
 
-  // Wipe any previous chunks (re-index / resumed-prepare case) so chunk_index
-  // stays contiguous and we don't mix stale rows with the new run.
-  const { error: delErr } = await sb.from("vault_chunks").delete().eq("document_id", doc.id);
-  if (delErr) throw new Error(`failed to clear old chunks: ${delErr.message}`);
-
-  // Persist chunk rows WITHOUT embeddings. These are small (no 1536-float
-  // vector), so even a few thousand insert comfortably within one invocation.
+  await sb.from("vault_chunks").delete().eq("document_id", doc.id);
   const rows = chunks.map((c, i) => ({
-    document_id:  doc.id,
-    chunk_index:  i,
-    content:      c.content,
-    token_count:  c.token_count,
-    page:         c.page,
-    heading:      c.heading ?? null,
-    embedding:    null,
+    document_id: doc.id, chunk_index: i, content: c.content,
+    token_count: c.token_count, page: c.page, heading: c.heading ?? null, embedding: null,
   }));
-  const INSERT_BATCH = 200;
-  for (let i = 0; i < rows.length; i += INSERT_BATCH) {
-    const { error: insErr } = await sb.from("vault_chunks").insert(rows.slice(i, i + INSERT_BATCH));
-    if (insErr) throw new Error(`chunk insert failed: ${insErr.message}`);
+  for (let i = 0; i < rows.length; i += 200) {
+    const { error } = await sb.from("vault_chunks").insert(rows.slice(i, i + 200));
+    if (error) throw new Error(`chunk insert failed: ${error.message}`);
   }
 
-  // Record structural stats now; token_count + status='ready' come after the
-  // embed loop drains. raw_text is intentionally NOT cleared here — a resumed
-  // prepare for kind='paste' still needs it. It's cleared on ready.
-  const { error: upErr } = await sb
-    .from("vault_documents")
-    .update({
-      status:       "embedding",
-      status_error: null,
-      char_count:   extraction.char_count,
-      chunk_count:  chunks.length,
-      page_count:   extraction.pages?.length ?? null,
-    })
-    .eq("id", doc.id);
-  if (upErr) throw new Error(`document update failed: ${upErr.message}`);
+  await sb.from("vault_documents").update({
+    status: "embedding", status_error: null,
+    char_count: extraction.char_count, chunk_count: chunks.length, page_count: null,
+  }).eq("id", doc.id);
 }
 
-/* ─── Phase 2: embed loop (drains NULL-embedding chunks, time-bounded) ────── */
+/* ─── Embed loop (drains NULL-embedding chunks, time-bounded) ─────────────── */
 
-async function embedLoop(sb: SbClient, ctx: Ctx, document_id: string) {
-  const start = Date.now();
-
-  // Heartbeat: bump the document row (via the updated_at trigger) at the start
-  // of every embed invocation. A multi-invocation embed otherwise leaves
-  // updated_at frozen at 'prepare' time, which the UI's stuck-detector (4 min)
-  // would misread as stalled even while it's actively progressing.
-  await setStatus(sb, document_id, "embedding");
+async function embedLoop(sb: SbClient, ctx: Ctx, document_id: string, invocationStart: number) {
+  await setStatus(sb, document_id, "embedding"); // heartbeat
 
   while (true) {
     const { data: pending, error: selErr } = await sb
@@ -219,15 +277,11 @@ async function embedLoop(sb: SbClient, ctx: Ctx, document_id: string) {
       return;
     }
 
-    const inputs = pending.map((c) => c.content as string);
-    const { embeddings, model } = await embedBatch(ctx.openaiKey, inputs);
+    const { embeddings, model } = await embedBatch(ctx.openaiKey, pending.map((c) => c.content as string));
     if (embeddings.length !== pending.length) {
       throw new Error(`Embedding count mismatch: ${embeddings.length} vs ${pending.length} chunks`);
     }
 
-    // Fill in the embeddings. Bounded concurrency keeps the connection pool
-    // happy while still being far faster than serial round-trips.
-    const UPDATE_CONCURRENCY = 25;
     for (let i = 0; i < pending.length; i += UPDATE_CONCURRENCY) {
       const group = pending.slice(i, i + UPDATE_CONCURRENCY);
       await Promise.all(group.map((c, j) => {
@@ -238,56 +292,45 @@ async function embedLoop(sb: SbClient, ctx: Ctx, document_id: string) {
       }));
     }
 
-    // Out of time for this invocation? Hand off to a fresh one and stop.
-    if (Date.now() - start > EMBED_TIME_BUDGET_MS) {
-      await fireContinuation(ctx, document_id);
+    if (Date.now() - invocationStart > BUDGET_MS) {
+      await fireContinuation(ctx, document_id, "embed");
       return;
     }
   }
 }
 
-/** Mark the document ready, deriving token_count from the persisted chunks. */
+/** Mark ready, deriving token_count from the persisted chunks. */
 async function markReady(sb: SbClient, document_id: string) {
-  const { data: toks } = await sb
-    .from("vault_chunks")
-    .select("token_count")
-    .eq("document_id", document_id);
+  const { data: toks } = await sb.from("vault_chunks").select("token_count").eq("document_id", document_id);
   const token_count = (toks ?? []).reduce(
     (s: number, r: { token_count: number | null }) => s + (r.token_count ?? 0), 0,
   ) || null;
-
-  const { error } = await sb
-    .from("vault_documents")
+  const { error } = await sb.from("vault_documents")
     .update({ status: "ready", status_error: null, token_count, raw_text: null })
     .eq("id", document_id);
   if (error) throw new Error(`failed to mark ready: ${error.message}`);
 }
 
-/** Fire a non-blocking 'embed' continuation for the same document. The target
- *  responds 202 immediately (it runs its work via waitUntil), so this resolves
- *  quickly rather than waiting out the next slice. */
-async function fireContinuation(ctx: Ctx, document_id: string) {
+/** Fire a non-blocking continuation for the same document. The target responds
+ *  202 immediately (work runs via waitUntil), so this resolves quickly. */
+async function fireContinuation(ctx: Ctx, document_id: string, phase: "prepare" | "embed") {
   try {
     const res = await fetch(`${ctx.sbUrl}/functions/v1/vault-indexer`, {
       method:  "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${ctx.sbKey}` },
-      body:    JSON.stringify({ document_id, phase: "embed" }),
+      body:    JSON.stringify({ document_id, phase }),
     });
-    await res.text().catch(() => {}); // drain the small body so the socket closes
+    await res.text().catch(() => {});
   } catch (err) {
-    // If the trigger fails the document stays in 'embedding' with its chunks
-    // persisted — the admin's Re-index (or a future sweep) resumes it.
-    console.error(`[vault-indexer] continuation trigger failed for ${document_id}:`, err);
+    console.error(`[vault-indexer] continuation (${phase}) trigger failed for ${document_id}:`, err);
   }
 }
 
-/* ─── Extract dispatch ───────────────────────────────────────────────────── */
+/* ─── Non-PDF extract dispatch ───────────────────────────────────────────── */
 
 async function runExtract(
-  sb: SbClient,
-  doc: DocumentRow,
-  ctx: Ctx,
-): Promise<{ text: string; char_count: number; title?: string; pages?: string[] }> {
+  sb: SbClient, doc: DocumentRow, ctx: Ctx,
+): Promise<{ text: string; char_count: number; title?: string }> {
   switch (doc.kind) {
     case "paste": {
       if (!doc.raw_text || doc.raw_text.trim().length === 0) {
@@ -295,30 +338,29 @@ async function runExtract(
       }
       return { text: doc.raw_text, char_count: doc.raw_text.length };
     }
-
     case "url": {
       if (!ctx.firecrawlKey) throw new Error("FIRECRAWL_API_KEY is required for kind='url'.");
       if (!doc.source)       throw new Error("URL document has no source URL.");
       return await extractUrl(doc.source, ctx.firecrawlKey);
     }
-
-    case "pdf":
     case "docx":
     case "txt": {
       if (!doc.storage_path) throw new Error(`${doc.kind.toUpperCase()} document has no storage_path.`);
       const bytes = await downloadFromStorage(sb, doc.storage_path);
-      if (doc.kind === "pdf")  return await extractPdf(bytes);
       if (doc.kind === "docx") return await extractDocx(bytes);
       return extractTxt(bytes);
     }
+    default:
+      throw new Error(`runExtract called for unsupported kind '${doc.kind}'.`);
   }
 }
+
+/* ─── Storage download ───────────────────────────────────────────────────── */
 
 async function downloadFromStorage(sb: SbClient, path: string): Promise<Uint8Array> {
   const { data, error } = await sb.storage.from(STORAGE_BUCKET).download(path);
   if (error || !data) throw new Error(`Storage download failed: ${error?.message ?? "no data"}`);
-  const buf = await data.arrayBuffer();
-  return new Uint8Array(buf);
+  return new Uint8Array(await data.arrayBuffer());
 }
 
 /* ─── helpers ────────────────────────────────────────────────────────────── */
@@ -329,7 +371,6 @@ async function setStatus(sb: SbClient, id: string, status: string) {
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }

@@ -45,6 +45,45 @@ export async function extractPdf(bytes: Uint8Array): Promise<ExtractResult> {
   return { text: cleaned, char_count: cleaned.length, pages };
 }
 
+/* ─── PDF, page-ranged (resumable extraction) ─────────────────────────────── */
+
+// deno-lint-ignore no-explicit-any
+export type PdfProxy = any;
+
+/** Parse the PDF structure once and return the proxy + page count. Parsing the
+ *  structure is cheap relative to extracting every page's text; the heavy work
+ *  is done per page in extractPdfPageRange so it can be spread across edge
+ *  invocations. */
+export async function loadPdf(bytes: Uint8Array): Promise<{ pdf: PdfProxy; numPages: number }> {
+  const pdf = await getDocumentProxy(bytes);
+  return { pdf, numPages: pdf.numPages as number };
+}
+
+/**
+ * Extract cleaned text for pages [from..to] (1-based, inclusive). Line breaks
+ * are reconstructed from pdf.js text items via `hasEOL` so paragraph/heading
+ * detection in the chunker still works — matching the structure unpdf's
+ * whole-document extractText produces, but bounded to a page range.
+ */
+export async function extractPdfPageRange(
+  pdf: PdfProxy,
+  from: number,
+  to: number,
+): Promise<string[]> {
+  const out: string[] = [];
+  for (let p = from; p <= to; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    let s = "";
+    for (const item of (content.items as Array<{ str?: string; hasEOL?: boolean }>)) {
+      s += item.str ?? "";
+      s += item.hasEOL ? "\n" : " ";
+    }
+    out.push(normaliseWhitespace(s));
+  }
+  return out;
+}
+
 /* ─── DOCX (mammoth, via esm.sh — no Node fs dependency) ─────────────────── */
 
 export async function extractDocx(bytes: Uint8Array): Promise<ExtractResult> {
