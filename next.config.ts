@@ -74,7 +74,9 @@ const nextConfig: NextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
               "frame-ancestors 'self'",
-              "form-action 'self' https://*.hsforms.com https://*.hubspot.com",
+              // claude.ai / claude.com allow the MCP connector's OAuth login
+              // form to redirect back to Claude's callback after sign-in.
+              "form-action 'self' https://*.hsforms.com https://*.hubspot.com https://claude.ai https://claude.com",
             ].join("; "),
           },
           // Full source-allowlist CSP shipped in REPORT-ONLY mode: the browser
@@ -100,7 +102,9 @@ const nextConfig: NextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
               "frame-ancestors 'self'",
-              "form-action 'self' https://*.hsforms.com https://*.hubspot.com",
+              // claude.ai / claude.com allow the MCP connector's OAuth login
+              // form to redirect back to Claude's callback after sign-in.
+              "form-action 'self' https://*.hsforms.com https://*.hubspot.com https://claude.ai https://claude.com",
             ].join("; "),
           },
         ],

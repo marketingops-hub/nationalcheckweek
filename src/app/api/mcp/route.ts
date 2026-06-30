@@ -14,15 +14,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import OpenAI from 'openai';
+import { verifyAccessToken, MCP_BASE_URL } from '@/lib/mcp/oauth';
 
-// ─── Auth ──────────────────────────────────────────────────────────────────
+// ─── Auth (OAuth 2.1 Bearer access token) ────────────────────────────────────
 
-export function checkAuth(req: NextRequest, urlKey?: string): boolean {
-  const expected = process.env.MCP_API_KEY;
-  if (!expected) return true; // no key set → open (dev only)
-  if (urlKey && urlKey === expected) return true;
+/**
+ * Authorize a request. Primary path: an OAuth access-token JWT issued by our
+ * /oauth/token endpoint (verified for signature, issuer and MCP audience).
+ * Legacy fallback: a static MCP_API_KEY, honoured ONLY if that env is set
+ * (Bearer header or key-in-URL) — left in for backwards compatibility.
+ */
+export async function checkAuth(req: NextRequest, urlKey?: string): Promise<boolean> {
   const auth = req.headers.get('authorization') ?? '';
-  return auth === `Bearer ${expected}`;
+  if (auth.startsWith('Bearer ')) {
+    const token = auth.slice(7);
+    if (await verifyAccessToken(token)) return true;
+
+    const legacy = process.env.MCP_API_KEY;
+    if (legacy && token === legacy) return true;
+  }
+  const legacy = process.env.MCP_API_KEY;
+  if (legacy && urlKey && urlKey === legacy) return true;
+  return false;
 }
 
 // ─── CORS (Claude.ai calls from the browser) ───────────────────────────────
@@ -33,6 +46,20 @@ const CORS = {
   'Access-Control-Allow-Headers':
     'Content-Type, Authorization, mcp-session-id, Accept',
 };
+
+/** 401 that tells Claude where to discover OAuth (RFC 9728 §5.1). */
+function unauthorized(): NextResponse {
+  return NextResponse.json(
+    { error: 'Unauthorized' },
+    {
+      status: 401,
+      headers: {
+        ...CORS,
+        'WWW-Authenticate': `Bearer resource_metadata="${MCP_BASE_URL}/.well-known/oauth-protected-resource"`,
+      },
+    },
+  );
+}
 
 // ─── MCP tool definitions ──────────────────────────────────────────────────
 
@@ -310,8 +337,8 @@ async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
 // ─── Shared route handlers (used by both /api/mcp and /api/mcp/[key]) ────────
 
 export async function handlePOST(req: NextRequest, urlKey?: string) {
-  if (!checkAuth(req, urlKey)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: CORS });
+  if (!(await checkAuth(req, urlKey))) {
+    return unauthorized();
   }
 
   let body: unknown;
@@ -339,8 +366,8 @@ export async function handlePOST(req: NextRequest, urlKey?: string) {
 }
 
 export async function handleGET(req: NextRequest, urlKey?: string) {
-  if (!checkAuth(req, urlKey)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: CORS });
+  if (!(await checkAuth(req, urlKey))) {
+    return unauthorized();
   }
   return NextResponse.json(
     { name: 'nciw-vault', version: '1.0.0', protocol: 'mcp/2024-11-05' },
