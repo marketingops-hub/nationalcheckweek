@@ -46,15 +46,13 @@ const STORAGE_BUCKET = "vault";
 // Per-invocation wall-clock budget for the actual work. Comfortably under the
 // ~150s edge ceiling so the in-flight batch + the self-retrigger both finish.
 const BUDGET_MS = 100_000;
-// Pages extracted per commit. Kept small so a batch of worst-case (timed-out)
-// pages can't outrun the wall-clock before we checkpoint + can stop:
-// PAGE_BATCH * PAGE_TIMEOUT_MS (4 * 15s = 60s) stays well under the ~150s wall.
-const PAGE_BATCH = 4;
 // Hard cap on pages processed per invocation. pdf.js memory grows with pages
 // touched in a single invocation; large PDFs were OOM-killed around ~80 pages
 // BEFORE the time budget could trigger a hand-off, so they froze. Handing off
 // to a fresh invocation every N pages keeps peak memory flat (each invocation
-// re-parses the PDF cheaply and processes only its slice).
+// re-parses the PDF cheaply and processes only its slice). Pages are now
+// processed one at a time with a pre-claimed cursor so a single poison page
+// can't loop the pipeline.
 const MAX_PAGES_PER_INVOCATION = 30;
 // Chunks embedded per DB round. embedBatch sub-batches these by 64 to OpenAI.
 const EMBED_SLICE = 192;
@@ -206,35 +204,34 @@ async function extractAndChunk(
 
   const startCursor = cursor;
   while (cursor < numPages) {
-    const end = Math.min(cursor + PAGE_BATCH, numPages);
-    const pageTexts = await extractPdfPageRange(pdf, cursor + 1, end);
+    const p = cursor + 1;
 
-    const rows = pageTexts.flatMap((text, k) => {
-      const pageNo = cursor + 1 + k;
-      return chunkDocument(text).map((c) => ({
-        document_id: doc.id,
-        chunk_index: nextIdx++,
-        content:     c.content,
-        token_count: c.token_count,
-        page:        pageNo,
-        heading:     c.heading ?? null,
-        embedding:   null,
-      }));
-    });
+    // Pre-claim this page: advance the watermark BEFORE extracting it. A page
+    // can hard-crash the worker (a synchronous OOM in pdf.js that the per-page
+    // timeout cannot interrupt). If we advanced the cursor only AFTER success,
+    // the next invocation would resume on the same poison page and loop
+    // forever. By claiming it first, a crash makes the next run skip past this
+    // one page (losing just its text) and carry on — guaranteed progress.
+    await sb.from("vault_documents").update({ extract_cursor: p }).eq("id", doc.id);
+
+    const [text] = await extractPdfPageRange(pdf, p, p);
+    const rows = chunkDocument(text ?? "").map((c) => ({
+      document_id: doc.id,
+      chunk_index: nextIdx++,
+      content:     c.content,
+      token_count: c.token_count,
+      page:        p,
+      heading:     c.heading ?? null,
+      embedding:   null,
+    }));
     if (rows.length > 0) {
-      const { error } = await sb.from("vault_chunks").insert(rows); // atomic batch
+      const { error } = await sb.from("vault_chunks").insert(rows);
       if (error) throw new Error(`chunk insert failed: ${error.message}`);
     }
+    // Surface running chunk total so the UI's "N chunks" climbs live.
+    await sb.from("vault_documents").update({ chunk_count: nextIdx }).eq("id", doc.id);
 
-    cursor = end;
-    // Persist the watermark AFTER the chunks commit. A crash between the two
-    // is handled on resume by the delete-past-cursor above. Also surface the
-    // running chunk total so the UI's "N chunks" reflects progress live
-    // instead of showing 0 until the whole document finishes.
-    await sb.from("vault_documents")
-      .update({ extract_cursor: cursor, chunk_count: nextIdx })
-      .eq("id", doc.id);
-
+    cursor = p;
     if (cursor < numPages &&
         (Date.now() - invocationStart > BUDGET_MS ||
          cursor - startCursor >= MAX_PAGES_PER_INVOCATION)) {
