@@ -29,6 +29,31 @@ const STATUS_OPTIONS: (DocumentStatus | 'all')[] = [
   'all', 'ready', 'pending', 'extracting', 'chunking', 'embedding', 'failed',
 ];
 
+/** Short "x ago" string so the user can see whether an in-flight doc is
+ *  actually advancing (fresh) or frozen (minutes old). */
+function relTime(iso: string): string {
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 5)   return 'just now';
+  if (s < 60)  return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60)  return `${m}m ago`;
+  return `${Math.floor(m / 60)}h ago`;
+}
+
+/** Human progress line for an in-flight (non-terminal) document. */
+function progressLabel(doc: VaultDocument): string {
+  if (isDocStuck(doc)) return `Looks stuck in "${doc.status}" — click Re-index to resume`;
+  switch (doc.status) {
+    case 'pending':    return 'Queued — waiting for the indexer…';
+    case 'extracting': return doc.page_count
+      ? `Extracting — page ${Math.min(doc.extract_cursor ?? 0, doc.page_count)} of ${doc.page_count} · ${doc.chunk_count} chunks`
+      : `Extracting — ${doc.chunk_count} chunks so far`;
+    case 'chunking':   return 'Chunking text…';
+    case 'embedding':  return `Embedding — ${doc.chunk_count} chunks`;
+    default:           return doc.status;
+  }
+}
+
 const KIND_OPTIONS: (DocumentKind | 'all')[] = ['all', 'pdf', 'docx', 'txt', 'url', 'paste'];
 
 export default function VaultLibraryPage() {
@@ -245,6 +270,28 @@ function DocumentCard({
       {failed && doc.status_error && (
         <div style={{ fontSize: 12, color: '#B91C1C', background: '#FEF2F2', padding: 8, borderRadius: 6 }}>
           {doc.status_error}
+        </div>
+      )}
+
+      {/* Live progress for in-flight docs: what stage, how far, and how fresh
+          the last update is — so a re-index is visibly moving (or visibly
+          stuck). The list auto-polls every 4s, so this updates on its own. */}
+      {!STATUS_IS_TERMINAL[doc.status] && (
+        <div style={{
+          fontSize: 12, display: 'flex', alignItems: 'center', gap: 6,
+          padding: '6px 8px', borderRadius: 6,
+          background: stuck ? '#FEF3C7' : '#E0F2FE',
+          color: stuck ? '#92400E' : '#0C5A78',
+        }}>
+          <span
+            className={`material-symbols-outlined${stuck ? '' : ' swa-spin'}`}
+            style={{ fontSize: 14 }}
+            aria-hidden
+          >
+            {stuck ? 'warning' : 'progress_activity'}
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>{progressLabel(doc)}</span>
+          <span style={{ color: '#6B7280', whiteSpace: 'nowrap' }}>upd. {relTime(doc.updated_at)}</span>
         </div>
       )}
 

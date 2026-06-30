@@ -54,7 +54,7 @@ export const GET = requireStaff(async (req: NextRequest) => {
   const sb = adminClient();
   let q = sb
     .from('vault_documents')
-    .select('id, title, kind, source, reference, author, publisher, year, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, page_count, byte_size, file_hash, use_count, last_used_at, added_by, created_at, updated_at')
+    .select('id, title, kind, source, reference, author, publisher, year, source_url, page_ref, storage_path, category, tags, status, status_error, char_count, chunk_count, token_count, page_count, extract_cursor, byte_size, file_hash, use_count, last_used_at, added_by, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 

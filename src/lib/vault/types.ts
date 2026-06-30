@@ -40,6 +40,8 @@ export interface VaultDocument {
   token_count:  number | null;
   /** PDF page count (null for non-paged sources / pre-page-tracking rows). */
   page_count:   number | null;
+  /** Resumable extraction watermark: pages committed so far (PDF). */
+  extract_cursor: number | null;
   /** Source size in bytes (files). */
   byte_size:    number | null;
   /** sha-256 of the source — used for duplicate detection. */
