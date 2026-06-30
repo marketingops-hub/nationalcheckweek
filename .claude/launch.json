@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Next.js (main app)",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "/Users/ishitavig/.nvm/versions/node/v20.20.1/bin/node",
+      "runtimeArgs": ["node_modules/.bin/next", "dev"],
       "port": 3000
     },
     {
