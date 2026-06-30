@@ -11,7 +11,7 @@
  * gone, vault_content is auto-migrated into vault_documents.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { listDocuments, deleteDocument, reindexDocument } from "@/lib/vault/client";
 import {
@@ -92,6 +92,28 @@ export default function VaultLibraryPage() {
     if (!pending) return;
     const t = setInterval(refresh, 4000);
     return () => clearInterval(t);
+  }, [docs, refresh]);
+
+  // Auto-resume stalled documents. A PDF page can OOM-kill the indexer worker
+  // uncatchably, which also kills the self-trigger that would continue the
+  // job — so a doc can sit non-terminal with no progress. The indexer
+  // pre-claims each page in extract_cursor before touching it, so simply
+  // re-firing the indexer resumes PAST the poison page. While this page is
+  // open we detect a stall (no updated_at change for ~45s) and re-fire it,
+  // at most once per cooldown, so the doc grinds to completion on its own.
+  const autoResumedRef = useRef<Map<string, number>>(new Map());
+  useEffect(() => {
+    const STALL_MS = 45_000;
+    const COOLDOWN_MS = 45_000;
+    const now = Date.now();
+    for (const d of docs) {
+      if (STATUS_IS_TERMINAL[d.status]) continue;
+      if (now - new Date(d.updated_at).getTime() < STALL_MS) continue;
+      const last = autoResumedRef.current.get(d.id) ?? 0;
+      if (now - last < COOLDOWN_MS) continue;
+      autoResumedRef.current.set(d.id, now);
+      reindexDocument(d.id).then(() => refresh()).catch(() => {});
+    }
   }, [docs, refresh]);
 
   // Stats strip — the whole vault at a glance.

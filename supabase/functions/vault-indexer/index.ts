@@ -314,6 +314,10 @@ async function embedLoop(sb: SbClient, ctx: Ctx, document_id: string, invocation
       }));
     }
 
+    // Touch updated_at each slice so the stall/auto-resume detector doesn't
+    // mistake a long-but-healthy embed for a crash.
+    await setStatus(sb, document_id, "embedding");
+
     if (Date.now() - invocationStart > BUDGET_MS) {
       await fireContinuation(ctx, document_id, "embed");
       return;

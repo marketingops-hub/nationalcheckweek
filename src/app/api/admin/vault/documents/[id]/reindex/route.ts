@@ -29,20 +29,36 @@ export const POST = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
   const { id } = await ctx!.params;
   const sb = adminClient();
 
-  // Reset status; keep raw_text / storage_path intact so the indexer has
-  // something to work with. chunk_count is zeroed because the indexer will
-  // wipe existing chunks before inserting new ones.
+  const { data: current, error: loadErr } = await sb
+    .from('vault_documents')
+    .select('status')
+    .eq('id', id)
+    .single<{ status: string }>();
+  if (loadErr || !current) {
+    return NextResponse.json({ error: loadErr?.message ?? 'Not found' }, { status: 404 });
+  }
+
+  // RESUME vs RESTART:
+  //  • mid-flight ('extracting'/'embedding') → RESUME. Keep status + chunks +
+  //    extract_cursor intact and just re-fire the indexer; it continues from
+  //    the watermark, which (thanks to the pre-claimed cursor) is already past
+  //    any page that crashed the worker. This is what un-freezes a doc whose
+  //    auto-continuation was killed by an OOM. We only touch updated_at so the
+  //    stall detector resets.
+  //  • otherwise ('ready'/'failed'/'pending') → RESTART from scratch.
+  const midFlight = current.status === 'extracting' || current.status === 'embedding';
+  const patch = midFlight
+    ? { status: current.status }                                  // touch updated_at only
+    : { status: 'pending', status_error: null, chunk_count: 0 };  // full restart
+
   const { data, error } = await sb
     .from('vault_documents')
-    .update({ status: 'pending', status_error: null, chunk_count: 0 })
+    .update(patch)
     .eq('id', id)
     .select()
     .single<VaultDocument>();
   if (error || !data) {
-    return NextResponse.json(
-      { error: error?.message ?? 'Not found' },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: error?.message ?? 'Not found' }, { status: 500 });
   }
 
   triggerIndexer(id);
