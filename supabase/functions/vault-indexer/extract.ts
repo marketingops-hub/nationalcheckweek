@@ -72,16 +72,50 @@ export async function extractPdfPageRange(
 ): Promise<string[]> {
   const out: string[] = [];
   for (let p = from; p <= to; p++) {
-    const page = await pdf.getPage(p);
+    out.push(await extractOnePage(pdf, p));
+  }
+  return out;
+}
+
+// Per-page timeout. A single malformed/huge page in pdf.js can hang or run
+// extremely long; without a bound it kills the whole edge invocation before
+// the cursor advances, so every re-index re-hits the same page and the
+// document is frozen forever. We cap each page and, on timeout/error, skip it
+// (empty text) so the cursor still advances past the poison page.
+const PAGE_TIMEOUT_MS = 15_000;
+
+async function extractOnePage(pdf: PdfProxy, p: number): Promise<string> {
+  try {
+    return await withTimeout(extractPageText(pdf, p), PAGE_TIMEOUT_MS, `page ${p}`);
+  } catch (e) {
+    console.error(`[extract] page ${p} skipped:`, e instanceof Error ? e.message : e);
+    return "";
+  }
+}
+
+async function extractPageText(pdf: PdfProxy, p: number): Promise<string> {
+  const page = await pdf.getPage(p);
+  try {
     const content = await page.getTextContent();
     let s = "";
     for (const item of (content.items as Array<{ str?: string; hasEOL?: boolean }>)) {
       s += item.str ?? "";
       s += item.hasEOL ? "\n" : " ";
     }
-    out.push(normaliseWhitespace(s));
+    return normaliseWhitespace(s);
+  } finally {
+    // Release page resources between pages to keep memory flat on big PDFs.
+    try { (page as { cleanup?: () => void }).cleanup?.(); } catch { /* ignore */ }
   }
-  return out;
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ]);
 }
 
 /* ─── DOCX (mammoth, via esm.sh — no Node fs dependency) ─────────────────── */

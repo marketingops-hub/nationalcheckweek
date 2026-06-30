@@ -46,8 +46,10 @@ const STORAGE_BUCKET = "vault";
 // Per-invocation wall-clock budget for the actual work. Comfortably under the
 // ~150s edge ceiling so the in-flight batch + the self-retrigger both finish.
 const BUDGET_MS = 100_000;
-// Pages extracted per commit. Small so we checkpoint (and can stop) often.
-const PAGE_BATCH = 8;
+// Pages extracted per commit. Kept small so a batch of worst-case (timed-out)
+// pages can't outrun the wall-clock before we checkpoint + can stop:
+// PAGE_BATCH * PAGE_TIMEOUT_MS (4 * 15s = 60s) stays well under the ~150s wall.
+const PAGE_BATCH = 4;
 // Chunks embedded per DB round. embedBatch sub-batches these by 64 to OpenAI.
 const EMBED_SLICE = 192;
 const UPDATE_CONCURRENCY = 25;
