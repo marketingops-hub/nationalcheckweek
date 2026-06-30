@@ -50,6 +50,12 @@ const BUDGET_MS = 100_000;
 // pages can't outrun the wall-clock before we checkpoint + can stop:
 // PAGE_BATCH * PAGE_TIMEOUT_MS (4 * 15s = 60s) stays well under the ~150s wall.
 const PAGE_BATCH = 4;
+// Hard cap on pages processed per invocation. pdf.js memory grows with pages
+// touched in a single invocation; large PDFs were OOM-killed around ~80 pages
+// BEFORE the time budget could trigger a hand-off, so they froze. Handing off
+// to a fresh invocation every N pages keeps peak memory flat (each invocation
+// re-parses the PDF cheaply and processes only its slice).
+const MAX_PAGES_PER_INVOCATION = 30;
 // Chunks embedded per DB round. embedBatch sub-batches these by 64 to OpenAI.
 const EMBED_SLICE = 192;
 const UPDATE_CONCURRENCY = 25;
@@ -198,6 +204,7 @@ async function extractAndChunk(
     .select("id", { count: "exact", head: true }).eq("document_id", doc.id);
   let nextIdx = existing ?? 0;
 
+  const startCursor = cursor;
   while (cursor < numPages) {
     const end = Math.min(cursor + PAGE_BATCH, numPages);
     const pageTexts = await extractPdfPageRange(pdf, cursor + 1, end);
@@ -228,7 +235,9 @@ async function extractAndChunk(
       .update({ extract_cursor: cursor, chunk_count: nextIdx })
       .eq("id", doc.id);
 
-    if (cursor < numPages && Date.now() - invocationStart > BUDGET_MS) {
+    if (cursor < numPages &&
+        (Date.now() - invocationStart > BUDGET_MS ||
+         cursor - startCursor >= MAX_PAGES_PER_INVOCATION)) {
       await fireContinuation(ctx, doc.id, "prepare");
       return false;
     }
