@@ -209,8 +209,12 @@ async function extractAndChunk(
 
     cursor = end;
     // Persist the watermark AFTER the chunks commit. A crash between the two
-    // is handled on resume by the delete-past-cursor above.
-    await sb.from("vault_documents").update({ extract_cursor: cursor }).eq("id", doc.id);
+    // is handled on resume by the delete-past-cursor above. Also surface the
+    // running chunk total so the UI's "N chunks" reflects progress live
+    // instead of showing 0 until the whole document finishes.
+    await sb.from("vault_documents")
+      .update({ extract_cursor: cursor, chunk_count: nextIdx })
+      .eq("id", doc.id);
 
     if (cursor < numPages && Date.now() - invocationStart > BUDGET_MS) {
       await fireContinuation(ctx, doc.id, "prepare");
@@ -305,8 +309,10 @@ async function markReady(sb: SbClient, document_id: string) {
   const token_count = (toks ?? []).reduce(
     (s: number, r: { token_count: number | null }) => s + (r.token_count ?? 0), 0,
   ) || null;
+  // Reconcile chunk_count from the authoritative row set at ready time.
+  const chunk_count = (toks ?? []).length;
   const { error } = await sb.from("vault_documents")
-    .update({ status: "ready", status_error: null, token_count, raw_text: null })
+    .update({ status: "ready", status_error: null, token_count, chunk_count, raw_text: null })
     .eq("id", document_id);
   if (error) throw new Error(`failed to mark ready: ${error.message}`);
 }
