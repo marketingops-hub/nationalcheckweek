@@ -29,3 +29,10 @@ verify_jwt = false
 
 [functions.content-creator-verify]
 verify_jwt = false
+
+# vault-indexer self-triggers (resumable extraction/embedding) using
+# EDGE_SHARED_SECRET, which is not a JWT — so it needs the same treatment, or
+# the gateway 401s the continuation and indexing stalls mid-run. The function
+# does its own bearer check (EDGE_SHARED_SECRET or the service key).
+[functions.vault-indexer]
+verify_jwt = false

@@ -346,7 +346,10 @@ async function handleJsonCreate(req: NextRequest): Promise<NextResponse> {
  */
 export function triggerIndexer(document_id: string): void {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Prefer the shared secret (vault-indexer now runs with verify_jwt off and
+  // checks EDGE_SHARED_SECRET, matching its own self-trigger). Fall back to the
+  // service key. See the content-creator callEdge for the same pattern.
+  const key = process.env.EDGE_SHARED_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     console.error('[vault-indexer] Missing Supabase env vars — cannot trigger.');
     return;

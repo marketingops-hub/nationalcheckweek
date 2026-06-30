@@ -91,6 +91,16 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Missing SUPABASE_* or OPENAI_API_KEY env vars." }, 500);
   }
 
+  // We run our own auth: verify_jwt is disabled for this function (see
+  // config.toml) so the resumable self-trigger can authenticate with
+  // EDGE_SHARED_SECRET — a plain secret, not a Supabase JWT, which the gateway
+  // would otherwise reject. Accept EDGE_SHARED_SECRET or the service key.
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  const shared = Deno.env.get("EDGE_SHARED_SECRET") ?? "";
+  if (!((shared && timingSafeEqual(token, shared)) || (ctx.sbKey && timingSafeEqual(token, ctx.sbKey)))) {
+    return json({ error: "Unauthorized." }, 401);
+  }
+
   let body: Record<string, unknown>;
   try { body = await req.json(); }
   catch { return json({ error: "Invalid JSON body." }, 400); }
@@ -321,9 +331,13 @@ async function markReady(sb: SbClient, document_id: string) {
  *  202 immediately (work runs via waitUntil), so this resolves quickly. */
 async function fireContinuation(ctx: Ctx, document_id: string, phase: "prepare" | "embed") {
   try {
+    // Use the shared secret so the call passes our own requireAuth above. The
+    // service key is NOT a gateway-valid JWT on new-API-key projects, which is
+    // exactly what stalled the continuation before.
+    const bearer = Deno.env.get("EDGE_SHARED_SECRET") || ctx.sbKey;
     const res = await fetch(`${ctx.sbUrl}/functions/v1/vault-indexer`, {
       method:  "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${ctx.sbKey}` },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${bearer}` },
       body:    JSON.stringify({ document_id, phase }),
     });
     await res.text().catch(() => {});
@@ -379,4 +393,12 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+/** Constant-time string compare; length mismatch short-circuits. */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
