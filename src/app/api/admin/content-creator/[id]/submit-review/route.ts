@@ -33,9 +33,14 @@ export const POST = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
     rejection_reason: null,
   };
 
+  // If a rejected draft is being resubmitted, move it out of the 'rejected'
+  // pipeline column back to 'draft' so its status matches its review state
+  // (pending again). Otherwise leave status untouched.
+  const nextStatus = draft.status === 'rejected' ? 'draft' : draft.status;
+
   const { data: updated, error: updateErr } = await sb
     .from('content_drafts')
-    .update({ verification: updatedVerification, updated_at: new Date().toISOString() })
+    .update({ status: nextStatus, verification: updatedVerification, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single();
