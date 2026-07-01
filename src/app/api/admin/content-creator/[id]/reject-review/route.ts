@@ -28,10 +28,12 @@ export const POST = requireStaff(async (req: NextRequest, ctx?: Ctx) => {
     return err('Draft has not been submitted for review.', 409);
   }
 
+  // Keep submitted_for_review_at/_by intact — reviewState() checks that field
+  // first, so clearing it would make a rejected draft read as 'none' (losing
+  // its Rejected chip, the rejection-reason banner, and its place in the
+  // moderation history). Rejection is expressed by rejection_reason + status.
   const updatedVerification = {
     ...(draft.verification ?? {}),
-    submitted_for_review_at: null,
-    submitted_for_review_by: null,
     rejection_reason: reason ?? null,
   };
 
