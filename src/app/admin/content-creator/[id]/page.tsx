@@ -20,6 +20,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { useParams } from "next/navigation";
+import { reviewState } from "@/lib/content-creator/types";
 import { useDraftDetail } from "./_hooks/useDraftDetail";
 import { DraftHeader }         from "./_components/DraftHeader";
 import { DraftBodyEditor }     from "./_components/DraftBodyEditor";
@@ -66,6 +67,28 @@ export default function DraftDetailPage() {
           {d.error}
         </div>
       )}
+
+      {(() => {
+        const rs = reviewState(d.draft);
+        if (rs === 'none') return null;
+        const v = d.draft.verification;
+        const style =
+          rs === 'approved' ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#065F46' }
+          : rs === 'rejected' ? { bg: '#FEF2F2', border: '#FECACA', color: '#991B1B' }
+          : { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' };
+        return (
+          <div style={{
+            marginBottom: 20, padding: '10px 14px', borderRadius: 8,
+            background: style.bg, border: `1px solid ${style.border}`, color: style.color, fontSize: 13,
+          }}>
+            {rs === 'pending' && <><strong>Submitted for review</strong> — pending approval.</>}
+            {rs === 'approved' && <><strong>Approved</strong>{v?.approved_by ? <> by {v.approved_by}</> : null}.</>}
+            {rs === 'rejected' && (
+              <><strong>Sent back in review.</strong>{v?.rejection_reason ? <> Reason: {v.rejection_reason}</> : null} Revise, then click <em>Resubmit for review</em>.</>
+            )}
+          </div>
+        );
+      })()}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -29,7 +29,7 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import { useState } from "react";
-import type { ContentDraft } from "@/lib/content-creator/types";
+import { reviewState, type ContentDraft } from "@/lib/content-creator/types";
 import { PLATFORM_CONFIG } from "@/lib/content-creator/platforms";
 import { DraftSpinner } from "./DraftSpinner";
 
@@ -97,6 +97,18 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
     (draft.brief?.include_title ?? true);
 
   const isFinalized = !!draft.verification?.approved_at;
+
+  // Submit-for-review button state, driven by the actual review STATE (not the
+  // raw submitted_for_review_at timestamp, which stays set after a rejection).
+  // Only a 'pending' draft is locked as "In review"; a rejected one must be
+  // resubmittable.
+  const rs = reviewState(draft);
+  const submitPending = rs === 'pending';
+  const submitLabel =
+    busy === 'submit-review' ? 'Submitting…'
+    : rs === 'pending'  ? 'In review'
+    : rs === 'rejected' ? 'Resubmit for review'
+    : 'Submit for review';
 
   async function submitFeedback() {
     const text = feedback.trim();
@@ -230,16 +242,12 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
             </button>
             <button
               onClick={onSubmitReview}
-              disabled={inFlight || !!draft.verification?.submitted_for_review_at}
+              disabled={inFlight || submitPending}
               className="swa-btn"
-              title="Submit this draft for moderator approval before publishing"
+              title="Submit this draft for review and approval before publishing"
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>rate_review</span>
-              {busy === 'submit-review'
-                ? 'Submitting…'
-                : draft.verification?.submitted_for_review_at
-                  ? 'In review'
-                  : 'Submit for review'}
+              {submitLabel}
             </button>
             <button
               onClick={() => setFeedbackOpen((v) => !v)}
@@ -259,16 +267,12 @@ export function DraftBodyEditor(props: DraftBodyEditorProps) {
           <>
             <button
               onClick={onSubmitReview}
-              disabled={inFlight || !!draft.verification?.submitted_for_review_at}
+              disabled={inFlight || submitPending}
               className="swa-btn swa-btn--primary"
-              title="Submit this draft for moderator approval before publishing"
+              title="Submit this draft for review and approval before publishing"
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>rate_review</span>
-              {busy === 'submit-review'
-                ? 'Submitting…'
-                : draft.verification?.submitted_for_review_at
-                  ? 'In review'
-                  : 'Submit for review'}
+              {submitLabel}
             </button>
             <button onClick={onFinalize} disabled={inFlight} className="swa-btn">
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>task_alt</span>
