@@ -25,8 +25,15 @@
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 import Link from "next/link";
-import type { ContentDraft } from "@/lib/content-creator/types";
+import { reviewState, REVIEW_STATE_LABEL, type ContentDraft } from "@/lib/content-creator/types";
 import { formatAuthor } from "@/lib/content-creator/author";
+
+/* Review-state chip colours (Pending review / Approved / Rejected). */
+const REVIEW_THEME: Record<'pending' | 'approved' | 'rejected', { bg: string; color: string }> = {
+  pending:  { bg: '#FEF3C7', color: '#92400E' },
+  approved: { bg: '#D1FAE5', color: '#065F46' },
+  rejected: { bg: '#FEE2E2', color: '#991B1B' },
+};
 
 /* ─── Status / type theming ───────────────────────────────────────────────
  * Colours mirror the existing StatusPill theme so a user glancing from the
@@ -138,6 +145,12 @@ export function ContentCard(props: ContentCardProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         <Chip bg={theme.bg} color={theme.color}>{theme.label}</Chip>
         <Chip bg="#F3F4F6" color="#374151">{typeLabel(draft)}</Chip>
+        {/* Review state — lets the author see whether a submission is pending,
+            approved, or was sent back. */}
+        {reviewState(draft) !== 'none' && (() => {
+          const rs = reviewState(draft) as 'pending' | 'approved' | 'rejected';
+          return <Chip bg={REVIEW_THEME[rs].bg} color={REVIEW_THEME[rs].color}>{REVIEW_STATE_LABEL[rs]}</Chip>;
+        })()}
 
         {isInFlight ? (
           <span

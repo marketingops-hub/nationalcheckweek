@@ -25,6 +25,7 @@ const EDITOR_PATHS = [
   '/admin/vault',
   '/admin/simple-content',
   '/admin/content-creator',
+  '/admin/content-moderation',    // editors submit AND review/approve each other's drafts
   '/admin/tutorial',
   '/admin/login',
 ];
@@ -40,7 +41,6 @@ const ADMIN_PATHS = [
   '/admin/home-page',
   '/admin/cms/menu',
   '/admin/cms/redirects',
-  '/admin/content-moderation',
   '/admin/prompts',
   '/admin/seo',
   '/admin/typography',

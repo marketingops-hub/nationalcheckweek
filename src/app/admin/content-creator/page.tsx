@@ -22,7 +22,7 @@ import Link from "next/link";
 import { listDrafts, getStats } from "@/lib/content-creator/client";
 import { adminFetch } from "@/lib/adminFetch";
 import { asJson } from "@/lib/content-creator/http";
-import type { ContentDraft, ContentStatus } from "@/lib/content-creator/types";
+import { reviewState, type ContentDraft, type ContentStatus } from "@/lib/content-creator/types";
 
 type StageSummary = {
   key: 'ideas' | 'drafts' | 'verified' | 'archived';
@@ -68,7 +68,9 @@ export default function ContentCreatorOverview() {
             count: s.statuses.reduce((sum, st) => sum + (counts[st] ?? 0), 0),
           })),
         );
-        setInReviewCount(modData.drafts.length);
+        // The moderation endpoint now returns approved/rejected too; the badge
+        // should reflect only what still needs action.
+        setInReviewCount(modData.drafts.filter((d) => reviewState(d) === 'pending').length);
         setRecent(recentRows.slice(0, 5));
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));

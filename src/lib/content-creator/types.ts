@@ -163,6 +163,25 @@ export interface VerificationResult {
   rejection_reason?: string | null;
 }
 
+/** A draft's position in the review→approve flow, derived from `verification`.
+ *  Deliberately ignores `status` (a rejected-then-resubmitted draft keeps
+ *  status='rejected' but should read as pending again once resubmitted). */
+export type ReviewState = 'none' | 'pending' | 'approved' | 'rejected';
+
+export function reviewState(d: { verification?: Partial<VerificationResult> | null }): ReviewState {
+  const v = d.verification;
+  if (!v?.submitted_for_review_at) return 'none';
+  if (v.approved_at)               return 'approved';
+  if (v.rejection_reason)          return 'rejected';
+  return 'pending';
+}
+
+export const REVIEW_STATE_LABEL: Record<Exclude<ReviewState, 'none'>, string> = {
+  pending:  'Pending review',
+  approved: 'Approved',
+  rejected: 'Rejected',
+};
+
 /**
  * The canonical draft shape. Mirrors the content_drafts row 1:1.
  * `title` is nullable because social posts never have one (DB CHECK enforces).
