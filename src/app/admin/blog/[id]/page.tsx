@@ -259,7 +259,11 @@ export default function EditBlogPostPage() {
                   </div>
                 )}
                 <p style={{ fontSize: '0.8rem', color: '#9CA3AF', margin: 0 }}>
-                  Blog posts publish only after approval. Save your edits, then submit for review.
+                  {rs === 'pending'
+                    ? 'Awaiting review — an approver will publish or send it back.'
+                    : rs === 'approved'
+                      ? 'Approved. Editing the content and saving will send it back for review before changes go live.'
+                      : 'Blog posts publish only after approval. Save your edits, then submit for review.'}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {canSubmit && (
