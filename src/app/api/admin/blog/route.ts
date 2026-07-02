@@ -85,8 +85,11 @@ export const POST = requireStaff(async (req: NextRequest) => {
       content: validatedData.content || null,
       feature_image: validatedData.feature_image || null,
       author: validatedData.author || null,
-      published: validatedData.published ?? false,
-      published_at: validatedData.published ? new Date().toISOString() : null,
+      // Approval gate: new posts always start unpublished, in 'draft' review
+      // state. Publishing only happens through the submit → approve flow.
+      published: false,
+      published_at: null,
+      review_status: 'draft',
       meta_title: validatedData.meta_title || null,
       meta_desc: validatedData.meta_desc || null,
       og_image: validatedData.og_image || null,

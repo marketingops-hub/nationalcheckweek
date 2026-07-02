@@ -14,9 +14,20 @@ interface BlogPost {
   author: string | null;
   published: boolean;
   published_at: string | null;
+  review_status?: 'draft' | 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string | null;
+  submitted_by?: string | null;
+  reviewed_by?: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const REVIEW_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  draft:    { bg: '#F3F4F6', color: '#374151', label: 'Draft' },
+  pending:  { bg: '#FEF3C7', color: '#92400E', label: 'Pending review' },
+  approved: { bg: '#D1FAE5', color: '#065F46', label: 'Approved — published' },
+  rejected: { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' },
+};
 
 export default function EditBlogPostPage() {
   const router = useRouter();
@@ -30,11 +41,13 @@ export default function EditBlogPostPage() {
     excerpt: "",
     content: "",
     author: "",
-    published: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [reviewBusy, setReviewBusy] = useState<string | null>(null);
+  const [rejectOpen, setRejectOpen]   = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -50,7 +63,6 @@ export default function EditBlogPostPage() {
             excerpt: d.post.excerpt || "",
             content: d.post.content || "",
             author: d.post.author || "",
-            published: d.post.published || false,
           });
         }
         setLoading(false);
@@ -93,6 +105,25 @@ export default function EditBlogPostPage() {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function doReviewAction(action: 'submit-review' | 'approve' | 'reject', body?: object) {
+    setReviewBusy(action); setError("");
+    try {
+      const res = await adminFetch(`/api/admin/blog/${id}/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `${action} failed`);
+      setPost(data.post);
+      setRejectOpen(false); setRejectReason("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `${action} failed`);
+    } finally {
+      setReviewBusy(null);
     }
   }
 
@@ -151,7 +182,7 @@ export default function EditBlogPostPage() {
               style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", display: "inline-flex", alignItems: "center", gap: 6 }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
-              {form.published ? "View on site" : "Preview"}
+              {post?.published ? "View on site" : "Preview"}
             </a>
           )}
           <button
@@ -211,18 +242,58 @@ export default function EditBlogPostPage() {
           />
         </div>
         <div>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-            <input
-              type="checkbox"
-              checked={form.published}
-              onChange={(e) => set("published", e.target.checked)}
-              style={{ width: 18, height: 18 }}
-            />
-            <span className="swa-form-label" style={{ marginBottom: 0 }}>Published</span>
-          </label>
-          <p style={{ fontSize: "0.8rem", color: "#9CA3AF", marginTop: 4 }}>
-            {form.published ? "This post is visible to the public" : "This post is a draft"}
-          </p>
+          {(() => {
+            const rs = post?.review_status ?? 'draft';
+            const st = REVIEW_STYLE[rs] ?? REVIEW_STYLE.draft;
+            const canSubmit = rs === 'draft' || rs === 'rejected';
+            const isPending = rs === 'pending';
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className="swa-form-label" style={{ marginBottom: 0 }}>Publication status</span>
+                  <span style={{ background: st.bg, color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 999, textTransform: 'uppercase' }}>{st.label}</span>
+                </div>
+                {rs === 'rejected' && post?.rejection_reason && (
+                  <div style={{ padding: '8px 12px', background: '#FEF2F2', borderRadius: 6, fontSize: 12, color: '#991B1B' }}>
+                    <strong>Sent back:</strong> {post.rejection_reason} — revise, then resubmit.
+                  </div>
+                )}
+                <p style={{ fontSize: '0.8rem', color: '#9CA3AF', margin: 0 }}>
+                  Blog posts publish only after approval. Save your edits, then submit for review.
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {canSubmit && (
+                    <button onClick={() => doReviewAction('submit-review')} disabled={!!reviewBusy} className="swa-btn swa-btn--primary" style={{ fontSize: 13 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>rate_review</span>
+                      {reviewBusy === 'submit-review' ? 'Submitting…' : rs === 'rejected' ? 'Resubmit for review' : 'Submit for review'}
+                    </button>
+                  )}
+                  {isPending && (
+                    <>
+                      <button onClick={() => doReviewAction('approve')} disabled={!!reviewBusy} className="swa-btn swa-btn--primary" style={{ fontSize: 13 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 15 }}>check_circle</span>
+                        {reviewBusy === 'approve' ? 'Approving…' : 'Approve & publish'}
+                      </button>
+                      <button onClick={() => setRejectOpen((v) => !v)} disabled={!!reviewBusy} className="swa-btn" style={{ fontSize: 13, color: '#DC2626' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 15 }}>cancel</span>
+                        {rejectOpen ? 'Cancel' : 'Reject'}
+                      </button>
+                    </>
+                  )}
+                </div>
+                {rejectOpen && (
+                  <div style={{ padding: 12, background: '#FEF2F2', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="Reason (shown to the author)…" style={{ padding: '8px 10px', border: '1px solid #FECACA', borderRadius: 6, fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }} />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button onClick={() => doReviewAction('reject', { reason: rejectReason.trim() })} disabled={!!reviewBusy} className="swa-btn" style={{ fontSize: 13, background: '#DC2626', color: '#fff', borderColor: '#DC2626' }}>
+                        {reviewBusy === 'reject' ? 'Rejecting…' : 'Confirm rejection'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -259,7 +330,7 @@ export default function EditBlogPostPage() {
             style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
-            {form.published ? "View on site" : "Preview"}
+            {post?.published ? "View on site" : "Preview"}
           </a>
         )}
         <button

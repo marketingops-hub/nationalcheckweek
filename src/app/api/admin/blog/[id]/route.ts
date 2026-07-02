@@ -23,11 +23,25 @@ export const PATCH = requireStaff(async (req: NextRequest, ctx?: RouteCtx) => {
   if (!parsed.ok) return parsed.response;
 
   const patch = { ...parsed.data, updated_at: new Date().toISOString() } as Record<string, unknown>;
+
+  const sb = adminClient();
+
+  // Approval gate: a post may only be set published=true once approved.
+  // Publishing otherwise must go through submit-review → approve.
+  if (parsed.data.published === true) {
+    const { data: cur } = await sb
+      .from('blog_posts').select('review_status').eq('id', id).single<{ review_status: string }>();
+    if (cur?.review_status !== 'approved') {
+      return NextResponse.json(
+        { error: 'This post must be approved before publishing — submit it for review first.' },
+        { status: 409 },
+      );
+    }
+  }
   if (parsed.data.published && !parsed.data.published_at) {
     patch.published_at = new Date().toISOString();
   }
 
-  const sb = adminClient();
   const { data, error } = await sb.from('blog_posts').update(patch).eq('id', id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   revalidateEntity('blog', data.slug);
