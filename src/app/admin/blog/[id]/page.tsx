@@ -25,7 +25,7 @@ interface BlogPost {
 const REVIEW_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   draft:    { bg: '#F3F4F6', color: '#374151', label: 'Draft' },
   pending:  { bg: '#FEF3C7', color: '#92400E', label: 'Pending review' },
-  approved: { bg: '#D1FAE5', color: '#065F46', label: 'Approved — published' },
+  approved: { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
   rejected: { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' },
 };
 
