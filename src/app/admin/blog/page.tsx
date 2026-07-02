@@ -11,14 +11,40 @@ interface BlogPost {
   excerpt: string | null;
   published: boolean;
   published_at: string | null;
+  review_status?: 'draft' | 'pending' | 'approved' | 'rejected';
   created_at: string;
   author: string | null;
+}
+
+type Filter = 'all' | 'pending' | 'published' | 'draft' | 'rejected';
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'all',       label: 'All' },
+  { key: 'pending',   label: 'Pending review' },
+  { key: 'published', label: 'Published' },
+  { key: 'draft',     label: 'Drafts' },
+  { key: 'rejected',  label: 'Rejected' },
+];
+
+/** review_status falls back for pre-migration rows. */
+function reviewOf(p: BlogPost): 'draft' | 'pending' | 'approved' | 'rejected' {
+  return p.review_status ?? (p.published ? 'approved' : 'draft');
+}
+
+function statusChip(p: BlogPost): { bg: string; color: string; label: string } {
+  if (p.published)              return { bg: '#D1FAE5', color: '#065F46', label: 'Published' };
+  const rs = reviewOf(p);
+  if (rs === 'pending')         return { bg: '#FEF3C7', color: '#92400E', label: 'Pending review' };
+  if (rs === 'rejected')        return { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' };
+  if (rs === 'approved')        return { bg: '#DBEAFE', color: '#1D4ED8', label: 'Approved · unpublished' };
+  return { bg: '#FFF7ED', color: '#EA580C', label: 'Draft' };
 }
 
 export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<Filter>('all');
+  const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
     adminFetch("/api/admin/blog?all=true")
@@ -46,6 +72,20 @@ export default function AdminBlogPage() {
     }
   }
 
+  async function approve(id: string) {
+    setBusy(id);
+    try {
+      const res = await adminFetch(`/api/admin/blog/${id}/approve`, { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Approve failed");
+      setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, ...d.post } : p)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Approve failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function deletePost(id: string, title: string) {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
     const prev = posts;
@@ -56,6 +96,13 @@ export default function AdminBlogPage() {
       setError("Failed to delete post");
     }
   }
+
+  const pendingCount = posts.filter((p) => reviewOf(p) === 'pending').length;
+  const filtered = posts.filter((p) => {
+    if (filter === 'all')       return true;
+    if (filter === 'published') return p.published;
+    return reviewOf(p) === filter;   // pending / draft / rejected
+  });
 
   return (
     <div>
@@ -74,6 +121,31 @@ export default function AdminBlogPage() {
 
       {error && <div className="swa-alert swa-alert--error" style={{ marginBottom: 20 }}>{error}</div>}
 
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className="swa-btn"
+            style={{
+              fontSize: 13,
+              background: filter === f.key ? "#1b4673" : "#fff",
+              color: filter === f.key ? "#fff" : "#374151",
+              border: "1px solid #E5E7EB",
+              fontWeight: filter === f.key ? 700 : 500,
+            }}
+          >
+            {f.label}
+            {f.key === "pending" && pendingCount > 0 && (
+              <span style={{ marginLeft: 6, background: "#FEF3C7", color: "#92400E", borderRadius: 999, padding: "0 7px", fontSize: 11, fontWeight: 700 }}>
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: "#9CA3AF" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 40, display: "block", marginBottom: 12 }}>
@@ -81,20 +153,24 @@ export default function AdminBlogPage() {
           </span>
           Loading posts…
         </div>
-      ) : posts.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF" }}>
           <span className="material-symbols-outlined" style={{ fontSize: 48, display: "block", marginBottom: 16 }}>
             article
           </span>
-          <h3 style={{ color: "#1b4673", marginBottom: 8 }}>No blog posts yet</h3>
-          <p style={{ marginBottom: 20 }}>Create your first blog post to get started.</p>
-          <Link href="/admin/blog/new" className="swa-btn swa-btn--primary">
-            Create a post
-          </Link>
+          <h3 style={{ color: "#1b4673", marginBottom: 8 }}>
+            {filter === 'all' ? 'No blog posts yet' : `No ${FILTERS.find((f) => f.key === filter)?.label.toLowerCase()} posts`}
+          </h3>
+          {filter === 'all' && (
+            <>
+              <p style={{ marginBottom: 20 }}>Create your first blog post to get started.</p>
+              <Link href="/admin/blog/new" className="swa-btn swa-btn--primary">Create a post</Link>
+            </>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {posts.map((post) => (
+          {filtered.map((post) => (
             <div
               key={post.id}
               style={{
@@ -111,21 +187,14 @@ export default function AdminBlogPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1b4673" }}>{post.title}</span>
-                  {!post.published && (
-                    <span
-                      style={{
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
-                        padding: "2px 8px",
-                        borderRadius: 100,
-                        background: "#FFF7ED",
-                        color: "#EA580C",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Draft
-                    </span>
-                  )}
+                  {(() => {
+                    const c = statusChip(post);
+                    return (
+                      <span style={{ fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, background: c.bg, color: c.color, textTransform: "uppercase" }}>
+                        {c.label}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "#9CA3AF" }}>
                   {post.excerpt && <span>{post.excerpt.substring(0, 120)}...</span>}
@@ -135,16 +204,32 @@ export default function AdminBlogPage() {
               </div>
 
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-                <button
-                  onClick={() => togglePublish(post.id, post.published)}
-                  title={post.published ? "Unpublish" : "Publish"}
-                  className="swa-icon-btn"
-                  style={{ color: post.published ? "#16A34A" : "#9CA3AF" }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                    {post.published ? "visibility" : "visibility_off"}
-                  </span>
-                </button>
+                {reviewOf(post) === 'pending' && (
+                  <button
+                    onClick={() => approve(post.id)}
+                    disabled={busy === post.id}
+                    className="swa-btn swa-btn--primary"
+                    style={{ fontSize: 12 }}
+                    title="Approve and publish this post"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check_circle</span>
+                    {busy === post.id ? "Approving…" : "Approve"}
+                  </button>
+                )}
+                {/* Publish/unpublish toggle only for approved posts — publishing
+                    anything else is gated behind the review flow. */}
+                {reviewOf(post) === 'approved' && (
+                  <button
+                    onClick={() => togglePublish(post.id, post.published)}
+                    title={post.published ? "Unpublish" : "Publish"}
+                    className="swa-icon-btn"
+                    style={{ color: post.published ? "#16A34A" : "#9CA3AF" }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                      {post.published ? "visibility" : "visibility_off"}
+                    </span>
+                  </button>
+                )}
                 <Link href={`/admin/blog/${post.id}`} className="swa-icon-btn" title="Edit">
                   <span className="material-symbols-outlined" style={{ fontSize: 18 }}>edit</span>
                 </Link>
