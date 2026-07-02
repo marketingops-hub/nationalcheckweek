@@ -79,6 +79,7 @@ export default function RewriteFromSource({ recordType, recordId, onApply }: Pro
   const [vaultDocs, setVaultDocs] = useState<VaultDoc[]>([]);
   const [loadingVault, setLoadingVault] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState('');
+  const [vaultSearch, setVaultSearch] = useState('');
 
   // Shared processing state
   const [uploading, setUploading] = useState(false);
@@ -95,7 +96,10 @@ export default function RewriteFromSource({ recordType, recordId, onApply }: Pro
   useEffect(() => {
     if (mode !== 'vault') return;
     setLoadingVault(true);
-    adminFetch('/api/admin/vault/documents?status=ready&limit=100')
+    // Fetch ALL docs (not just ready) so a just-added source shows up even
+    // while it's still indexing — with its status — instead of silently
+    // missing. Only 'ready' docs are selectable for a rewrite.
+    adminFetch('/api/admin/vault/documents?limit=200')
       .then(r => r.json())
       .then(d => setVaultDocs((d.documents ?? d.items ?? []) as VaultDoc[]))
       .catch(() => {})
@@ -298,14 +302,57 @@ export default function RewriteFromSource({ recordType, recordId, onApply }: Pro
           ) : (
             <>
               <div>
-                <label className="swa-label" style={{ marginBottom: 4, display: 'block' }}>Select a document from the Vault</label>
-                <select className="swa-form-input" value={selectedDocId} onChange={e => setSelectedDocId(e.target.value)}>
-                  <option value="">— choose a document —</option>
-                  {vaultDocs.map(d => (
-                    <option key={d.id} value={d.id}>{d.title} ({d.kind})</option>
-                  ))}
-                </select>
+                <label className="swa-label" style={{ marginBottom: 4, display: 'block' }}>Search the Vault for a source</label>
+                <input
+                  className="swa-form-input"
+                  value={vaultSearch}
+                  onChange={e => setVaultSearch(e.target.value)}
+                  placeholder="Type to filter by title — e.g. AIHW, suicide, self-harm"
+                  autoFocus
+                />
               </div>
+              {(() => {
+                const q = vaultSearch.trim().toLowerCase();
+                const matches = vaultDocs.filter(d => !q || d.title.toLowerCase().includes(q));
+                if (matches.length === 0) {
+                  return (
+                    <p style={{ fontSize: 13, color: 'var(--color-text-muted)', padding: '8px 2px' }}>
+                      {vaultDocs.length === 0
+                        ? 'No documents in the Vault yet.'
+                        : <>No sources match “{vaultSearch}”. If you just added it, it may still be indexing — check the Vault library.</>}
+                    </p>
+                  );
+                }
+                return (
+                  <div style={{ maxHeight: 280, overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: 8 }}>
+                    {matches.map(d => {
+                      const ready  = d.status === 'ready';
+                      const active = selectedDocId === d.id;
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => ready && setSelectedDocId(d.id)}
+                          disabled={!ready}
+                          title={ready ? d.title : `${d.title} — still ${d.status}; wait for it to finish indexing`}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                            width: '100%', textAlign: 'left', padding: '9px 12px',
+                            border: 'none', borderBottom: '1px solid var(--color-border)',
+                            background: active ? '#eff6ff' : 'transparent',
+                            cursor: ready ? 'pointer' : 'not-allowed', opacity: ready ? 1 : 0.6,
+                          }}
+                        >
+                          <span style={{ fontSize: 13, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {d.title} <span style={{ color: 'var(--color-text-muted)' }}>({d.kind})</span>
+                          </span>
+                          {!ready && <StatusChip status={d.status} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               <div>
                 <button className="swa-btn swa-btn--primary" onClick={handleSelectVaultDoc} disabled={!selectedDocId}>
                   Use this document
