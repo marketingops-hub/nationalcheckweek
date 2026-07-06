@@ -249,7 +249,7 @@ export default function EventPageClient({
               {/* Scroll-to-form CTA for past events with a gated recording */}
               {isPast && event.recording_url && !recordingUnlocked && (
                 <a href="#recording-gate" className="event-hero-register-cta">
-                  🎬 Watch recording ↓
+                  🎬 Register to Watch recording
                 </a>
               )}
             </div>
@@ -551,7 +551,7 @@ export default function EventPageClient({
                                   formId={RECORDING_GATE_FORM}
                                   containerId="recording-gate-form"
                                   onFormReady={() => setGateReady(true)}
-                                  onFormSubmit={handleRecordingFormSubmit}
+                                  onFormSubmitted={handleRecordingFormSubmit}
                                 />
                               </>
                             )}

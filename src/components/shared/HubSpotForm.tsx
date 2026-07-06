@@ -14,8 +14,14 @@ interface HubSpotFormProps {
   containerId?: string;
   /** Called once the HubSpot form iframe is ready */
   onFormReady?: ($form: HTMLFormElement) => void;
-  /** Called when the form is submitted */
+  /** Called when the form is submitted (fires BEFORE the POST is sent) */
   onFormSubmit?: ($form: HTMLFormElement, data: Record<string, unknown>) => void;
+  /**
+   * Called after submission completes (HubSpot's onFormSubmitted).
+   * Use this — not onFormSubmit — for anything that unmounts the form,
+   * otherwise the in-flight submit POST gets cancelled.
+   */
+  onFormSubmitted?: () => void;
   /** Lazy-load: only initialise the form when it scrolls into view */
   lazy?: boolean;
   /** IntersectionObserver rootMargin for lazy loading (default "100px") */
@@ -35,6 +41,7 @@ export default function HubSpotForm({
   containerId,
   onFormReady,
   onFormSubmit,
+  onFormSubmitted,
   lazy = false,
   lazyMargin = '100px',
 }: HubSpotFormProps) {
@@ -72,30 +79,39 @@ export default function HubSpotForm({
       onFormSubmit: ($form: HTMLFormElement, data: Record<string, unknown>) => {
         if (onFormSubmit) setTimeout(() => onFormSubmit($form, data), 0);
       },
+      onFormSubmitted: () => {
+        if (onFormSubmitted) setTimeout(onFormSubmitted, 0);
+      },
     });
-  }, [portalId, formId, region, targetId, markReady, onFormSubmit]);
+  }, [portalId, formId, region, targetId, markReady, onFormSubmit, onFormSubmitted]);
 
   // HubSpot iframes communicate via postMessage — this is the reliable
   // cross-iframe mechanism that fires even when onFormSubmit doesn't.
   useEffect(() => {
-    if (!onFormSubmit) return;
+    if (!onFormSubmit && !onFormSubmitted) return;
 
     const handleMessage = (event: MessageEvent) => {
       if (
-        typeof event.data === 'object' &&
-        event.data !== null &&
-        event.data.type === 'hsFormCallback' &&
-        event.data.eventName === 'onFormSubmit' &&
-        event.data.id === formId
+        typeof event.data !== 'object' ||
+        event.data === null ||
+        event.data.type !== 'hsFormCallback' ||
+        event.data.id !== formId
       ) {
+        return;
+      }
+
+      if (event.data.eventName === 'onFormSubmit' && onFormSubmit) {
         const data: Array<{ name: string; value: string }> = event.data.data ?? [];
         onFormSubmit(null as unknown as HTMLFormElement, data as unknown as Record<string, unknown>);
+      } else if (event.data.eventName === 'onFormSubmitted' && onFormSubmitted) {
+        // Fires after the submit POST completes — safe to unmount here.
+        onFormSubmitted();
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [formId, onFormSubmit]);
+  }, [formId, onFormSubmit, onFormSubmitted]);
 
   // Fallback: watch for HubSpot injecting content into the target div
   // in case onFormReady doesn't fire (observed in production).

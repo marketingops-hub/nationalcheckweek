@@ -9,6 +9,8 @@ interface HubSpotFormConfig {
   region?: string;
   onFormReady?: ($form: HTMLFormElement) => void;
   onFormSubmit?: ($form: HTMLFormElement, data: Record<string, unknown>) => void;
+  /** Fires after the submission POST completes (safe to unmount the form here). */
+  onFormSubmitted?: () => void;
 }
 
 interface HubSpotForms {
