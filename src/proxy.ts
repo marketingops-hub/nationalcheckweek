@@ -87,8 +87,12 @@ export async function proxy(request: NextRequest) {
 
   // ── 2. Auth + role protection — only runs for /admin routes ──────
 
-  // Always allow the login page through — no auth check, no redirect loop
-  if (pathname === '/admin/login') {
+  // Always allow the login page and the auth callback through — no auth check,
+  // no redirect loop. The callback verifies password-recovery / invite links
+  // server-side for users who are NOT signed in yet, so it must be reachable
+  // without a session (otherwise the guard bounces it to /admin/login and the
+  // token is never verified).
+  if (pathname === '/admin/login' || pathname === '/admin/auth/callback') {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
