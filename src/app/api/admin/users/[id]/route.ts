@@ -20,7 +20,7 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
       process.env.NEXT_PUBLIC_SITE_URL ?? "https://nationalcheckinweek.com";
 
     const { error } = await sb.auth.resetPasswordForEmail(parsed.data.email, {
-      redirectTo: `${siteUrl}/admin/login`,
+      redirectTo: `${siteUrl}/admin/auth/callback`,
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ ok: true });

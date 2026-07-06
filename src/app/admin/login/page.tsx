@@ -23,22 +23,28 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  // Handle the password-recovery link. Supabase redirects here with either a
-  // PKCE `?code=` (which the browser client exchanges for a session on load) or,
-  // for an expired/invalid link, an error in the query/hash. We capture those
-  // indicators BEFORE instantiating the client (it strips the code from the URL),
-  // then show the "set new password" form. onAuthStateChange is a backstop.
+  // Handle the password-recovery link. The /admin/auth/callback route verifies
+  // the link server-side, sets the session cookie, and redirects here with
+  // `?recovery=1` — that's our cue to show the "set new password" form. We also
+  // still support a raw PKCE `?code=` / recovery hash (same-browser fallback),
+  // and surface any error the callback passes back. onAuthStateChange is a
+  // backstop for the client-detected recovery event.
   useEffect(() => {
     const url = new URL(window.location.href);
     const hash = new URLSearchParams(window.location.hash.slice(1));
+    const isRecoveryFlag = url.searchParams.get('recovery') === '1';
     const hasCode = url.searchParams.has('code');
     const isRecoveryHash = hash.get('type') === 'recovery';
+    const errorParam = url.searchParams.get('error');
     const errorDesc =
       url.searchParams.get('error_description') ?? hash.get('error_description');
 
     if (errorDesc) {
       setError(errorDesc.replace(/\+/g, ' '));
-    } else if (hasCode || isRecoveryHash) {
+    } else if (errorParam && errorParam !== 'access_denied') {
+      // Full message passed by the callback route (already URL-decoded here).
+      setError(errorParam);
+    } else if (isRecoveryFlag || hasCode || isRecoveryHash) {
       setMode('recovery');
     }
 
@@ -104,7 +110,7 @@ export default function AdminLoginPage() {
     // the current origin so the link works in any environment.
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
-      { redirectTo: `${window.location.origin}/admin/login` }
+      { redirectTo: `${window.location.origin}/admin/auth/callback` }
     );
 
     setLoading(false);
