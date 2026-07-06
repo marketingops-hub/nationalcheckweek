@@ -16,8 +16,19 @@ export const PATCH = requireAdmin(async (req: NextRequest, ctx?: RouteCtx) => {
   const sb = adminClient();
 
   if ('send_reset' in parsed.data && parsed.data.send_reset) {
+    // Prefer the configured site URL; otherwise derive the origin from the
+    // request so the reset link points at the deployment the admin is using,
+    // not localhost. Only fall back to localhost as a last resort (dev).
+    const forwardedHost = req.headers.get("x-forwarded-host");
+    const forwardedProto = req.headers.get("x-forwarded-proto") ?? "https";
+    const requestOrigin = forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : req.nextUrl.origin;
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ?? requestOrigin ?? "http://localhost:3000";
+
     const { error } = await sb.auth.resetPasswordForEmail(parsed.data.email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/admin/login`,
+      redirectTo: `${siteUrl}/admin/login`,
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ ok: true });
