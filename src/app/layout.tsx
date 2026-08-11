@@ -75,6 +75,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://js-ap1.hsforms.net" />
         <link rel="dns-prefetch" href="https://f.vimeocdn.com" />
         <link rel="dns-prefetch" href="https://player.vimeo.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {/* HubSpot tracking — in <head> for verification and full-page coverage */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script type="text/javascript" id="hs-script-loader" async defer src="//js-ap1.hs-scripts.com/4596264.js" />
@@ -90,6 +91,19 @@ export default async function RootLayout({
       </head>
       <body>
         {children}
+        {/* Google Analytics (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-2FN4SH0011"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-2FN4SH0011');
+          `}
+        </Script>
         <Script
           src="https://lsgo-resources.s3.ap-southeast-2.amazonaws.com/utilities/lsgo_ac/lsgo_ac_global_v4.min.js"
           strategy="afterInteractive"
