@@ -1,14 +1,18 @@
-# Remote MCP Vault Connector — OAuth (fixed client id/secret)
+# Remote MCP Connector — OAuth (fixed client id/secret)
 
 An OAuth-protected MCP server served from this Next.js app. Claude (claude.ai /
 Desktop) adds it via *Settings › Connectors → Add custom connector*, you paste a
 **client id + client secret** into the Advanced fields, and staff sign in with
-their Supabase account to get **read-only** Vault access.
+their Supabase account to get **read-only** access to:
+
+- the research **Vault**
+- published **state / region / issue** content (same data as `/states`, `/areas`, `/issues`)
 
 - **Connector URL:** `https://<base>/api/mcp`
 - **OAuth:** `/oauth/authorize`, `/oauth/token` (no Dynamic Client Registration)
 - **Discovery:** `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`
-- **Tools:** `search_vault`, `list_documents`, `get_document`
+- **Vault tools:** `search_vault`, `list_documents`, `get_document`
+- **Geo tools:** `list_states`, `get_state`, `list_areas`, `get_area`, `list_issues`, `get_issue`
 
 **No database migration required** — the OAuth client is a single pre-shared
 credential (env), and authorization codes / access tokens / refresh tokens are
@@ -45,7 +49,7 @@ node scripts/mcp-selftest.mjs "$MCP_PUBLIC_BASE_URL"
 ```
 Checks discovery, the 401 challenge, bad-secret rejection, and the full
 code→token→MCP call + refresh (it mints a stateless code to stand in for the
-browser login).
+browser login). Also calls `list_states` to verify geo tools.
 
 ## Add to Claude
 
@@ -57,7 +61,10 @@ browser login).
 4. Claude discovers the OAuth server and opens `/oauth/authorize` in a browser
    tab (ngrok shows its "Visit Site" warning first) → staff login screen
 5. Sign in with an editor/admin/super_admin account → connected
-6. Try: *"Search the vault for teen anxiety statistics and cite sources."*
+6. Try:
+   - *"Search the vault for teen anxiety statistics and cite sources."*
+   - *"List published states, then show Victoria's priority issues and regions."*
+   - *"What does National Check-in Week say about bullying in NSW regions?"*
 
 ## Notes
 - Access tokens are short-lived (1h) JWTs bound to the MCP resource URL (`aud`);
@@ -71,3 +78,5 @@ browser login).
   it's retired in favour of OAuth.
 - Production: deploy to Vercel, set the same env vars (use your real domain as
   `MCP_PUBLIC_BASE_URL`), and add the connector with the same client id/secret.
+- Geo tools only return **published** states (and public areas/issues). They do
+  not write CMS content.

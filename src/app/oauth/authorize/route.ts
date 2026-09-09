@@ -52,16 +52,16 @@ button{width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;backgr
   );
 }
 
-const errorPage = (m: string) => html(`<div class="card"><div class="brand">🔒 Vault Connector</div>
+const errorPage = (m: string) => html(`<div class="card"><div class="brand">🔒 NCIW Connector</div>
   <div class="err">${esc(m)}</div><p class="sub">Close this window and try connecting again.</p></div>`, 400);
 
 function loginForm(p: P, error?: string): Response {
   const hidden = (Object.entries(p) as [string, string][])
     .map(([k, v]) => `<input type="hidden" name="${k}" value="${esc(v)}">`).join('');
   return html(`<form class="card" method="post" action="/oauth/authorize">
-    <div class="brand">🔒 Vault Connector</div>
+    <div class="brand">🔒 NCIW Connector</div>
     <h1>Sign in to connect</h1>
-    <p class="sub">Use your National Check-in Week staff account. Claude will get read-only access to the Vault.</p>
+    <p class="sub">Use your National Check-in Week staff account. Claude will get read-only access to the Vault and published state/region/issue data.</p>
     ${error ? `<div class="err">${esc(error)}</div>` : ''}
     <label>Email</label><input name="email" type="email" autocomplete="username" required autofocus>
     <label>Password</label><input name="password" type="password" autocomplete="current-password" required>

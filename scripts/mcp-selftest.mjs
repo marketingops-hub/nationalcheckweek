@@ -11,7 +11,8 @@
  *   4. mints a stateless auth code (same JWT secret the server uses), exchanges
  *      it at /oauth/token with the real client_secret + PKCE, then calls
  *      /api/mcp with the returned access token: initialize → tools/list →
- *      tools/call(list_documents). Also exercises the refresh_token grant.
+ *      tools/call(list_documents) + tools/call(list_states). Also exercises
+ *      the refresh_token grant.
  *
  * Step 4 stands in for the browser login so the whole token path is validated
  * without typing a password.
@@ -94,10 +95,13 @@ try {
     ok('initialize with access token', init.status === 200 && !!init.body.result, `status ${init.status}`);
     const tools = await rpc(access, 2, 'tools/list', {});
     const names = (tools.body?.result?.tools || []).map(t => t.name);
-    ok('tools/list returns vault tools', names.length >= 1, names.join(', '));
+    ok('tools/list returns vault + geo tools', names.includes('list_documents') && names.includes('list_states'), names.join(', '));
     const call = await rpc(access, 3, 'tools/call', { name: 'list_documents', arguments: { limit: 3 } });
     const txt = call.body?.result?.content?.[0]?.text || '';
     ok('tools/call list_documents returns data', txt.includes('documents') || txt.includes('total'), txt.slice(0, 70).replace(/\n/g, ' '));
+    const geo = await rpc(access, 4, 'tools/call', { name: 'list_states', arguments: {} });
+    const geoTxt = geo.body?.result?.content?.[0]?.text || '';
+    ok('tools/call list_states returns data', geoTxt.includes('states') || geoTxt.includes('slug'), geoTxt.slice(0, 70).replace(/\n/g, ' '));
   }
 
   if (tok.body.refresh_token) {

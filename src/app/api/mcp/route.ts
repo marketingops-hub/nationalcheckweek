@@ -1,20 +1,21 @@
 /**
- * NCIW Vault — MCP Connector endpoint
+ * NCIW MCP Connector endpoint
  *
  * Implements the MCP Streamable HTTP transport (spec 2024-11-05).
  * One URL, Bearer-token auth. Teammates add this URL in Claude → Settings →
- * Connectors and paste the MCP_API_KEY value as the Bearer token.
+ * Connectors (OAuth client id/secret, or legacy MCP_API_KEY Bearer).
  *
  * Tools exposed:
- *   search_vault    — semantic search via pgvector (OpenAI embeddings)
- *   list_documents  — browse the vault with optional filters
- *   get_document    — fetch a document + chunk preview by ID
+ *   search_vault / list_documents / get_document  — research vault
+ *   list_states / get_state / list_areas / get_area / list_issues / get_issue
+ *     — published state, region, and issue content (same as /states, /areas, /issues)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import OpenAI from 'openai';
 import { verifyAccessToken, MCP_BASE_URL } from '@/lib/mcp/oauth';
+import { GEO_TOOLS, callGeoTool } from '@/lib/mcp/geo-tools';
 
 // ─── Auth (OAuth 2.1 Bearer access token) ────────────────────────────────────
 
@@ -67,9 +68,10 @@ const TOOLS = [
   {
     name: 'search_vault',
     description:
-      'Semantically search the NCIW vault. Returns the most relevant document chunks ' +
-      'ranked by cosine similarity. Use this to find research, statistics, resources, ' +
-      'or any content stored in the vault.',
+      'Search the NCIW vault for research, statistics, resources, or other stored content. ' +
+      'Prefers semantic (embedding) search; if embeddings are unavailable it falls back to ' +
+      'Postgres full-text over chunk bodies (not just titles). Pass document_id to search ' +
+      'inside a large document (hundreds of chunks) instead of reading front matter.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -81,6 +83,10 @@ const TOOLS = [
         category: {
           type: 'string',
           description: 'Optional: restrict to a specific category',
+        },
+        document_id: {
+          type: 'string',
+          description: 'Optional: restrict search to a single vault document UUID',
         },
       },
       required: ['query'],
@@ -114,95 +120,256 @@ const TOOLS = [
   {
     name: 'get_document',
     description:
-      'Retrieve a specific vault document by ID, including full citation metadata ' +
-      'and a preview of the first 10 chunks.',
+      'Retrieve a specific vault document by ID, including citation metadata and a ' +
+      'page of chunks. Default is the first 10 chunks (front matter on large PDFs). ' +
+      'Use offset to page through later chunks, or search to filter chunks by keyword ' +
+      'inside this document. Prefer search_vault with document_id for targeted findings.',
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Document UUID' },
+        offset: {
+          type: 'number',
+          description: 'Chunk index to start from (default 0)',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max chunks to return (default 10, max 30)',
+        },
+        search: {
+          type: 'string',
+          description: 'Optional keyword filter applied to chunk content',
+        },
       },
       required: ['id'],
     },
   },
+  ...GEO_TOOLS,
 ];
 
 // ─── Tool implementations ──────────────────────────────────────────────────
+
+type VaultDocMeta = {
+  id: string;
+  author: string | null;
+  year: number | null;
+  source_url: string | null;
+  reference: string | null;
+};
+
+async function enrichDocs(
+  db: ReturnType<typeof adminClient>,
+  docIds: string[],
+): Promise<Record<string, VaultDocMeta>> {
+  if (docIds.length === 0) return {};
+  const { data: docs } = await db
+    .from('vault_documents')
+    .select('id, author, year, source_url, reference')
+    .in('id', docIds);
+  return Object.fromEntries((docs ?? []).map((d) => [d.id, d]));
+}
+
+function embedFailureNote(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const status =
+    err && typeof err === 'object' && 'status' in err
+      ? Number((err as { status?: number }).status)
+      : undefined;
+  if (status === 429 || /insufficient_quota|quota|credits remaining/i.test(raw)) {
+    return 'OpenAI embeddings quota/credits exhausted (429). Search used full-text over chunk bodies instead. Top up the OPENAI_API_KEY account to restore semantic search.';
+  }
+  return `Semantic search unavailable (${raw.slice(0, 180)}). Search used full-text over chunk bodies instead.`;
+}
+
+function queryTokens(query: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of query.toLowerCase().split(/[^a-z0-9]+/i)) {
+    if (t.length >= 3 && !seen.has(t)) {
+      seen.add(t);
+      out.push(t);
+    }
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+
+async function keywordSearchVault(
+  db: ReturnType<typeof adminClient>,
+  opts: {
+    query: string;
+    k: number;
+    category?: string;
+    document_id?: string;
+    reason?: string;
+  },
+): Promise<object> {
+  const { query, k, category, document_id, reason } = opts;
+  const tokens = queryTokens(query);
+
+  let fts = db
+    .from('vault_chunks')
+    .select(
+      'id, content, chunk_index, page, heading, document_id, vault_documents!inner(id, title, kind, status, author, year, source_url, reference)',
+    )
+    .eq('vault_documents.status', 'ready')
+    .limit(Math.min(Math.max(k * 6, 24), 80));
+
+  if (category) fts = fts.eq('vault_documents.category', category);
+  if (document_id) fts = fts.eq('document_id', document_id);
+
+  let rows: Record<string, unknown>[] | null = null;
+  const ftsRes = await fts.textSearch('content', query, {
+    type: 'websearch',
+    config: 'english',
+  });
+  if (!ftsRes.error && ftsRes.data?.length) {
+    rows = ftsRes.data as Record<string, unknown>[];
+  } else if (tokens.length > 0) {
+    let ilike = db
+      .from('vault_chunks')
+      .select(
+        'id, content, chunk_index, page, heading, document_id, vault_documents!inner(id, title, kind, status, author, year, source_url, reference)',
+      )
+      .eq('vault_documents.status', 'ready')
+      .or(tokens.map((t) => `content.ilike.%${t.replace(/[%_,]/g, '')}%`).join(','))
+      .limit(document_id ? 200 : 80);
+    if (category) ilike = ilike.eq('vault_documents.category', category);
+    if (document_id) ilike = ilike.eq('document_id', document_id);
+    const ilikeRes = await ilike;
+    if (ilikeRes.error) throw new Error(ilikeRes.error.message);
+    rows = (ilikeRes.data ?? []) as Record<string, unknown>[];
+  }
+
+  type DocJoin = {
+    title?: string;
+    kind?: string;
+    author?: string | null;
+    year?: number | null;
+    source_url?: string | null;
+    reference?: string | null;
+  };
+
+  const scored = (rows ?? []).map((row) => {
+    const docRaw = row.vault_documents;
+    const doc = (Array.isArray(docRaw) ? docRaw[0] : docRaw) as DocJoin | undefined;
+    const hay = `${doc?.title ?? ''}\n${row.content ?? ''}`.toLowerCase();
+    let score = 0;
+    for (const t of tokens) {
+      if (hay.includes(t)) score += 1;
+      if ((doc?.title ?? '').toLowerCase().includes(t)) score += 2;
+    }
+    return {
+      score,
+      document_id: row.document_id as string,
+      title: doc?.title ?? 'Untitled',
+      kind: doc?.kind ?? '',
+      author: doc?.author ?? null,
+      year: doc?.year ?? null,
+      source_url: doc?.source_url ?? null,
+      reference: doc?.reference ?? null,
+      page: (row.page as number | null) ?? null,
+      heading: (row.heading as string | null) ?? null,
+      chunk_index: (row.chunk_index as number | null) ?? null,
+      content: row.content as string,
+    };
+  });
+
+  const results = scored
+    .filter((r) => tokens.length === 0 || r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k);
+
+  return {
+    query,
+    mode: 'keyword_fallback',
+    note: reason ?? 'Full-text search over chunk bodies (embeddings not used).',
+    results,
+  };
+}
 
 async function toolSearchVault(args: {
   query: string;
   limit?: number;
   category?: string;
+  document_id?: string;
 }): Promise<object> {
-  const { query, limit = 8, category } = args;
+  const { query, limit = 8, category, document_id } = args;
   const k = Math.min(limit, 20);
   const db = adminClient();
 
+  // Document-scoped search skips embeddings: match_vault_chunks has no
+  // document_id filter, and FTS already hits the body of a 400+ chunk PDF.
   const apiKey = process.env.OPENAI_API_KEY;
-  if (apiKey) {
-    const openai = new OpenAI({ apiKey });
-    const res = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: query,
-    });
-    const embedding = res.data[0].embedding;
+  if (apiKey && !document_id) {
+    try {
+      const openai = new OpenAI({ apiKey });
+      const res = await openai.embeddings.create({
+        model: 'text-embedding-3-small',
+        input: query,
+      });
+      const embedding = res.data[0].embedding;
 
-    const { data, error } = await db.rpc('match_vault_chunks', {
-      query_embedding: embedding,
-      match_k: k,
-      min_similarity: 0.25,
-      category_filter: category ?? null,
-    });
-    if (error) throw new Error(error.message);
+      const { data, error } = await db.rpc('match_vault_chunks', {
+        query_embedding: embedding,
+        match_k: k,
+        min_similarity: 0.25,
+        category_filter: category ?? null,
+      });
+      if (error) throw new Error(error.message);
 
-    // Enrich with citation fields not returned by the RPC
-    const docIds = [...new Set((data as { document_id: string }[]).map((r) => r.document_id))];
-    const { data: docs } = await db
-      .from('vault_documents')
-      .select('id, author, year, source_url, reference, page_ref, publisher')
-      .in('id', docIds);
-    const docMap = Object.fromEntries((docs ?? []).map((d) => [d.id, d]));
+      const rows = (data ?? []) as {
+        chunk_id: string;
+        document_id: string;
+        document_title: string;
+        document_kind: string;
+        chunk_page?: number | null;
+        chunk_heading?: string | null;
+        content: string;
+        similarity: number;
+      }[];
 
-    const results = (data as {
-      chunk_id: string;
-      document_id: string;
-      document_title: string;
-      document_source: string | null;
-      document_kind: string;
-      content: string;
-      similarity: number;
-    }[]).map((r) => {
-      const meta = docMap[r.document_id] ?? {};
-      return {
-        score: Math.round(r.similarity * 1000) / 1000,
-        document_id: r.document_id,
-        title: r.document_title,
-        kind: r.document_kind,
-        author: meta.author ?? null,
-        year: meta.year ?? null,
-        source_url: meta.source_url ?? null,
-        reference: meta.reference ?? null,
-        content: r.content,
-      };
-    });
-
-    return { query, mode: 'semantic', results };
+      if (rows.length > 0) {
+        const docMap = await enrichDocs(db, [...new Set(rows.map((r) => r.document_id))]);
+        const results = rows.map((r) => {
+          const meta = docMap[r.document_id] ?? {};
+          return {
+            score: Math.round(r.similarity * 1000) / 1000,
+            document_id: r.document_id,
+            title: r.document_title,
+            kind: r.document_kind,
+            author: meta.author ?? null,
+            year: meta.year ?? null,
+            source_url: meta.source_url ?? null,
+            reference: meta.reference ?? null,
+            page: r.chunk_page ?? null,
+            heading: r.chunk_heading ?? null,
+            content: r.content,
+          };
+        });
+        return { query, mode: 'semantic', results };
+      }
+    } catch (err) {
+      return keywordSearchVault(db, {
+        query,
+        k,
+        category,
+        reason: embedFailureNote(err),
+      });
+    }
   }
 
-  // Fallback: keyword search on title when no OpenAI key
-  const { data, error } = await db
-    .from('vault_documents')
-    .select('id, title, kind, category, author, year, source_url, reference')
-    .eq('status', 'ready')
-    .ilike('title', `%${query}%`)
-    .limit(k);
-  if (error) throw new Error(error.message);
-
-  return {
+  return keywordSearchVault(db, {
     query,
-    mode: 'keyword_fallback',
-    note: 'Set OPENAI_API_KEY for semantic search',
-    results: data ?? [],
-  };
+    k,
+    category,
+    document_id,
+    reason: document_id
+      ? 'Full-text search inside the requested document.'
+      : apiKey
+        ? 'Semantic search returned no matches; used full-text over chunk bodies.'
+        : 'Set OPENAI_API_KEY for semantic search. Used full-text over chunk bodies.',
+  });
 }
 
 async function toolListDocuments(args: {
@@ -232,29 +399,54 @@ async function toolListDocuments(args: {
   return { total: data?.length ?? 0, documents: data ?? [] };
 }
 
-async function toolGetDocument(args: { id: string }): Promise<object> {
+async function toolGetDocument(args: {
+  id: string;
+  offset?: number;
+  limit?: number;
+  search?: string;
+}): Promise<object> {
   const db = adminClient();
-  const [{ data: doc, error: docErr }, { data: chunks, error: chunkErr }] =
-    await Promise.all([
-      db
-        .from('vault_documents')
-        .select(
-          'id, title, kind, category, tags, author, publisher, year, source_url, reference, page_ref, status, chunk_count, char_count, token_count, page_count, created_at',
-        )
-        .eq('id', args.id)
-        .single(),
-      db
-        .from('vault_chunks')
-        .select('chunk_index, content, token_count')
-        .eq('document_id', args.id)
-        .order('chunk_index')
-        .limit(10),
-    ]);
+  const offset = Math.max(0, Math.floor(args.offset ?? 0));
+  const limit = Math.min(Math.max(1, Math.floor(args.limit ?? 10)), 30);
+  const search = args.search?.trim() || undefined;
 
+  const { data: doc, error: docErr } = await db
+    .from('vault_documents')
+    .select(
+      'id, title, kind, category, tags, author, publisher, year, source_url, reference, page_ref, status, chunk_count, char_count, token_count, page_count, created_at',
+    )
+    .eq('id', args.id)
+    .single();
   if (docErr) throw new Error(docErr.message);
+
+  let chunkQ = db
+    .from('vault_chunks')
+    .select('chunk_index, page, heading, content, token_count')
+    .eq('document_id', args.id)
+    .order('chunk_index')
+    .range(offset, offset + limit - 1);
+
+  if (search) {
+    chunkQ = chunkQ.textSearch('content', search, {
+      type: 'websearch',
+      config: 'english',
+    });
+  }
+
+  const { data: chunks, error: chunkErr } = await chunkQ;
   if (chunkErr) throw new Error(chunkErr.message);
 
-  return { document: doc, chunk_preview: chunks ?? [] };
+  const returned = chunks?.length ?? 0;
+  const total = (doc?.chunk_count as number | null) ?? 0;
+
+  return {
+    document: doc,
+    chunk_preview: chunks ?? [],
+    chunk_offset: offset,
+    chunk_limit: limit,
+    chunks_returned: returned,
+    has_more: search ? returned === limit : offset + returned < total,
+  };
 }
 
 // ─── MCP request dispatcher ────────────────────────────────────────────────
@@ -296,7 +488,7 @@ async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
         return respond({
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'nciw-vault', version: '1.0.0' },
+          serverInfo: { name: 'nciw-mcp', version: '1.1.0' },
         });
 
       case 'ping':
@@ -317,7 +509,9 @@ async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
         } else if (name === 'get_document') {
           result = await toolGetDocument(args as Parameters<typeof toolGetDocument>[0]);
         } else {
-          return error(-32602, `Unknown tool: ${name}`);
+          const geo = await callGeoTool(name, args);
+          if (!geo) return error(-32602, `Unknown tool: ${name}`);
+          result = geo;
         }
 
         return respond({
@@ -370,7 +564,7 @@ export async function handleGET(req: NextRequest, urlKey?: string) {
     return unauthorized();
   }
   return NextResponse.json(
-    { name: 'nciw-vault', version: '1.0.0', protocol: 'mcp/2024-11-05' },
+    { name: 'nciw-mcp', version: '1.1.0', protocol: 'mcp/2024-11-05' },
     { headers: CORS },
   );
 }
