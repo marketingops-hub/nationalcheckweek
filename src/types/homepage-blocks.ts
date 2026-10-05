@@ -86,6 +86,12 @@ export interface HeroBlockContent {
     emoji: string;
     text: string;
   };
+  /** When true, hero renders the countdown timer using countdownTarget. */
+  showCountdown?: boolean;
+  /** ISO-8601 datetime the countdown counts down to (e.g. 2026-05-25T00:00:00+10:00). */
+  countdownTarget?: string;
+  /** Label shown above the countdown (e.g. "Countdown to the event"). */
+  countdownLabel?: string;
   colors?: BlockColors;
 }
 

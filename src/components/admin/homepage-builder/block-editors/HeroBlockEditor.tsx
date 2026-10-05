@@ -6,6 +6,7 @@
  * - Primary and secondary CTA buttons
  * - Background image
  * - Badge with emoji and text
+ * - Event date / countdown timer (date change auto-updates countdown)
  * - Inline color customization
  * 
  * @component
@@ -14,16 +15,22 @@
 import React from "react";
 import ImageUpload from "../../ImageUpload";
 import type { HeroBlockContent } from "@/types/homepage-blocks";
-import { TextInput, TextArea, ColorPicker } from "@/components/admin/forms";
+import { TextInput, TextArea, ColorPicker, FormGroup } from "@/components/admin/forms";
+import {
+  countdownTargetToDate,
+  dateToCountdownTarget,
+  updateBadgeDateText,
+} from "@/lib/countdown";
 
 interface HeroBlockEditorProps {
   content: HeroBlockContent;
-  onChange: (key: string, value: unknown) => void;
+  onChange: (keyOrPatch: string | Record<string, unknown>, value?: unknown) => void;
 }
 
 export const HeroBlockEditor: React.FC<HeroBlockEditorProps> = ({ content, onChange }) => {
   const colors = content.colors || {};
   const useGlobalColors = colors.useGlobalColors !== false;
+  const eventDate = countdownTargetToDate(content.countdownTarget);
 
   const handleColorChange = (colorKey: string, value: string) => {
     onChange("colors", {
@@ -36,6 +43,24 @@ export const HeroBlockEditor: React.FC<HeroBlockEditorProps> = ({ content, onCha
     onChange("colors", {
       ...colors,
       useGlobalColors: checked,
+    });
+  };
+
+  /** Changing the event date updates countdownTarget and the badge date text. */
+  const handleEventDateChange = (dateYmd: string) => {
+    if (!dateYmd) {
+      onChange({ countdownTarget: "" });
+      return;
+    }
+    onChange({
+      countdownTarget: dateToCountdownTarget(dateYmd, content.countdownTarget),
+      showCountdown: true,
+      countdownLabel: content.countdownLabel || "Countdown to the event",
+      badge: {
+        ...content.badge,
+        emoji: content.badge?.emoji || "📅",
+        text: updateBadgeDateText(content.badge?.text, dateYmd),
+      },
     });
   };
 
@@ -69,7 +94,49 @@ export const HeroBlockEditor: React.FC<HeroBlockEditorProps> = ({ content, onCha
         value={content.badge?.text || ""}
         onChange={(value) => onChange("badge", { ...content.badge, text: value })}
         placeholder="25 May 2026 · Australia"
+        helpText="Auto-updates when you change the event date below (location after · is kept)."
       />
+
+      {/* Event date → countdown */}
+      <div style={{ marginTop: 8, paddingTop: 24, borderTop: "2px solid var(--color-border)" }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>timer</span>
+          Event Date &amp; Countdown
+        </h3>
+
+        <TextInput
+          label="Event Date"
+          type="date"
+          value={eventDate}
+          onChange={handleEventDateChange}
+          helpText="Changing this date automatically adjusts the countdown timer on the homepage."
+        />
+
+        <FormGroup label="Show Countdown">
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={content.showCountdown === true}
+              onChange={(e) => onChange("showCountdown", e.target.checked)}
+              style={{ width: 18, height: 18 }}
+            />
+            <span>Display countdown timer in the hero</span>
+          </label>
+        </FormGroup>
+
+        <TextInput
+          label="Countdown Label"
+          value={content.countdownLabel || ""}
+          onChange={(value) => onChange("countdownLabel", value)}
+          placeholder="Countdown to the event"
+        />
+
+        {content.countdownTarget && (
+          <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginTop: 4 }}>
+            Countdown target: <code>{content.countdownTarget}</code>
+          </p>
+        )}
+      </div>
 
       <TextInput
         label="Primary CTA Text"

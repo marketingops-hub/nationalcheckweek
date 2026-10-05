@@ -20,7 +20,7 @@
 
 import { SignJWT } from 'jose';
 
-const BASE = (process.argv[2] || process.env.MCP_PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+const BASE = (process.argv[2] || process.env.MCP_PUBLIC_BASE_URL || 'http://localhost:4000').replace(/\/+$/, '');
 const RESOURCE_BASE = (process.env.MCP_PUBLIC_BASE_URL || BASE).replace(/\/+$/, '');
 const RESOURCE = `${RESOURCE_BASE}/api/mcp`;
 const MCP_URL = `${BASE}/api/mcp`;

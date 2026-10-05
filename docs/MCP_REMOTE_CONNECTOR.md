@@ -37,8 +37,8 @@ MCP_OAUTH_JWT_SECRET=<long random string — signs all JWTs>
 
 ```bash
 # Node 18+ (Next 16). Then:
-npm run dev          # http://localhost:3000
-ngrok http 3000      # https://XXXX.ngrok-free.app  → set as MCP_PUBLIC_BASE_URL, restart dev
+npm run dev          # http://localhost:4000
+ngrok http 4000      # https://XXXX.ngrok-free.app  → set as MCP_PUBLIC_BASE_URL, restart dev
 ```
 
 ## Self-test before Claude

@@ -3,6 +3,11 @@
 import ColorPicker from "../ColorPicker";
 import ImageUpload from "../ImageUpload";
 import type { HeroSettings } from "./types";
+import {
+  countdownTargetToDate,
+  dateToCountdownTarget,
+  formatEventDateBadge,
+} from "@/lib/countdown";
 
 interface HeroTabProps {
   /** Current hero section settings */
@@ -84,12 +89,32 @@ export default function HeroTab({ settings, onChange, onSave, saving }: HeroTabP
             <div>
               <label className="swa-form-label">Event Date</label>
               <input
-                type="text"
-                value={settings.event_date || ""}
-                onChange={(e) => onChange({ ...settings, event_date: e.target.value })}
+                type="date"
+                value={countdownTargetToDate(settings.countdown_target_date) || ""}
+                onChange={(e) => {
+                  const dateYmd = e.target.value;
+                  if (!dateYmd) {
+                    onChange({ ...settings, event_date: "", countdown_target_date: "" });
+                    return;
+                  }
+                  onChange({
+                    ...settings,
+                    event_date: formatEventDateBadge(dateYmd),
+                    countdown_target_date: dateToCountdownTarget(
+                      dateYmd,
+                      settings.countdown_target_date
+                    ),
+                    show_countdown: true,
+                  });
+                }}
                 className="swa-form-input"
-                placeholder="25 May 2026"
+                aria-label="Event date"
+                data-testid="event-date-input"
               />
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
+                Updates the countdown timer automatically.
+                {settings.event_date ? ` Display: ${settings.event_date}` : ""}
+              </p>
             </div>
             <div>
               <label className="swa-form-label">Location</label>
@@ -204,14 +229,20 @@ export default function HeroTab({ settings, onChange, onSave, saving }: HeroTabP
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Countdown Timer</h3>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             <div>
-              <label className="swa-form-label">Target Date (ISO 8601)</label>
+              <label className="swa-form-label">Target Date (auto from Event Date)</label>
               <input
                 type="text"
                 value={settings.countdown_target_date || ""}
-                onChange={(e) => onChange({ ...settings, countdown_target_date: e.target.value })}
+                readOnly
                 className="swa-form-input"
-                placeholder="2026-05-25T00:00:00+10:00"
+                placeholder="Set via Event Date above"
+                aria-label="Countdown target date"
+                data-testid="countdown-target-input"
+                style={{ opacity: 0.75, cursor: "default" }}
               />
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 6 }}>
+                Derived from the Event Date (midnight AEST / +10:00).
+              </p>
             </div>
             <div>
               <label className="swa-form-label">Show Countdown</label>

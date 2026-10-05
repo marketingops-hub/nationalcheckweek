@@ -18,7 +18,7 @@ export async function getIssues(): Promise<Issue[]> {
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/issues`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:4000'}/api/issues`, {
       next: { revalidate: 3600 }
     });
 

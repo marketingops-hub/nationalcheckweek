@@ -8,7 +8,7 @@ interface TextInputProps {
   placeholder?: string;
   required?: boolean;
   helpText?: string;
-  type?: 'text' | 'email' | 'url' | 'number';
+  type?: 'text' | 'email' | 'url' | 'number' | 'date' | 'time';
   maxLength?: number;
 }
 

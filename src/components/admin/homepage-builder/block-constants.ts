@@ -23,7 +23,7 @@ import {
 
 /** Single source of truth for all supported homepage block types. */
 export const HOMEPAGE_BLOCK_DEFS: Array<{ type: BlockType; label: string; defaultContent: BlockContent }> = [
-  { type: "hero",                 label: "Hero",                  defaultContent: { heading: "New Hero Section", subheading: "", primaryCTA: { text: "Get Started", link: "/" }, secondaryCTA: { text: "", link: "" }, backgroundImage: "" } },
+  { type: "hero",                 label: "Hero",                  defaultContent: { heading: "New Hero Section", subheading: "", primaryCTA: { text: "Get Started", link: "/" }, secondaryCTA: { text: "", link: "" }, backgroundImage: "", showCountdown: true, countdownTarget: "2026-05-25T00:00:00+10:00", countdownLabel: "Countdown to the event" } },
   { type: "stats",                label: "Stats",                 defaultContent: { stats: [{ value: "0", label: "Label" }] } },
   { type: "cta",                  label: "CTA",                   defaultContent: { eyebrow: "", heading: "Take Action", description: "", primaryCTA: { text: "Learn More", link: "/" }, secondaryCTA: { text: "", link: "" }, backgroundColor: "#6366f1", textColor: "#ffffff" } },
   { type: "welcome",              label: "Welcome",               defaultContent: { eyebrow: "", heading: "Welcome", description: "", longDescription: "" } },
@@ -78,7 +78,12 @@ export const BLOCK_ICONS: Record<BlockType, string> = {
  * Editor component registry — maps block_type to its inline editor.
  * To add a new editor: add one line here + create the editor component.
  */
-export const EDITOR_REGISTRY: Partial<Record<BlockType, ComponentType<{ content: any; onChange: (key: string, value: unknown) => void }>>> = {
+export type BlockEditorOnChange = (
+  keyOrPatch: string | Record<string, unknown>,
+  value?: unknown
+) => void;
+
+export const EDITOR_REGISTRY: Partial<Record<BlockType, ComponentType<{ content: any; onChange: BlockEditorOnChange }>>> = {
   hero:                 HeroBlockEditor,
   stats:                StatsBlockEditor,
   cta:                  CTABlockEditor,

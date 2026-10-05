@@ -30,8 +30,12 @@ const HomepageBlockItem = memo(({
 
   useEffect(() => { setEditedContent(block.content); }, [block.id]);
 
-  const updateContent = useCallback((key: string, value: unknown) => {
-    setEditedContent(prev => ({ ...prev, [key]: value }));
+  const updateContent = useCallback((keyOrPatch: string | Record<string, unknown>, value?: unknown) => {
+    if (typeof keyOrPatch === "string") {
+      setEditedContent(prev => ({ ...prev, [keyOrPatch]: value }));
+      return;
+    }
+    setEditedContent(prev => ({ ...prev, ...keyOrPatch }));
   }, []);
 
   const handleSave = async () => {
