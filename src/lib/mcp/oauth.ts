@@ -28,7 +28,9 @@ export const MCP_BASE_URL  = (process.env.MCP_PUBLIC_BASE_URL ?? '').replace(/\/
 export const MCP_ENDPOINT  = '/api/mcp';
 export const MCP_RESOURCE  = `${MCP_BASE_URL}${MCP_ENDPOINT}`;
 export const MCP_ISSUER    = MCP_BASE_URL;
-export const MCP_SCOPE     = 'vault:read';
+/** Default scopes granted on authorize. Includes write so Claude can upload. */
+export const MCP_SCOPE     = 'vault:read vault:write';
+export const MCP_SCOPES_SUPPORTED = ['vault:read', 'vault:write'] as const;
 
 export const MCP_CLIENT_ID     = process.env.MCP_OAUTH_CLIENT_ID ?? '';
 export const MCP_CLIENT_SECRET = process.env.MCP_OAUTH_CLIENT_SECRET ?? '';

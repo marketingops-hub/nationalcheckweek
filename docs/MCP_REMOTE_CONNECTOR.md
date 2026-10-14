@@ -3,15 +3,17 @@
 An OAuth-protected MCP server served from this Next.js app. Claude (claude.ai /
 Desktop) adds it via *Settings › Connectors → Add custom connector*, you paste a
 **client id + client secret** into the Advanced fields, and staff sign in with
-their Supabase account to get **read-only** access to:
+their Supabase account to get Vault **read + upload** access and published
+geo content:
 
-- the research **Vault**
+- the research **Vault** (search / list / get / upload)
 - published **state / region / issue** content (same data as `/states`, `/areas`, `/issues`)
 
 - **Connector URL:** `https://<base>/api/mcp`
 - **OAuth:** `/oauth/authorize`, `/oauth/token` (no Dynamic Client Registration)
 - **Discovery:** `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`
-- **Vault tools:** `search_vault`, `list_documents`, `get_document`
+- **Scopes:** `vault:read`, `vault:write`
+- **Vault tools:** `search_vault`, `list_documents`, `get_document`, `upload_vault_document`
 - **Geo tools:** `list_states`, `get_state`, `list_areas`, `get_area`, `list_issues`, `get_issue`
 
 **No database migration required** — the OAuth client is a single pre-shared
@@ -65,6 +67,25 @@ browser login). Also calls `list_states` to verify geo tools.
    - *"Search the vault for teen anxiety statistics and cite sources."*
    - *"List published states, then show Victoria's priority issues and regions."*
    - *"What does National Check-in Week say about bullying in NSW regions?"*
+   - *"Upload this research note to the vault — ask me for a title and tags first."*
+
+### Uploading from Claude (`upload_vault_document`)
+
+Claude must supply a **proper title** and **at least one tag**. The tool rejects
+generic titles (`Untitled`, `Document`, `test`, …) and empty tags — ask the user
+before calling.
+
+| `kind` | Required args | Notes |
+|--------|---------------|--------|
+| `paste` | `title`, `tags`, `content` | Best for text already in the chat |
+| `url` | `title`, `tags`, `url` | Public http(s) page; indexer crawls it |
+| `file` | `title`, `tags`, `filename`, `mime`, `content_base64` | Max 3 MB decoded; larger files → admin Vault UI |
+
+Optional citation fields: `category`, `author`, `publisher`, `year`, `source_url`,
+`reference`, `page_ref`.
+
+If an older connector token only has `vault:read`, re-authorize (disconnect +
+reconnect) so the new `vault:write` scope is granted.
 
 ## Notes
 - Access tokens are short-lived (1h) JWTs bound to the MCP resource URL (`aud`);

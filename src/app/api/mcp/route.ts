@@ -6,7 +6,8 @@
  * Connectors (OAuth client id/secret, or legacy MCP_API_KEY Bearer).
  *
  * Tools exposed:
- *   search_vault / list_documents / get_document  — research vault
+ *   search_vault / list_documents / get_document / upload_vault_document
+ *     — research vault (upload requires title + tags)
  *   list_states / get_state / list_areas / get_area / list_issues / get_issue
  *     — published state, region, and issue content (same as /states, /areas, /issues)
  */
@@ -14,10 +15,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminClient } from '@/lib/adminClient';
 import OpenAI from 'openai';
-import { verifyAccessToken, MCP_BASE_URL } from '@/lib/mcp/oauth';
+import { verifyAccessToken, MCP_BASE_URL, MCP_SCOPE } from '@/lib/mcp/oauth';
 import { GEO_TOOLS, callGeoTool } from '@/lib/mcp/geo-tools';
+import {
+  UPLOAD_VAULT_TOOL,
+  callUploadVaultDocument,
+  type UploadAuth,
+} from '@/lib/mcp/vault-upload';
 
 // ─── Auth (OAuth 2.1 Bearer access token) ────────────────────────────────────
+
+export type McpAuthContext = {
+  userId: string | null;
+  scope: string;
+  viaLegacyKey: boolean;
+};
 
 /**
  * Authorize a request. Primary path: an OAuth access-token JWT issued by our
@@ -25,18 +37,37 @@ import { GEO_TOOLS, callGeoTool } from '@/lib/mcp/geo-tools';
  * Legacy fallback: a static MCP_API_KEY, honoured ONLY if that env is set
  * (Bearer header or key-in-URL) — left in for backwards compatibility.
  */
-export async function checkAuth(req: NextRequest, urlKey?: string): Promise<boolean> {
+export async function resolveAuth(
+  req: NextRequest,
+  urlKey?: string,
+): Promise<McpAuthContext | null> {
   const auth = req.headers.get('authorization') ?? '';
   if (auth.startsWith('Bearer ')) {
     const token = auth.slice(7);
-    if (await verifyAccessToken(token)) return true;
+    const payload = await verifyAccessToken(token);
+    if (payload) {
+      return {
+        userId: typeof payload.sub === 'string' ? payload.sub : null,
+        scope: typeof payload.scope === 'string' ? payload.scope : MCP_SCOPE,
+        viaLegacyKey: false,
+      };
+    }
 
     const legacy = process.env.MCP_API_KEY;
-    if (legacy && token === legacy) return true;
+    if (legacy && token === legacy) {
+      return { userId: null, scope: MCP_SCOPE, viaLegacyKey: true };
+    }
   }
   const legacy = process.env.MCP_API_KEY;
-  if (legacy && urlKey && urlKey === legacy) return true;
-  return false;
+  if (legacy && urlKey && urlKey === legacy) {
+    return { userId: null, scope: MCP_SCOPE, viaLegacyKey: true };
+  }
+  return null;
+}
+
+/** @deprecated Prefer resolveAuth — kept for /api/mcp/[key] import compat. */
+export async function checkAuth(req: NextRequest, urlKey?: string): Promise<boolean> {
+  return (await resolveAuth(req, urlKey)) !== null;
 }
 
 // ─── CORS (Claude.ai calls from the browser) ───────────────────────────────
@@ -144,6 +175,7 @@ const TOOLS = [
       required: ['id'],
     },
   },
+  UPLOAD_VAULT_TOOL,
   ...GEO_TOOLS,
 ];
 
@@ -465,7 +497,10 @@ type JsonRpcResponse = {
   error?: { code: number; message: string };
 };
 
-async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
+async function dispatch(
+  msg: JsonRpcRequest,
+  auth: McpAuthContext,
+): Promise<JsonRpcResponse | null> {
   const { jsonrpc, id, method, params } = msg;
 
   // Notifications have no id — no response required
@@ -488,7 +523,7 @@ async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
         return respond({
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'nciw-mcp', version: '1.1.0' },
+          serverInfo: { name: 'nciw-mcp', version: '1.2.0' },
         });
 
       case 'ping':
@@ -508,6 +543,13 @@ async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
           result = await toolListDocuments(args as Parameters<typeof toolListDocuments>[0]);
         } else if (name === 'get_document') {
           result = await toolGetDocument(args as Parameters<typeof toolGetDocument>[0]);
+        } else if (name === 'upload_vault_document') {
+          const uploadAuth: UploadAuth = {
+            userId: auth.userId,
+            scope: auth.scope,
+            viaLegacyKey: auth.viaLegacyKey,
+          };
+          result = await callUploadVaultDocument(args, uploadAuth);
         } else {
           const geo = await callGeoTool(name, args);
           if (!geo) return error(-32602, `Unknown tool: ${name}`);
@@ -531,7 +573,8 @@ async function dispatch(msg: JsonRpcRequest): Promise<JsonRpcResponse | null> {
 // ─── Shared route handlers (used by both /api/mcp and /api/mcp/[key]) ────────
 
 export async function handlePOST(req: NextRequest, urlKey?: string) {
-  if (!(await checkAuth(req, urlKey))) {
+  const auth = await resolveAuth(req, urlKey);
+  if (!auth) {
     return unauthorized();
   }
 
@@ -547,12 +590,12 @@ export async function handlePOST(req: NextRequest, urlKey?: string) {
 
   if (Array.isArray(body)) {
     const responses = (
-      await Promise.all((body as JsonRpcRequest[]).map(dispatch))
+      await Promise.all((body as JsonRpcRequest[]).map((m) => dispatch(m, auth)))
     ).filter(Boolean);
     return NextResponse.json(responses, { headers: CORS });
   }
 
-  const response = await dispatch(body as JsonRpcRequest);
+  const response = await dispatch(body as JsonRpcRequest, auth);
   if (response === null) {
     return new NextResponse(null, { status: 202, headers: CORS });
   }
@@ -560,11 +603,11 @@ export async function handlePOST(req: NextRequest, urlKey?: string) {
 }
 
 export async function handleGET(req: NextRequest, urlKey?: string) {
-  if (!(await checkAuth(req, urlKey))) {
+  if (!(await resolveAuth(req, urlKey))) {
     return unauthorized();
   }
   return NextResponse.json(
-    { name: 'nciw-mcp', version: '1.1.0', protocol: 'mcp/2024-11-05' },
+    { name: 'nciw-mcp', version: '1.2.0', protocol: 'mcp/2024-11-05' },
     { headers: CORS },
   );
 }

@@ -1,7 +1,7 @@
 /* RFC 9728 — Protected Resource Metadata. Catch-all so the bare path and the
  * resource-suffixed variant both resolve here. */
 
-import { MCP_RESOURCE, MCP_ISSUER, MCP_SCOPE } from '@/lib/mcp/oauth';
+import { MCP_RESOURCE, MCP_ISSUER, MCP_SCOPES_SUPPORTED } from '@/lib/mcp/oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export function GET() {
   return new Response(JSON.stringify({
     resource:                 MCP_RESOURCE,
     authorization_servers:    [MCP_ISSUER],
-    scopes_supported:         [MCP_SCOPE],
+    scopes_supported:         [...MCP_SCOPES_SUPPORTED],
     bearer_methods_supported: ['header'],
   }), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...CORS } });
 }

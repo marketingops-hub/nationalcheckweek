@@ -34,7 +34,7 @@ const ok = (n, c, extra = '') => { c ? pass++ : fail++; console.log(`${c ? '✓'
 const b64url = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 async function mintCode(challenge) {
-  return new SignJWT({ typ: 'mcp_code', redirect_uri: REDIRECT, cc: challenge, ccm: 'S256', scope: 'vault:read', resource: RESOURCE, email: 'selftest@local' })
+  return new SignJWT({ typ: 'mcp_code', redirect_uri: REDIRECT, cc: challenge, ccm: 'S256', scope: 'vault:read vault:write', resource: RESOURCE, email: 'selftest@local' })
     .setProtectedHeader({ alg: 'HS256' }).setIssuer(RESOURCE_BASE).setSubject('selftest-user')
     .setIssuedAt().setExpirationTime('5m').sign(secret);
 }
@@ -95,13 +95,19 @@ try {
     ok('initialize with access token', init.status === 200 && !!init.body.result, `status ${init.status}`);
     const tools = await rpc(access, 2, 'tools/list', {});
     const names = (tools.body?.result?.tools || []).map(t => t.name);
-    ok('tools/list returns vault + geo tools', names.includes('list_documents') && names.includes('list_states'), names.join(', '));
+    ok('tools/list returns vault + geo tools', names.includes('list_documents') && names.includes('list_states') && names.includes('upload_vault_document'), names.join(', '));
     const call = await rpc(access, 3, 'tools/call', { name: 'list_documents', arguments: { limit: 3 } });
     const txt = call.body?.result?.content?.[0]?.text || '';
     ok('tools/call list_documents returns data', txt.includes('documents') || txt.includes('total'), txt.slice(0, 70).replace(/\n/g, ' '));
     const geo = await rpc(access, 4, 'tools/call', { name: 'list_states', arguments: {} });
     const geoTxt = geo.body?.result?.content?.[0]?.text || '';
     ok('tools/call list_states returns data', geoTxt.includes('states') || geoTxt.includes('slug'), geoTxt.slice(0, 70).replace(/\n/g, ' '));
+    const badUpload = await rpc(access, 5, 'tools/call', {
+      name: 'upload_vault_document',
+      arguments: { kind: 'paste', title: 'Untitled', tags: [], content: 'x' },
+    });
+    const badTxt = badUpload.body?.result?.content?.[0]?.text || '';
+    ok('upload_vault_document rejects missing title/tags', /title|tags|generic/i.test(badTxt), badTxt.slice(0, 90).replace(/\n/g, ' '));
   }
 
   if (tok.body.refresh_token) {

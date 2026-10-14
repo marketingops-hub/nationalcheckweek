@@ -61,7 +61,7 @@ function loginForm(p: P, error?: string): Response {
   return html(`<form class="card" method="post" action="/oauth/authorize">
     <div class="brand">🔒 NCIW Connector</div>
     <h1>Sign in to connect</h1>
-    <p class="sub">Use your National Check-in Week staff account. Claude will get read-only access to the Vault and published state/region/issue data.</p>
+    <p class="sub">Use your National Check-in Week staff account. Claude will get Vault read/upload access and published state/region/issue data. Uploads still require a proper title and tags.</p>
     ${error ? `<div class="err">${esc(error)}</div>` : ''}
     <label>Email</label><input name="email" type="email" autocomplete="username" required autofocus>
     <label>Password</label><input name="password" type="password" autocomplete="current-password" required>
@@ -125,7 +125,9 @@ export async function POST(req: Request) {
     redirect_uri:          p.redirect_uri,
     code_challenge:        p.code_challenge,
     code_challenge_method: p.code_challenge_method,
-    scope:                 p.scope || MCP_SCOPE,
+    // Always grant the connector's full default scopes (read + write). Claude may
+    // request a subset; this fixed staff client is intentionally not scoped-down.
+    scope:                 MCP_SCOPE,
     resource:              p.resource,
   });
 
