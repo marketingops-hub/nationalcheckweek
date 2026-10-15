@@ -10,6 +10,8 @@
  *     — research vault (upload requires title + tags)
  *   list_states / get_state / list_areas / get_area / list_issues / get_issue
  *     — published state, region, and issue content (same as /states, /areas, /issues)
+ *
+ * redeploy: 2026-10-15
  */
 
 import { NextRequest, NextResponse } from 'next/server';
