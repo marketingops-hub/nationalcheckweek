@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface HeroBlockProps {
   content: {
@@ -219,7 +219,7 @@ export default function HeroBlock({ content, globalColors }: HeroBlockProps) {
             letterSpacing: '-0.02em',
             color: blockColors.headingColor,
             marginBottom: '24px'
-          }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(heading) }} />
+          }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(heading) }} />
 
           <p style={{
             fontSize: '1.125rem',
