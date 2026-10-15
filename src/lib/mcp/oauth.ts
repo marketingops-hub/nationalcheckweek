@@ -32,6 +32,13 @@ export const MCP_ISSUER    = MCP_BASE_URL;
 export const MCP_SCOPE     = 'vault:read vault:write';
 export const MCP_SCOPES_SUPPORTED = ['vault:read', 'vault:write'] as const;
 
+/** Merge granted scopes up to the current connector default (additive). */
+export function ensureMcpScopes(scope: string | undefined | null): string {
+  const parts = new Set((scope ?? '').split(/\s+/).filter(Boolean));
+  for (const s of MCP_SCOPE.split(/\s+/)) parts.add(s);
+  return [...parts].join(' ');
+}
+
 export const MCP_CLIENT_ID     = process.env.MCP_OAUTH_CLIENT_ID ?? '';
 export const MCP_CLIENT_SECRET = process.env.MCP_OAUTH_CLIENT_SECRET ?? '';
 

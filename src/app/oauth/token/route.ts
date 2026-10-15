@@ -11,6 +11,7 @@ import {
   MCP_RESOURCE, MCP_SCOPE, TTL,
   verifyClient, verifyAuthCode, verifyPkce,
   issueAccessToken, issueRefreshToken, verifyRefreshToken,
+  ensureMcpScopes,
 } from '@/lib/mcp/oauth';
 
 export const runtime = 'nodejs';
@@ -67,7 +68,8 @@ export async function POST(req: Request) {
     if (!(await verifyPkce(verifier, claims.code_challenge, claims.code_challenge_method)))
       return err('invalid_grant', 'PKCE verification failed.');
 
-    const scope    = claims.scope || MCP_SCOPE;
+    // Upgrade legacy vault:read-only codes to the current connector scopes.
+    const scope    = ensureMcpScopes(claims.scope || MCP_SCOPE);
     const resource = claims.resource || MCP_RESOURCE;
     const access_token  = await issueAccessToken({ userId: claims.sub, email: claims.email, scope, resource });
     const refresh_token = await issueRefreshToken({ userId: claims.sub, email: claims.email, scope, resource });
@@ -80,9 +82,11 @@ export async function POST(req: Request) {
     const r = await verifyRefreshToken(refresh);
     if (!r) return err('invalid_grant', 'Refresh token invalid or expired.');
 
-    const access_token  = await issueAccessToken({ userId: r.sub, email: r.email, scope: r.scope, resource: r.resource });
-    const refresh_token = await issueRefreshToken({ userId: r.sub, email: r.email, scope: r.scope, resource: r.resource });
-    return ok({ access_token, refresh_token, token_type: 'Bearer', expires_in: TTL.ACCESS_TTL, scope: r.scope });
+    // Silent Claude refresh of an old vault:read token must pick up vault:write.
+    const scope = ensureMcpScopes(r.scope);
+    const access_token  = await issueAccessToken({ userId: r.sub, email: r.email, scope, resource: r.resource });
+    const refresh_token = await issueRefreshToken({ userId: r.sub, email: r.email, scope, resource: r.resource });
+    return ok({ access_token, refresh_token, token_type: 'Bearer', expires_in: TTL.ACCESS_TTL, scope });
   }
 
   return err('unsupported_grant_type', `grant_type '${grant}' not supported.`);

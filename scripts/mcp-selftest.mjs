@@ -107,7 +107,11 @@ try {
       arguments: { kind: 'paste', title: 'Untitled', tags: [], content: 'x' },
     });
     const badTxt = badUpload.body?.result?.content?.[0]?.text || '';
-    ok('upload_vault_document rejects missing title/tags', /title|tags|generic/i.test(badTxt), badTxt.slice(0, 90).replace(/\n/g, ' '));
+    ok(
+      'upload_vault_document rejects missing title/tags (not a scope error)',
+      /title|tags|generic/i.test(badTxt) && !/vault:write/i.test(badTxt),
+      badTxt.slice(0, 90).replace(/\n/g, ' '),
+    );
   }
 
   if (tok.body.refresh_token) {

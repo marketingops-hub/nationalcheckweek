@@ -84,8 +84,9 @@ before calling.
 Optional citation fields: `category`, `author`, `publisher`, `year`, `source_url`,
 `reference`, `page_ref`.
 
-If an older connector token only has `vault:read`, re-authorize (disconnect +
-reconnect) so the new `vault:write` scope is granted.
+Upload is allowed for any authenticated staff connector session (role checked
+at sign-in). Token refresh also upgrades older `vault:read`-only tokens to
+include `vault:write`.
 
 ## Notes
 - Access tokens are short-lived (1h) JWTs bound to the MCP resource URL (`aud`);

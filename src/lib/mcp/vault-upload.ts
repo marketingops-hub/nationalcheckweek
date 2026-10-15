@@ -225,12 +225,6 @@ function triggerIndexer(document_id: string): void {
   });
 }
 
-function hasWriteScope(auth: UploadAuth): boolean {
-  if (auth.viaLegacyKey) return true;
-  const scopes = auth.scope.split(/\s+/).filter(Boolean);
-  return scopes.includes('vault:write');
-}
-
 function extractHostname(url: string): string {
   try {
     return new URL(url).hostname;
@@ -262,14 +256,8 @@ export async function callUploadVaultDocument(
   args: UploadVaultArgs,
   auth: UploadAuth,
 ): Promise<object> {
-  if (!hasWriteScope(auth)) {
-    return {
-      error:
-        'Missing vault:write scope. Re-authorize the connector (sign out of the ' +
-        'NCIW connector in Claude and connect again) so the token includes write access.',
-    };
-  }
-
+  // Auth is already enforced at the MCP route (staff OAuth / legacy key).
+  // Title + tags remain the upload quality gate — not OAuth scopes.
   const meta = validateTitleAndTags(args.title, args.tags);
   if (!meta.ok) return { error: meta.error };
 
