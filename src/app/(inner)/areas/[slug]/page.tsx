@@ -5,6 +5,7 @@ import { SEVERITY } from "@/lib/colors";
 import type { SeverityLevel } from "@/lib/colors";
 import AreaSchoolStatsPanel from "@/components/AreaSchoolStatsPanel";
 import { SourcesList } from "@/components/SourcesList";
+import PageSources from "@/components/PageSources";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { buildIssueSlugMap } from "@/lib/geo-utils";
 import { parseAreaIssues, parseKeyStats } from "@/lib/schemas/geo";
@@ -157,6 +158,7 @@ export default async function AreaPage({ params }: Props) {
 
         {/* Sources - Dynamic from database */}
         <SourcesList entityType="area" entitySlug={slug} />
+        <PageSources entityType="area" entityKey={slug} />
 
         {/* Related areas */}
         {relatedAreas.length > 0 && (

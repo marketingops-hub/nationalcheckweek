@@ -5,6 +5,7 @@ import { SEVERITY, SEVERITY_ICON } from "@/lib/colors";
 import SchoolStatsPanel from "@/components/SchoolStatsPanel";
 import CitedText from "@/components/CitedText";
 import InfoNote from "@/components/InfoNote";
+import PageSources from "@/components/PageSources";
 import PreventionBridge from "@/components/PreventionBridge";
 import {
   parseImpacts,
@@ -314,6 +315,10 @@ export default async function GeoIssuePage({ params }: Props) {
             ))}
           </section>
         )}
+
+        {/* Vault documents this state's figures were refreshed from */}
+        <PageSources entityType="state_issue" entityKey={`${stateSlug}/${issueSlug}`} title={`Sources for ${state.name} data`} asSection />
+        <PageSources entityType="issue" entityKey={issueSlug} title={`Sources for the ${issue.title.toLowerCase()} overview`} asSection />
 
         {/* NAVIGATION */}
         <section className="inner-section">

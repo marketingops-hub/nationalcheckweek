@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import SeoPanel from "@/components/admin/SeoPanel";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import { useRegenerate } from "@/components/admin/useRegenerate";
+import RefreshFromVault from "@/components/admin/RefreshFromVault";
 
 interface StateIssue { name: string; badge: string; stat: string; desc: string; slug?: string; }
 interface GlobalIssue { slug: string; title: string; }
@@ -121,10 +122,11 @@ interface PendingRegen {
 export default function StateEditForm({ state }: { state: State | null }) {
   const router = useRouter();
   const isNew = !state;
-  const [tab, setTab] = useState<"info" | "issues" | "seo">("info");
+  const [tab, setTab] = useState<"info" | "issues" | "seo" | "refresh">("info");
   const [dirty, setDirty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [globalIssues, setGlobalIssues] = useState<GlobalIssue[]>([]);
+  const [refreshIssue, setRefreshIssue] = useState("");
   const regen = useRegenerate();
 
   useEffect(() => {
@@ -243,7 +245,15 @@ export default function StateEditForm({ state }: { state: State | null }) {
     { id: "info",   label: "Basic Info",      count: null },
     { id: "issues", label: "Priority Issues", count: issues.length },
     { id: "seo",    label: "SEO",             count: null },
+    { id: "refresh", label: "Vault Refresh", count: null },
   ] as const;
+  const VISIBLE_TABS = TABS.filter((t) => !isNew || t.id !== "refresh");
+
+  // Issue pages of this state that can be refreshed: saved entries that match a site-wide issue.
+  const refreshableIssues = (state?.issues ?? []).flatMap((si) => {
+    const g = globalIssues.find((x) => x.title.toLowerCase() === si.name.toLowerCase());
+    return g ? [{ slug: g.slug, name: si.name }] : [];
+  });
 
   return (
     <div className="max-w-4xl">
@@ -253,7 +263,7 @@ export default function StateEditForm({ state }: { state: State | null }) {
 
       {/* Tab bar - using new admin-editor-tabs classes ✅ */}
       <div className="admin-editor-tabs">
-        {TABS.map(t => (
+        {VISIBLE_TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`admin-editor-tab ${tab === t.id ? 'active' : ''}`}>
             {t.label}
@@ -351,6 +361,41 @@ export default function StateEditForm({ state }: { state: State | null }) {
               {issues.map((iss, idx) => <StateIssueCard key={idx} issue={iss} idx={idx} onChange={updateIssue} onRemove={removeIssue} globalIssues={globalIssues} />)}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Tab: Vault Refresh (the state page, or one of its issue pages) ── */}
+      {tab === "refresh" && state && (
+        <div className="mt-2" style={{ display: "grid", gap: 16 }}>
+          <div>
+            <label className="text-xs font-semibold" style={{ color: "var(--admin-text-subtle)" }} htmlFor="refresh-target">
+              Page to refresh
+            </label>
+            <select
+              id="refresh-target"
+              className="swa-form-input"
+              style={{ display: "block", marginTop: 4, width: "100%" }}
+              value={refreshIssue}
+              onChange={(e) => setRefreshIssue(e.target.value)}
+            >
+              <option value="">{state.name} overview page (subtitle + all issue cards)</option>
+              {refreshableIssues.map((i) => (
+                <option key={i.slug} value={i.slug}>{i.name} in {state.name} (issue page)</option>
+              ))}
+            </select>
+            {refreshableIssues.length === 0 && (
+              <p className="text-xs mt-1" style={{ color: "var(--admin-text-subtle)" }}>
+                Issue pages appear here once the state has saved priority issues that match a site-wide issue.
+              </p>
+            )}
+          </div>
+          <RefreshFromVault
+            key={refreshIssue || "state"}
+            entityType={refreshIssue ? "state_issue" : "state"}
+            entityKey={refreshIssue ? `${state.slug}/${refreshIssue}` : state.slug}
+            pagePath={refreshIssue ? `/states/${state.slug}/issues/${refreshIssue}` : `/states/${state.slug}`}
+            blockedReason={dirty ? "You have unsaved changes. Save or discard them first: publishing reloads this page." : null}
+          />
         </div>
       )}
 

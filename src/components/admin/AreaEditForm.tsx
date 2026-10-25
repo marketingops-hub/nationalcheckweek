@@ -13,6 +13,7 @@ import AreaIssueCard from "@/components/admin/areas/AreaIssueCard";
 import { type KeyStat, type AreaIssue, type GlobalIssue, INPUT_CLS, INPUT_STYLE, LABEL_CLS, LABEL_STYLE } from "@/components/admin/areas/AreaTypes";
 import { adminFetch } from "@/lib/adminFetch";
 import RewriteFromSource from "@/components/admin/RewriteFromSource";
+import RefreshFromVault from "@/components/admin/RefreshFromVault";
 
 interface Area {
   id: string; slug: string; name: string; state: string; state_slug: string;
@@ -39,7 +40,7 @@ function parseJsonArray<T>(raw: unknown, fallback: T[]): T[] {
 export default function AreaEditForm({ area }: { area: Area | null }) {
   const router = useRouter();
   const isNew = !area;
-  const [tab, setTab] = useState<"info" | "stats" | "issues" | "seo" | "rewrite">("info");
+  const [tab, setTab] = useState<"info" | "stats" | "issues" | "seo" | "rewrite" | "refresh">("info");
   const [dirty, setDirty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const regen = useRegenerate();
@@ -238,7 +239,9 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
     { id: "issues",  label: "Local Issues", count: issues.length },
     { id: "seo",     label: "SEO",          count: null },
     { id: "rewrite", label: "AI Rewrite",   count: null },
+    { id: "refresh", label: "Vault Refresh", count: null },
   ] as const;
+  const VISIBLE_TABS = TABS.filter((t) => !isNew || t.id !== "refresh");
 
   return (
     <div className="max-w-4xl">
@@ -253,7 +256,7 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
 
       {/* Tab bar */}
       <div className="flex gap-1 mb-8 p-1 rounded-xl" style={{ background: "var(--admin-bg-elevated)", border: "1px solid var(--admin-border)" }}>
-        {TABS.map(t => (
+        {VISIBLE_TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium flex-1 justify-center"
             style={tab === t.id
@@ -505,6 +508,18 @@ export default function AreaEditForm({ area }: { area: Area | null }) {
               if (typeof fields.prevention === "string")  set("prevention",  fields.prevention);
               if (Array.isArray(fields.key_stats))        { setKeyStats(fields.key_stats as KeyStat[]); setDirty(true); }
             }}
+          />
+        </div>
+      )}
+
+      {/* ── Tab: Vault Refresh ── */}
+      {tab === "refresh" && area && (
+        <div className="mt-2">
+          <RefreshFromVault
+            entityType="area"
+            entityKey={area.slug}
+            pagePath={`/areas/${area.slug}`}
+            blockedReason={dirty ? "You have unsaved changes. Save or discard them first: publishing reloads this page." : null}
           />
         </div>
       )}

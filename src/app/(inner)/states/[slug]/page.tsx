@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient, createStaticClient } from "@/lib/supabase/server";
 import { SEVERITY } from "@/lib/colors";
 import SchoolStatsPanel from "@/components/SchoolStatsPanel";
+import PageSources from "@/components/PageSources";
 import InfoNote from "@/components/InfoNote";
 import PreventionBridge from "@/components/PreventionBridge";
 import PrevNextNav from "@/components/PrevNextNav";
@@ -216,6 +217,7 @@ export default async function StatePage({ params }: Props) {
               ))}
             </ul>
           </div>
+          <PageSources entityType="state" entityKey={slug} title={`Latest data sources for ${state.name}`} />
         </section>
 
         {/* EXPLORE OTHER STATES */}

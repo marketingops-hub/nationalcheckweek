@@ -7,6 +7,7 @@ import VoiceBlock, { VOICE_DEFAULTS, type VoiceBlockData } from "@/components/Vo
 import InfoNote from "@/components/InfoNote";
 import PreventionBridge from "@/components/PreventionBridge";
 import CitedText from "@/components/CitedText";
+import PageSources from "@/components/PageSources";
 import PrevNextNav from "@/components/PrevNextNav";
 import { adminClient } from "@/lib/adminClient";
 import { parseImpacts, parseGroups, parseSourceStrings } from "@/lib/schemas/geo";
@@ -248,6 +249,7 @@ export default async function IssuePage({ params }: Props) {
           {issueSources.length === 0 && legacySources.length === 0 && (
             <p className="source-empty">Sources will be added as this content is verified.</p>
           )}
+          <PageSources entityType="issue" entityKey={slug} title="Latest data sources" />
         </section>
 
         <PrevNextNav
