@@ -2,21 +2,27 @@ import Header from "@/components/Header";
 import FooterModern from "@/components/FooterModern";
 import BlockRenderer from "@/components/homepage-blocks/BlockRenderer";
 import { createClient } from "@/lib/supabase/server";
+import { getEventYear } from "@/lib/eventDate";
+import type { Metadata } from "next";
 
 // Enable ISR - revalidate every hour (3600 seconds)
 // Homepage content is mostly static, no need to revalidate every minute
 export const revalidate = 3600;
 
-export const metadata = {
-  title: "National Check-in Week 2026 — Student Wellbeing: A National Priority",
-  description:
-    "Join Australia's leading student wellbeing event. Free webinars, expert panels, data, and resources for every school.",
-  openGraph: {
-    title: "National Check-in Week 2026",
-    description: "Free webinars, expert panels, and wellbeing resources for Australian schools.",
-    url: "https://nationalcheckinweek.com",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // Year comes from the same database value as the hero countdown.
+  const year = await getEventYear();
+  return {
+    title: `National Check-in Week ${year} — Student Wellbeing: A National Priority`,
+    description:
+      "Join Australia's leading student wellbeing event. Free webinars, expert panels, data, and resources for every school.",
+    openGraph: {
+      title: `National Check-in Week ${year}`,
+      description: "Free webinars, expert panels, and wellbeing resources for Australian schools.",
+      url: "https://nationalcheckinweek.com",
+    },
+  };
+}
 
 // Fetch home page data on the server
 async function getHomePageData() {

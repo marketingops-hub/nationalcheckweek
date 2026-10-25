@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import RegisterPageClient from '@/components/register/RegisterPageClient';
+import { applyEventYear, getEventYear } from '@/lib/eventDate';
 
 interface RegisterPageData {
   id: string;
@@ -25,9 +26,12 @@ export async function generateMetadata(): Promise<Metadata> {
     .select('seo_title, seo_description')
     .single();
 
+  const year = await getEventYear();
   return {
-    title: data?.seo_title || 'Register — National Check-in Week',
-    description: data?.seo_description || 'Register your school for National Check-in Week 2026',
+    title: applyEventYear(data?.seo_title, year) || 'Register — National Check-in Week',
+    description:
+      applyEventYear(data?.seo_description, year) ||
+      `Register your school for National Check-in Week ${year}`,
   };
 }
 
@@ -52,5 +56,21 @@ export default async function RegisterPage() {
     );
   }
 
-  return <RegisterPageClient pageData={pageData as RegisterPageData} />;
+  // Keep "National Check-in Week 20xx" copy in step with the next event year
+  // (the hero countdown date) so it never needs a manual edit each year.
+  const year = await getEventYear();
+  const page = pageData as RegisterPageData;
+  const withYear: RegisterPageData = {
+    ...page,
+    heading: applyEventYear(page.heading, year),
+    subheading: applyEventYear(page.subheading, year),
+    description: applyEventYear(page.description, year),
+    right_column_content: (page.right_column_content ?? []).map((block) => ({
+      ...block,
+      content: applyEventYear(block.content, year),
+      items: block.items?.map((item) => applyEventYear(item, year)),
+    })),
+  };
+
+  return <RegisterPageClient pageData={withYear} />;
 }

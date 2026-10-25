@@ -1,12 +1,19 @@
 import Link from "next/link";
 import ContactFormClient from "@/components/contact/ContactFormClient";
+import { getNextEvent, currentYear } from "@/lib/eventDate";
+
+export const revalidate = 3600;
 
 export const metadata = {
   title: "Contact Us — National Check-in Week",
   description: "Get in touch with the National Check-in Week team. We're here to support your school's wellbeing journey.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  // Event year/date come from the hero countdown target in the database.
+  const event = await getNextEvent();
+  const eventYear = event?.year ?? currentYear();
+
   return (
     <>
       <div className="page-hero page-hero--centered">
@@ -220,10 +227,13 @@ export default function ContactPage() {
                   marginBottom: '0.5rem',
                   color: '#1a1a2e'
                 }}>
-                  When is National Check-in Week 2026?
+                  When is National Check-in Week {eventYear}?
                 </h3>
                 <p style={{ color: '#64748b', lineHeight: 1.7, fontSize: '0.9375rem' }}>
-                  National Check-in Week 2026 will be held from May 25-29, 2026. Mark your calendars 
+                  {event
+                    ? `National Check-in Week ${eventYear} starts on ${event.formatted}.`
+                    : `National Check-in Week ${eventYear} dates will be announced soon.`}{" "}
+                  Mark your calendars 
                   and register early to ensure your school doesn't miss out!
                 </p>
               </div>

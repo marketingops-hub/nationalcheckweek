@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { applyCopyrightYear } from "@/lib/eventDate";
 
 /**
  * Footer link type
@@ -42,7 +43,7 @@ export default async function FooterModern() {
   let contactPhone = "1300 889 018";
   let contactAddress = "4/597 Darling Street, Rozelle NSW 2039, Australia";
   let contactEmail = "events@nationalcheckinweek.com";
-  let copyrightText = "Copyright © 2026 National Check-In Week. All rights reserved.";
+  let copyrightText = "Copyright © {year} National Check-In Week. All rights reserved.";
   let footerLinks: FooterLink[] = [
     { id: "1", label: "Privacy Policy", url: "/privacy" },
     { id: "2", label: "Terms and Conditions", url: "/terms" },
@@ -176,7 +177,7 @@ export default async function FooterModern() {
         </div>
       </div>
       <div className="footer-bottom-bar">
-        <p className="footer-copyright">{copyrightText}</p>
+        <p className="footer-copyright">{applyCopyrightYear(copyrightText)}</p>
       </div>
     </footer>
   );

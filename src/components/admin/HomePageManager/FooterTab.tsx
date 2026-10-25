@@ -77,7 +77,7 @@ export default function FooterTab({ settings, onChange, onSave, saving }: Footer
             value={settings.copyright_text || ""}
             onChange={(e) => onChange({ ...settings, copyright_text: e.target.value })}
             className="swa-form-input"
-            placeholder="Copyright © 2026 National Check-In Week. All rights reserved."
+            placeholder="Copyright © {year} National Check-In Week. All rights reserved."
           />
         </div>
 

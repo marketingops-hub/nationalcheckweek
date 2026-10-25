@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { currentYear } from "@/lib/eventDate";
 
 export default function Footer() {
   return (
@@ -85,7 +86,7 @@ export default function Footer() {
             </a>
             <span className="footer-social-label">Follow us!</span>
           </div>
-          <p className="footer-copyright">© 2026 National Check-in Week. &nbsp;All rights reserved.</p>
+          <p className="footer-copyright">© {currentYear()} National Check-in Week. &nbsp;All rights reserved.</p>
         </div>
       </footer>
     </>
