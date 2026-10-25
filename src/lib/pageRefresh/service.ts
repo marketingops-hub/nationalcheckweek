@@ -10,10 +10,13 @@ import {
   publishContentSchemas,
   type EntityType,
 } from "./entities";
-import { reviewEvidence, type EvidenceItem } from "./evidence";
+import { fieldText, reviewEvidence, type EvidenceItem } from "./evidence";
 import { safeSourceUrl, sourceLabel, type SourceDoc } from "./format";
-import { groupChunks } from "./group";
+import { groupChunks, type GroupedDoc } from "./group";
 import { describeAiError } from "./aiError";
+import { fetchAllChunks } from "./chunks";
+import { RefreshError } from "./errors";
+import { rankChunksForText } from "./rank";
 import { retrieveChunks } from "./retrieve";
 import {
   SYSTEM_PROMPT,
@@ -24,11 +27,7 @@ import {
   type PromptDoc,
 } from "./prompt";
 
-export class RefreshError extends Error {
-  constructor(message: string, public status = 400) {
-    super(message);
-  }
-}
+export { RefreshError };
 
 export interface PreviewSource {
   id: string;
@@ -164,18 +163,49 @@ export function toPreviewSource(meta: VaultMeta, cited: boolean): PreviewSource 
   };
 }
 
+/** Excerpts for a draft written only from the documents the reviewer chose, ranked by relevance to the page. */
+async function groupFromChosen(db: SupabaseClient, ctx: PageContext, ids: string[]): Promise<GroupedDoc[]> {
+  if (ids.length > 12) throw new RefreshError("Use at most 12 sources at a time.", 400);
+  const meta = await loadDocMeta(db, ids);
+  if (meta.size !== ids.length) throw new RefreshError("One of the selected documents no longer exists.", 400);
+  const titles = new Map([...meta].map(([id, m]) => [id, m.title]));
+
+  const all = await fetchAllChunks(db, ids, titles);
+  if (all.length === 0) {
+    throw new RefreshError("The selected documents have no indexed text yet. Wait until they show as Ready in the vault.", 422);
+  }
+  // Relevance to the page: what it is about, plus what it currently says.
+  const grouped = rankChunksForText(all, `${ctx.query} ${fieldText(ctx.current)}`);
+  if (grouped.length === 0) {
+    throw new RefreshError("Nothing in the ticked documents looks relevant to this page. Tick other documents or add more.", 422);
+  }
+  return grouped;
+}
+
 /** Search the vault, ask the model for refreshed content, and return it for review. Nothing is saved. */
-export async function previewRefresh(type: EntityType, key: string): Promise<RefreshPreview> {
+export async function previewRefresh(
+  type: EntityType,
+  key: string,
+  opts: { sourceIds?: string[] } = {},
+): Promise<RefreshPreview> {
   assertKey(type, key);
   const db = adminClient();
   const ctx = await loadContext(db, type, key);
 
-  const grouped = groupChunks(await retrieveChunks(db, ctx.query));
-  if (grouped.length === 0) {
-    throw new RefreshError("No relevant, indexed documents were found in the vault for this page.", 422);
+  // "Regenerate": the reviewer chose the documents, so write the draft from
+  // those only. Otherwise search the whole vault.
+  const chosen = [...new Set(opts.sourceIds ?? [])];
+  let grouped: GroupedDoc[];
+  if (chosen.length > 0) {
+    grouped = await groupFromChosen(db, ctx, chosen);
+  } else {
+    grouped = groupChunks(await retrieveChunks(db, ctx.query));
+    if (grouped.length === 0) {
+      throw new RefreshError("No relevant, indexed documents were found in the vault for this page.", 422);
+    }
   }
 
-  const meta = await loadDocMeta(db, grouped.map((g) => g.document_id));
+  const meta = await loadDocMeta(db, [...new Set([...grouped.map((g) => g.document_id), ...chosen])]);
   const docs: PromptDoc[] = grouped.map((g, i) => {
     const m = meta.get(g.document_id);
     return {
@@ -236,6 +266,9 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
     .filter(({ g }) => meta.has(g.document_id))
     .map(({ g, cited }) => toPreviewSource(meta.get(g.document_id)!, cited))
     .sort((a, b) => Number(b.cited) - Number(a.cited));
+  for (const id of chosen) {
+    if (meta.has(id) && !sources.some((src) => src.id === id)) sources.push(toPreviewSource(meta.get(id)!, false));
+  }
 
   const review = reviewEvidence({
     changed,

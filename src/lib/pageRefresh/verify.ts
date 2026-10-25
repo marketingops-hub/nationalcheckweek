@@ -1,10 +1,8 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { adminClient } from "@/lib/adminClient";
 import { anthropicService } from "@/lib/ai/anthropic-service";
 import { describeAiError } from "./aiError";
 import { FIELD_LABELS, modelContentSchemas, type EntityType } from "./entities";
 import { fieldText, reviewEvidence, type EvidenceItem } from "./evidence";
-import type { RetrievedChunk } from "./group";
 import {
   SYSTEM_PROMPT,
   buildEvidencePrompt,
@@ -13,6 +11,7 @@ import {
   reconcileStateIssues,
   type PromptDoc,
 } from "./prompt";
+import { fetchAllChunks } from "./chunks";
 import { rankChunksForText } from "./rank";
 import {
   MODEL,
@@ -24,8 +23,6 @@ import {
 import { safeSourceUrl, sourceLabel } from "./format";
 
 const MAX_SOURCES = 12;
-const PAGE = 1000;
-const MAX_PAGES_PER_DOC = 8;
 
 export interface VerifyResult {
   changed: string[];
@@ -34,33 +31,6 @@ export interface VerifyResult {
   warnings: string[];
   /** documents the draft was checked against */
   checkedSourceIds: string[];
-}
-
-/** Every indexed chunk of the given documents (paged; capped per document). */
-async function fetchAllChunks(db: SupabaseClient, ids: string[], titles: Map<string, string>): Promise<RetrievedChunk[]> {
-  const out: RetrievedChunk[] = [];
-  for (const id of ids) {
-    for (let page = 0; page < MAX_PAGES_PER_DOC; page++) {
-      const { data, error } = await db
-        .from("vault_chunks")
-        .select("content, page, heading")
-        .eq("document_id", id)
-        .order("chunk_index", { ascending: true })
-        .range(page * PAGE, page * PAGE + PAGE - 1);
-      if (error) throw new RefreshError(`Could not read vault documents: ${error.message}`, 500);
-      for (const row of data ?? []) {
-        out.push({
-          document_id: id,
-          document_title: titles.get(id) ?? "Untitled",
-          chunk_page: (row.page as number | null) ?? null,
-          chunk_heading: (row.heading as string | null) ?? null,
-          content: row.content as string,
-        });
-      }
-      if ((data ?? []).length < PAGE) break;
-    }
-  }
-  return out;
 }
 
 /**

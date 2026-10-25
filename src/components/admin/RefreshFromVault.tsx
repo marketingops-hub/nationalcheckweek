@@ -144,6 +144,9 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
   const [view, setView] = useState<Verification>({ evidence: {}, unsupported: {}, warnings: [] });
   const [verifiedKey, setVerifiedKey] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  // The ticked sources the current draft was written from.
+  const [draftSources, setDraftSources] = useState("");
 
   const fields = FIELDS[entityType];
   const live = versions[0];
@@ -177,6 +180,25 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
     return d;
   }
 
+  /** Load a draft (new refresh or regeneration) into the review screen. */
+  function applyPreview(d: Preview, ticked: string[], keepOut: PreviewSource[] = []) {
+    setPreview(d);
+    setAccepted({});
+    setSelected(new Set(ticked));
+    setEdits({});
+    setEditing({});
+    // Sources the reviewer had unticked stay in the list, unticked, so they can be re-added.
+    setExtraSources(keepOut.filter((k) => !d.sources.some((x) => x.id === k.id)));
+    setView({ evidence: d.evidence, unsupported: d.unsupported, warnings: d.warnings });
+    setVerifiedKey(stateKey(Object.fromEntries(fields.map((f) => [f, d.proposed[f]])), ticked));
+    setDraftSources([...ticked].sort().join(","));
+    setNote("");
+    setUrls({});
+    setUrlDraft({});
+    setUrlMsg({});
+    setPhase("review");
+  }
+
   async function startRefresh() {
     setPhase("loading");
     setError("");
@@ -187,23 +209,35 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
         { entity_type: entityType, entity_key: entityKey },
         PREVIEW_TIMEOUT_MS, // searching the vault and writing with the AI can take a minute or more
       );
-      const initialSelected = d.sources.filter((s) => s.cited).map((s) => s.id);
-      setPreview(d);
-      setAccepted({});
-      setSelected(new Set(initialSelected));
-      setEdits({});
-      setEditing({});
-      setExtraSources([]);
-      setView({ evidence: d.evidence, unsupported: d.unsupported, warnings: d.warnings });
-      setVerifiedKey(stateKey(Object.fromEntries(fields.map((f) => [f, d.proposed[f]])), initialSelected));
-      setNote("");
-      setUrls({});
-      setUrlDraft({});
-      setUrlMsg({});
-      setPhase("review");
+      applyPreview(d, d.sources.filter((s) => s.cited).map((s) => s.id));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
       setPhase("idle");
+    }
+  }
+
+  /** Write a new draft from the ticked sources only (original and added). */
+  async function regenerate() {
+    if (!preview || selectedIds.length === 0) return;
+    if (
+      Object.keys(edits).length > 0 &&
+      !window.confirm("Regenerating writes a new draft from the ticked sources and discards the edits you have made. Continue?")
+    ) {
+      return;
+    }
+    setRegenerating(true);
+    setError("");
+    try {
+      const d: Preview = await post(
+        "/api/admin/page-refresh/preview",
+        { entity_type: entityType, entity_key: entityKey, source_ids: selectedIds },
+        PREVIEW_TIMEOUT_MS,
+      );
+      applyPreview(d, selectedIds, allSources);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Regeneration failed");
+    } finally {
+      setRegenerating(false);
     }
   }
 
@@ -351,7 +385,8 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
   const quotedIds = new Set(
     Object.values(view.evidence).flatMap((items) => items.filter((i) => i.verified).map((i) => i.sourceId)),
   );
-  const busy = phase === "publishing" || verifying;
+  const sourcesChanged = Boolean(preview) && [...selectedIds].sort().join(",") !== draftSources;
+  const busy = phase === "publishing" || verifying || regenerating;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -385,7 +420,22 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
             <div key={w} style={{ ...box, borderColor: "#fde68a", background: "#fffbeb", color: "#92400e", fontSize: 13 }}>{w}</div>
           ))}
 
-          {/* Verification status: re-run after editing the text or changing the ticked sources */}
+          {/* Sources changed: write a new draft from them. Text edited: re-check it. */}
+          {sourcesChanged && (
+            <div style={{ ...box, borderColor: "#bfdbfe", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 13 }}>
+                <strong>The ticked sources have changed since this draft was written.</strong>
+                <div style={{ fontSize: 12, ...muted }}>
+                  Regenerate to write a new draft from the {selectedIds.length} ticked source{selectedIds.length === 1 ? "" : "s"}.
+                  {Object.keys(edits).length > 0 && " Your edits will be replaced."}
+                </div>
+              </div>
+              <button className="admin-btn admin-btn-primary" onClick={regenerate} disabled={busy || selectedIds.length === 0}>
+                {regenerating ? "Regenerating…" : "Regenerate draft from ticked sources"}
+              </button>
+            </div>
+          )}
+
           <div
             style={{
               ...box,
@@ -401,11 +451,11 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                 <><strong>Verification is up to date</strong> for the text and sources below.</>
               )}
               <div style={{ fontSize: 12, ...muted }}>
-                Re-running finds supporting quotes for the current wording and checks every quote and figure against the {selectedIds.length} ticked source{selectedIds.length === 1 ? "" : "s"}.
+                Re-running keeps your wording and checks every quote and figure against the {selectedIds.length} ticked source{selectedIds.length === 1 ? "" : "s"}.
               </div>
             </div>
             <button
-              className={stale ? "admin-btn admin-btn-primary" : "admin-btn admin-btn-secondary"}
+              className={stale && !sourcesChanged ? "admin-btn admin-btn-primary" : "admin-btn admin-btn-secondary"}
               onClick={verify}
               disabled={busy || selectedIds.length === 0 || changedNow.length === 0}
             >
@@ -610,6 +660,19 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
             })}
 
             <AddSourcesPanel existingIds={new Set(allSources.map((x) => x.id))} onAdd={addSource} disabled={busy} />
+
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px dashed var(--admin-border)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <button
+                className={sourcesChanged ? "admin-btn admin-btn-primary" : "admin-btn admin-btn-secondary"}
+                onClick={regenerate}
+                disabled={busy || selectedIds.length === 0}
+              >
+                {regenerating ? "Regenerating…" : `Regenerate draft from ${selectedIds.length} ticked source${selectedIds.length === 1 ? "" : "s"}`}
+              </button>
+              <span style={{ fontSize: 12, ...muted }}>
+                Writes a new draft using only the ticked documents. Use <em>Re-run verification</em> instead to keep your own wording.
+              </span>
+            </div>
           </div>
 
           <input

@@ -12,9 +12,14 @@ export const maxDuration = 120;
 // Each preview is an AI call, so keep it modest.
 const limiter = rateLimit.create("page-refresh-preview", { limit: 10, windowSeconds: 60 });
 
-const bodySchema = z.object({ entity_type: entityTypeSchema, entity_key: entityKeySchema });
+const bodySchema = z.object({
+  entity_type: entityTypeSchema,
+  entity_key: entityKeySchema,
+  // When present, the draft is written only from these vault documents ("Regenerate").
+  source_ids: z.array(z.string().uuid()).max(12).optional(),
+});
 
-/** POST /api/admin/page-refresh/preview — propose refreshed content from the vault. Saves nothing. */
+/** POST /api/admin/page-refresh/preview — propose refreshed content from the vault (or only from `source_ids`). Saves nothing. */
 export const POST = requireStaff(async (req: NextRequest) => {
   const blocked = limiter.check(req);
   if (blocked) return blocked;
@@ -23,7 +28,7 @@ export const POST = requireStaff(async (req: NextRequest) => {
   if (!body.success) return NextResponse.json({ error: "entity_type and entity_key are required." }, { status: 400 });
 
   try {
-    return NextResponse.json(await previewRefresh(body.data.entity_type, body.data.entity_key));
+    return NextResponse.json(await previewRefresh(body.data.entity_type, body.data.entity_key, { sourceIds: body.data.source_ids }));
   } catch (err) {
     return fail(err);
   }
