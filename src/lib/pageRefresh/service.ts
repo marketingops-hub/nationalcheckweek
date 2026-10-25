@@ -4,11 +4,13 @@ import { adminClient } from "@/lib/adminClient";
 import { anthropicService } from "@/lib/ai/anthropic-service";
 import {
   FIELDS,
+  FIELD_LABELS,
   isValidEntityKey,
   pathsToRevalidate,
   publishContentSchemas,
   type EntityType,
 } from "./entities";
+import { reviewEvidence, type EvidenceItem } from "./evidence";
 import { safeSourceUrl, sourceLabel, type SourceDoc } from "./format";
 import { groupChunks } from "./group";
 import { describeAiError } from "./aiError";
@@ -45,6 +47,10 @@ export interface RefreshPreview {
   proposed: Record<string, unknown>;
   changed: string[];
   sources: PreviewSource[];
+  /** Per changed field: the quotes behind it, each checked against the documents. */
+  evidence: Record<string, EvidenceItem[]>;
+  /** Per changed field: new figures that could not be found in the excerpts. */
+  unsupported: Record<string, string[]>;
   warnings: string[];
 }
 
@@ -194,7 +200,7 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
       const res = await anthropicService.generateContent(SYSTEM_PROMPT, userPrompt + feedback, {
         model: MODEL,
         temperature: 0.2,
-        maxTokens: 3000,
+        maxTokens: 3500,
         timeout: AI_ATTEMPT_TIMEOUT_MS,
       });
       raw = res.content;
@@ -231,17 +237,28 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
     .map(({ g, cited }) => toPreviewSource(meta.get(g.document_id)!, cited))
     .sort((a, b) => Number(b.cited) - Number(a.cited));
 
-  const warnings: string[] = [];
+  const review = reviewEvidence({
+    changed,
+    fieldLabels: FIELD_LABELS,
+    current: ctx.current,
+    proposed: proposal.content,
+    docs: grouped,
+    raw: proposal.evidence,
+    describe: (id) => {
+      const m = meta.get(id);
+      return m ? { label: sourceLabel(m), url: safeSourceUrl(m.source_url) } : { label: "Unknown document", url: null };
+    },
+  });
+  // A document the quotes come from counts as cited, even if the model forgot to list it.
+  for (const items of Object.values(review.evidence)) for (const it of items) if (it.verified) citedIds.add(it.sourceId);
+  for (const src of sources) if (citedIds.has(src.id)) src.cited = true;
+  sources.sort((a, b) => Number(b.cited) - Number(a.cited));
+
+  const warnings: string[] = [...review.warnings];
   if (changed.length > 0 && citedIds.size === 0) {
     warnings.push("The AI changed content without citing any document. Check the proposal carefully before publishing.");
   }
   if (changed.length === 0) warnings.push("The vault has nothing newer for this page. The content would not change.");
-  const uncited = sources.filter((s) => s.cited && !s.url);
-  if (uncited.length > 0) {
-    warnings.push(
-      `${uncited.length} cited document${uncited.length > 1 ? "s have" : " has"} no public link and will show as plain text in the page footer.`,
-    );
-  }
 
   return {
     entityType: type,
@@ -251,6 +268,8 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
     proposed: proposal.content,
     changed,
     sources,
+    evidence: review.evidence,
+    unsupported: review.unsupported,
     warnings,
   };
 }

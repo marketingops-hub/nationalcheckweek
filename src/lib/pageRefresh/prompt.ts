@@ -1,3 +1,4 @@
+import type { RawEvidence } from "./evidence";
 import {
   FIELDS,
   FIELD_LABELS,
@@ -92,16 +93,21 @@ Rules:
 Field guide:
 ${FIELD_GUIDE[ctx.entityType]}
 
+- EVIDENCE: for every field you CHANGED, give 1-3 quotes copied WORD FOR WORD from the excerpts that support the new text (each at most 300 characters, containing the figure or claim you used). Do not paraphrase inside quotes. Do not give evidence for fields you left unchanged. Never claim a document says something it does not.
+
 Return ONLY a JSON object:
 {
   "content": { ${FIELDS[ctx.entityType].map((f) => `"${f}": ...`).join(", ")} },
-  "sources_used": [<n of every document you took information from or cited>]
+  "sources_used": [<n of every document you took information from or cited>],
+  "evidence": { "<changed field name>": [ { "source": <document n>, "quote": "<exact words from that document>" } ] }
 }`;
 }
 
 export interface ModelProposal {
   content: Record<string, unknown>;
   sourcesUsed: number[];
+  /** Quotes the model gave per field, sanitised. Not yet verified against the documents. */
+  evidence: Record<string, RawEvidence[]>;
 }
 
 /** Parse and validate the model's reply. Throws a readable Error when it is unusable. */
@@ -119,7 +125,11 @@ export function parseModelOutput(raw: string, entityType: EntityType, docCount: 
   }
   if (!json || typeof json !== "object") throw new Error("The AI returned an unreadable response. Try again.");
 
-  const { content, sources_used } = json as { content?: unknown; sources_used?: unknown };
+  const { content, sources_used, evidence: rawEvidence } = json as {
+    content?: unknown;
+    sources_used?: unknown;
+    evidence?: unknown;
+  };
 
   const parsed = modelContentSchemas[entityType].safeParse(content);
   if (!parsed.success) {
@@ -136,7 +146,31 @@ export function parseModelOutput(raw: string, entityType: EntityType, docCount: 
     ),
   ];
 
-  return { content: parsed.data as Record<string, unknown>, sourcesUsed };
+  return {
+    content: parsed.data as Record<string, unknown>,
+    sourcesUsed,
+    evidence: sanitizeEvidence(rawEvidence, entityType, docCount),
+  };
+}
+
+/** Evidence is advisory, so a malformed entry is dropped rather than failing the whole reply. */
+function sanitizeEvidence(raw: unknown, entityType: EntityType, docCount: number): Record<string, RawEvidence[]> {
+  const out: Record<string, RawEvidence[]> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const field of FIELDS[entityType]) {
+    const list = (raw as Record<string, unknown>)[field];
+    if (!Array.isArray(list)) continue;
+    const items: RawEvidence[] = [];
+    for (const e of list) {
+      const source = Number((e as { source?: unknown })?.source);
+      const quote = (e as { quote?: unknown })?.quote;
+      if (Number.isInteger(source) && source >= 1 && source <= docCount && typeof quote === "string" && quote.trim()) {
+        items.push({ source, quote: quote.trim().slice(0, 600) });
+      }
+    }
+    if (items.length) out[field] = items.slice(0, 4);
+  }
+  return out;
 }
 
 /**

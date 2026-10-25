@@ -199,3 +199,91 @@ describe("describeAiError", () => {
     expect(describeAiError(new Error("boom"))).toBe("The AI request failed: boom");
   });
 });
+
+import { normalizeText, quoteInText, reviewEvidence, stripCitations, unsupportedFigures } from "../evidence";
+import { PatchDocumentSchema } from "../../vault/schemas";
+import { FIELD_LABELS } from "../entities";
+
+describe("quote verification", () => {
+  const text = "The eSafety Commissioner’s research found 53% of 10–17 year olds had experienced cyberbullying — and 38% in the past 12 months.";
+
+  it("matches quotes ignoring case, spacing and curly quotes/dashes", () => {
+    expect(quoteInText("the esafety commissioner's research found 53% of 10-17 year olds", text)).toBe(true);
+    expect(quoteInText("53%  of 10–17   year olds had experienced cyberbullying", text)).toBe(true);
+  });
+
+  it("rejects invented or too-short quotes", () => {
+    expect(quoteInText("more than half of Australian 15-year-olds report bullying", text)).toBe(false);
+    expect(quoteInText("53%", text)).toBe(false);
+  });
+
+  it("normalizes text", () => {
+    expect(normalizeText("  A  “Quote” – x ")).toBe('a "quote" - x');
+  });
+});
+
+describe("unsupported figures", () => {
+  const excerpts = "Results: 38% of students (1,200 schools) reported it. Rate rose 4.5 points.";
+
+  it("flags new figures missing from the excerpts, ignoring citations and old numbers", () => {
+    expect(unsupportedFigures("38% reported it (Source: Report 2026 edition)", "", excerpts)).toEqual([]);
+    expect(unsupportedFigures("53% reported it, 1200 schools", "", excerpts)).toEqual(["53%"]);
+    expect(unsupportedFigures("It affects 53% of students", "53% of students", excerpts)).toEqual([]);
+    expect(unsupportedFigures("up 4.5 points", "", excerpts)).toEqual([]);
+  });
+
+  it("strips citations", () => {
+    expect(stripCitations("A fact (Source: Doc 2025). Another.").includes("2025")).toBe(false);
+  });
+});
+
+describe("reviewEvidence", () => {
+  const docs = [
+    { document_id: "d1", chunks: [{ chunk_page: 14, chunk_heading: "Bullying", content: "More than half of 15-year-olds reported bullying in 2025 according to PISA." }] },
+    { document_id: "d2", chunks: [{ chunk_page: null, chunk_heading: null, content: "Unrelated text about attendance rates in remote areas." }] },
+  ];
+  const describe_ = (id: string) => ({ label: `Doc ${id}`, url: id === "d1" ? "https://x.org/r" : null });
+
+  it("verifies a quote, credits the right document, and records page and heading", () => {
+    const out = reviewEvidence({
+      changed: ["anchor_stat"],
+      fieldLabels: FIELD_LABELS,
+      current: { anchor_stat: "old" },
+      proposed: { anchor_stat: "More than half of 15-year-olds reported bullying" },
+      docs,
+      // model named document 2, but the quote is really in document 1
+      raw: { anchor_stat: [{ source: 2, quote: "More than half of 15-year-olds reported bullying in 2025" }] },
+      describe: describe_,
+    });
+    expect(out.evidence.anchor_stat[0]).toMatchObject({ sourceId: "d1", verified: true, page: 14, heading: "Bullying", url: "https://x.org/r" });
+    expect(out.warnings).toEqual([]);
+  });
+
+  it("warns about missing evidence, unverified quotes and untraceable figures", () => {
+    const out = reviewEvidence({
+      changed: ["anchor_stat", "definition"],
+      fieldLabels: FIELD_LABELS,
+      current: { anchor_stat: "old", definition: "old" },
+      proposed: { anchor_stat: "77% of students", definition: "text" },
+      docs,
+      raw: { anchor_stat: [{ source: 1, quote: "this sentence is not in any document at all" }] },
+      describe: describe_,
+    });
+    expect(out.evidence.anchor_stat[0].verified).toBe(false);
+    expect(out.evidence.definition).toEqual([]);
+    expect(out.unsupported.anchor_stat).toEqual(["77%"]);
+    expect(out.warnings.join(" ")).toMatch(/no supporting quote/);
+    expect(out.warnings.join(" ")).toMatch(/could not be found word-for-word/);
+    expect(out.warnings.join(" ")).toMatch(/77%/);
+  });
+});
+
+describe("vault source_url validation", () => {
+  it("accepts blank (to clear) and http(s) links; rejects anything else", () => {
+    expect(PatchDocumentSchema.safeParse({ source_url: "https://www.aihw.gov.au/report" }).success).toBe(true);
+    expect(PatchDocumentSchema.safeParse({ source_url: "" }).success).toBe(true);
+    expect(PatchDocumentSchema.safeParse({ source_url: "javascript:alert(1)" }).success).toBe(false);
+    expect(PatchDocumentSchema.safeParse({ source_url: "aihw.gov.au/report" }).success).toBe(false);
+    expect(PatchDocumentSchema.safeParse({ source_url: "https://" }).success).toBe(false);
+  });
+});

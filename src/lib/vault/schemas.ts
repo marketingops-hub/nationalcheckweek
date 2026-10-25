@@ -8,6 +8,13 @@
 
 import { z } from 'zod';
 
+/** Empty (clears the link) or an absolute http(s) URL. */
+function isBlankOrWebUrl(v: string): boolean {
+  if (v === '') return true;
+  if (!/^https?:\/\//i.test(v)) return false;
+  try { new URL(v); return true; } catch { return false; }
+}
+
 const nonEmpty    = z.string().trim().min(1);
 const titleSchema = nonEmpty.max(500);
 const categorySchema = nonEmpty.max(100).default('general');
@@ -18,7 +25,12 @@ const referenceSchema = z.string().trim().max(500).optional();   // manual full-
 const authorSchema    = z.string().trim().max(300).optional();   // "AIHW"
 const publisherSchema = z.string().trim().max(300).optional();   // "Australian Institute of Health and Welfare"
 const yearSchema      = z.string().trim().max(20).optional();    // "2024", "n.d."
-const sourceUrlSchema = z.string().trim().max(2000).optional();  // canonical public link
+const sourceUrlSchema = z
+  .string()
+  .trim()
+  .max(2000)
+  .refine(isBlankOrWebUrl, 'Must be a full web address starting with http:// or https://')
+  .optional();                                                     // canonical public link
 const pageRefSchema   = z.string().trim().max(120).optional();   // "p. 14", "Table 3" (manual locator)
 
 /** Reusable block of structured-citation fields shared across schemas. */
