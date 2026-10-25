@@ -11,6 +11,7 @@ import {
 } from "./entities";
 import { safeSourceUrl, sourceLabel, type SourceDoc } from "./format";
 import { groupChunks } from "./group";
+import { describeAiError } from "./aiError";
 import { retrieveChunks } from "./retrieve";
 import {
   SYSTEM_PROMPT,
@@ -185,7 +186,7 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
     );
     raw = res.content;
   } catch (err) {
-    throw new RefreshError(err instanceof Error ? err.message : "AI generation failed.", 502);
+    throw new RefreshError(describeAiError(err), 502);
   }
 
   let proposal;

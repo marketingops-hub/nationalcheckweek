@@ -175,3 +175,27 @@ describe("reconcileStateIssues", () => {
     expect(changedFields("state", { subtitle: "s", issues: current }, { subtitle: "s", issues: reconcileStateIssues(current, []) })).toEqual([]);
   });
 });
+
+import { describeAiError } from "../aiError";
+
+describe("describeAiError", () => {
+  const apiError = (status: number, message: string) => ({
+    details: { originalError: { status, message: `${status} ${message}`, error: { error: { message } } } },
+  });
+
+  it("explains an empty AI balance", () => {
+    expect(describeAiError(apiError(400, "Your credit balance is too low to access the Anthropic API."))).toMatch(/run out of credit/);
+  });
+
+  it("explains key and model problems", () => {
+    expect(describeAiError(apiError(401, "invalid x-api-key"))).toMatch(/API key/);
+    expect(describeAiError(apiError(404, "model: claude-x not found"))).toMatch(/model is not available/);
+  });
+
+  it("falls back to the real reason for anything else", () => {
+    expect(describeAiError(apiError(400, "messages: text content blocks must be non-empty"))).toMatch(
+      /AI request failed: messages: text content blocks must be non-empty/,
+    );
+    expect(describeAiError(new Error("boom"))).toBe("The AI request failed: boom");
+  });
+});
