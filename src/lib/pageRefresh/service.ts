@@ -55,6 +55,10 @@ interface PageContext {
 }
 
 const MODEL = "claude-sonnet-4-6";
+// The preview route may run for at most 120s (maxDuration): one slow attempt
+// (55s) plus a retry started before the 40s mark (55s) still fits.
+const AI_ATTEMPT_TIMEOUT_MS = 55_000;
+const RETRY_ONLY_IF_UNDER_MS = 40_000;
 
 function assertKey(type: EntityType, key: string) {
   if (!isValidEntityKey(type, key)) throw new RefreshError("Invalid page.", 400);
@@ -183,6 +187,7 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
   // long), tell the model exactly what was wrong and ask again.
   let proposal;
   let feedback = "";
+  const started = Date.now();
   for (let attempt = 1; attempt <= 2; attempt++) {
     let raw: string;
     try {
@@ -190,7 +195,7 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
         model: MODEL,
         temperature: 0.2,
         maxTokens: 3000,
-        timeout: 90000,
+        timeout: AI_ATTEMPT_TIMEOUT_MS,
       });
       raw = res.content;
     } catch (err) {
@@ -202,7 +207,8 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
       break;
     } catch (err) {
       const problem = err instanceof Error ? err.message : "Unusable reply.";
-      if (attempt === 2) throw new RefreshError(problem, 502);
+      // Retry only when there is time left inside the route's time limit.
+      if (attempt === 2 || Date.now() - started > RETRY_ONLY_IF_UNDER_MS) throw new RefreshError(problem, 502);
       console.warn("[page-refresh] invalid AI reply, retrying:", problem);
       feedback = `\n\nYOUR PREVIOUS REPLY WAS REJECTED: ${problem}\nReturn the JSON again, fixing exactly that problem and respecting every length limit.`;
     }

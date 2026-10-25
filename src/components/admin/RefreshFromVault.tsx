@@ -43,6 +43,9 @@ interface Props {
   blockedReason?: string | null;
 }
 
+/** The preview is an AI call; the default 30s browser timeout is far too short. */
+const PREVIEW_TIMEOUT_MS = 150_000;
+
 const ORIGIN_LABEL: Record<Version["origin"], string> = {
   baseline: "Original",
   refresh: "Vault refresh",
@@ -116,11 +119,12 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
     };
   }, [entityType, entityKey]);
 
-  async function post(url: string, body: unknown) {
+  async function post(url: string, body: unknown, timeout?: number) {
     const res = await adminFetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      timeout,
     });
     const d = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(d.error ?? "Request failed");
@@ -132,7 +136,11 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
     setError("");
     setMessage("");
     try {
-      const d: Preview = await post("/api/admin/page-refresh/preview", { entity_type: entityType, entity_key: entityKey });
+      const d: Preview = await post(
+        "/api/admin/page-refresh/preview",
+        { entity_type: entityType, entity_key: entityKey },
+        PREVIEW_TIMEOUT_MS, // searching the vault and writing with the AI can take a minute or more
+      );
       setPreview(d);
       setAccepted(Object.fromEntries(d.changed.map((f) => [f, true])));
       setSelected(new Set(d.sources.filter((s) => s.cited).map((s) => s.id)));
