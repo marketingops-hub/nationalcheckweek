@@ -27,6 +27,8 @@ export interface PromptContext {
   subject: string;
   current: Record<string, unknown>;
   docs: PromptDoc[];
+  /** True when staff ticked these documents themselves (rather than the vault search finding them). */
+  reviewerChoseSources?: boolean;
 }
 
 export const SYSTEM_PROMPT =
@@ -84,7 +86,12 @@ Refresh the page content (${fields}) with the LATEST figures found in the source
 
 Rules:
 - Prefer the most recent data. When two sources disagree, use the newer one and state the year of the figure.
-- Only change a field when the excerpts give relevant, better-supported information. Otherwise return the current value for that field unchanged.
+- Only change a field when the excerpts give relevant, better-supported information. Otherwise return the current value for that field unchanged.${
+    ctx.reviewerChoseSources
+      ? `
+- The reviewer chose these documents specifically for this page. Read them for figures and findings about the topic and USE them: update each field wherever a document gives a relevant statistic or finding, even if it only adds to or sharpens what the page already says. Return a field unchanged only when the documents contain nothing relevant to it.`
+      : ""
+  }
 - Never add a statistic that is not in the excerpts. Keep the existing tone and length.
 - In sentences (desc, overview, prevention, short_desc, definition, australian_data, mechanisms), add an inline citation "(Source: <document title>)" after each statistic or factual claim taken from a document, using the document's exact title. Do NOT put citations in short headline fields (stat, anchor_stat, subtitle, key_stats): the sources are listed separately at the bottom of the page.
 - Respect the length limits in the field guide. Keep roughly the same size and style as the current content.

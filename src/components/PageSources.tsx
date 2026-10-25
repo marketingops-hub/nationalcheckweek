@@ -1,18 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { getPageSourceRows } from "@/lib/pageRefresh/pageSources";
 import { safeSourceUrl, sourceLabel } from "@/lib/pageRefresh/format";
 import type { EntityType } from "@/lib/pageRefresh/entities";
 import styles from "./SourcesList.module.css";
-
-interface Row {
-  document_id: string;
-  title: string;
-  reference: string | null;
-  author: string | null;
-  publisher: string | null;
-  year: string | null;
-  page_ref: string | null;
-  source_url: string | null;
-}
 
 interface Props {
   entityType: EntityType;
@@ -29,20 +18,7 @@ interface Props {
  * link to a document updates every page that cites it.
  */
 export default async function PageSources({ entityType, entityKey, title = "Sources for this page", asSection = false }: Props) {
-  let rows: Row[] = [];
-  try {
-    const sb = await createClient();
-    const { data, error } = await sb.rpc("get_page_sources", {
-      p_entity_type: entityType,
-      p_entity_key: entityKey,
-    });
-    if (error) throw new Error(error.message);
-    rows = (data ?? []) as Row[];
-  } catch (err) {
-    // Never break the page over a footer list (e.g. migration not applied yet).
-    console.warn("[PageSources]", err instanceof Error ? err.message : err);
-    return null;
-  }
+  const rows = await getPageSourceRows(entityType, entityKey);
   if (rows.length === 0) return null;
 
   const list = (

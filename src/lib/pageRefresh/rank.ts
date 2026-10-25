@@ -15,6 +15,11 @@ function weightedTokens(text: string): Map<string, number> {
   return t;
 }
 
+/** How many figures (percentages, counts of 10+) a passage contains. */
+export function figureCount(text: string): number {
+  return (text.match(/\d+(?:\.\d+)?\s?%|\b\d{2,}(?:,\d{3})*\b/g) ?? []).length;
+}
+
 /**
  * Pick the chunks of the given documents that best match `text` (the edited
  * proposal), by weighted keyword overlap. No embeddings are needed, so this
@@ -23,8 +28,16 @@ function weightedTokens(text: string): Map<string, number> {
 export function rankChunksForText(
   chunks: RetrievedChunk[],
   text: string,
-  opts: GroupOptions = {},
+  opts: GroupOptions & {
+    /**
+     * Favour passages that contain figures (percentages, counts). Used when
+     * the goal is finding statistics to quote, so a results table beats an
+     * introduction that merely uses the same words.
+     */
+    preferStats?: boolean;
+  } = {},
 ): GroupedDoc[] {
+  const { preferStats = false, ...groupOpts } = opts;
   const tokens = weightedTokens(text);
   if (tokens.size === 0) return [];
 
@@ -33,6 +46,8 @@ export function rankChunksForText(
       const hay = chunk.content.toLowerCase().replace(/(\d),(\d)/g, "$1$2");
       let score = 0;
       for (const [token, weight] of tokens) if (hay.includes(token)) score += weight;
+      // Only boost passages that are already on topic, so unrelated tables do not win.
+      if (preferStats && score > 0) score += Math.min(6, figureCount(hay));
       return { chunk, order, score };
     })
     .filter((s) => s.score > 0)
@@ -40,6 +55,6 @@ export function rankChunksForText(
 
   return groupChunks(
     scored.map((s) => s.chunk),
-    { maxDocs: 12, perDoc: 4, ...opts },
+    { maxDocs: 12, perDoc: 4, ...groupOpts },
   );
 }

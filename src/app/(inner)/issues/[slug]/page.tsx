@@ -7,7 +7,7 @@ import VoiceBlock, { VOICE_DEFAULTS, type VoiceBlockData } from "@/components/Vo
 import InfoNote from "@/components/InfoNote";
 import PreventionBridge from "@/components/PreventionBridge";
 import CitedText from "@/components/CitedText";
-import PageSources from "@/components/PageSources";
+import IssueSourcesSection from "@/components/IssueSourcesSection";
 import PrevNextNav from "@/components/PrevNextNav";
 import { adminClient } from "@/lib/adminClient";
 import { parseImpacts, parseGroups, parseSourceStrings } from "@/lib/schemas/geo";
@@ -208,49 +208,13 @@ export default async function IssuePage({ params }: Props) {
 
         <VoiceBlock data={voiceData} />
 
-        {/* SOURCES */}
-        <section id="sources" className="inner-section">
-          <h2 className="section-heading section-heading--tight">Sources &amp; References</h2>
-
-          {issueSources.length > 0 && (
-            <div className="section-heading--md">
-              {issueSources.map((src) => (
-                <div key={src.id} id={`source-${src.num}`} className="source-item">
-                  <span className={`source-num ${src.verified ? "source-num--verified" : ""}`}>
-                    {src.num}
-                  </span>
-                  <div>
-                    <div className="source-title">
-                      {src.url ? (
-                        <a href={src.url} target="_blank" rel="noopener noreferrer">{src.title}</a>
-                      ) : src.title}
-                      {src.verified && <span className="source-verified">VERIFIED</span>}
-                    </div>
-                    <div className="source-meta">
-                      {src.publisher}{src.publisher && src.year && " · "}{src.year}
-                      {src.url && (
-                        <a href={src.url} target="_blank" rel="noopener noreferrer">↗ View source</a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!issueSources.length && legacySources.length > 0 && (
-            <div>
-              {legacySources.map((s) => (
-                <div key={s} className="source-legacy">📄 {s}</div>
-              ))}
-            </div>
-          )}
-
-          {issueSources.length === 0 && legacySources.length === 0 && (
-            <p className="source-empty">Sources will be added as this content is verified.</p>
-          )}
-          <PageSources entityType="issue" entityKey={slug} title="Latest data sources" />
-        </section>
+        {/* SOURCES: numbered references and the vault documents, as one list */}
+        <IssueSourcesSection
+          numbered={issueSources}
+          legacy={legacySources}
+          vault={[{ entityType: "issue", entityKey: slug }]}
+          emptyMessage="Sources will be added as this content is verified."
+        />
 
         <PrevNextNav
           prev={prevIssue ? { href: `/issues/${prevIssue.slug}`, label: <>{prevIssue.icon} {prevIssue.title}</> } : null}

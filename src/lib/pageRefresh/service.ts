@@ -17,7 +17,7 @@ import { describeAiError } from "./aiError";
 import { fetchAllChunks } from "./chunks";
 import { RefreshError } from "./errors";
 import { rankChunksForText } from "./rank";
-import { retrieveChunks } from "./retrieve";
+import { retrieveForPage } from "./retrieve";
 import {
   SYSTEM_PROMPT,
   buildUserPrompt,
@@ -175,7 +175,12 @@ async function groupFromChosen(db: SupabaseClient, ctx: PageContext, ids: string
     throw new RefreshError("The selected documents have no indexed text yet. Wait until they show as Ready in the vault.", 422);
   }
   // Relevance to the page: what it is about, plus what it currently says.
-  const grouped = rankChunksForText(all, `${ctx.query} ${fieldText(ctx.current)}`);
+  // Favour passages with figures: the aim is to find statistics to use.
+  const grouped = rankChunksForText(all, `${ctx.query} ${fieldText(ctx.current)}`, {
+    preferStats: true,
+    perDoc: 8,
+    maxTotalChars: 30000,
+  });
   if (grouped.length === 0) {
     throw new RefreshError("Nothing in the ticked documents looks relevant to this page. Tick other documents or add more.", 422);
   }
@@ -199,7 +204,12 @@ export async function previewRefresh(
   if (chosen.length > 0) {
     grouped = await groupFromChosen(db, ctx, chosen);
   } else {
-    grouped = groupChunks(await retrieveChunks(db, ctx.query));
+    // Two angles (what the page is about; the statistics about it), merged, so a
+    // document rich in figures is found even if another document dominates the topic search.
+    grouped = groupChunks(
+      await retrieveForPage(db, [ctx.query, `${ctx.subject} statistics percentage of students survey findings results`]),
+      { maxDocs: 8, perDoc: 4 },
+    );
     if (grouped.length === 0) {
       throw new RefreshError("No relevant, indexed documents were found in the vault for this page.", 422);
     }
@@ -217,7 +227,13 @@ export async function previewRefresh(
     };
   });
 
-  const userPrompt = buildUserPrompt({ entityType: type, subject: ctx.subject, current: ctx.current, docs });
+  const userPrompt = buildUserPrompt({
+    entityType: type,
+    subject: ctx.subject,
+    current: ctx.current,
+    docs,
+    reviewerChoseSources: chosen.length > 0,
+  });
 
   // One automatic retry: if the reply is unusable (for example a field is too
   // long), tell the model exactly what was wrong and ask again.
@@ -293,7 +309,14 @@ export async function previewRefresh(
   if (changed.length > 0 && citedIds.size === 0) {
     warnings.push("The AI changed content without citing any document. Check the proposal carefully before publishing.");
   }
-  if (changed.length === 0) warnings.push("The vault has nothing newer for this page. The content would not change.");
+  if (changed.length === 0) {
+    const passages = grouped.reduce((n, g) => n + g.chunks.length, 0);
+    warnings.push(
+      chosen.length > 0
+        ? `The AI read ${passages} passage${passages === 1 ? "" : "s"} from ${grouped.length} of the ticked document${grouped.length === 1 ? "" : "s"} and found no figures that improve this page. Use Edit to add a figure yourself, or tick other documents.`
+        : `The AI read ${passages} passage${passages === 1 ? "" : "s"} from ${grouped.length} document${grouped.length === 1 ? "" : "s"} in the vault and found nothing newer for this page. Add more documents on the Sources tab if you expect better figures.`,
+    );
+  }
 
   return {
     entityType: type,

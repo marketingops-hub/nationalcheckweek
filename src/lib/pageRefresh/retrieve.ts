@@ -1,8 +1,13 @@
 import OpenAI from "openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { looseQuery, type RetrievedChunk } from "./group";
+import { interleave, looseQuery, type RetrievedChunk } from "./group";
 
-const MATCH_K = 24;
+// Passages to pull before grouping by document. The old limit of 24 let one
+// document with many strong passages fill every slot, hiding other relevant
+// documents. A large pool lets several documents surface; groupChunks then
+// keeps only the best few passages of each.
+const MATCH_K = 120;
+const POOL = 250;
 
 /**
  * Retrieve vault chunks relevant to a query. Uses hybrid (semantic + keyword)
@@ -20,6 +25,7 @@ export async function retrieveChunks(db: SupabaseClient, query: string): Promise
         query_embedding: emb.data[0].embedding,
         query_text: looseQuery(query),
         match_k: MATCH_K,
+        pool: POOL,
         category_filter: null,
       });
       if (error) throw new Error(error.message);
@@ -60,4 +66,14 @@ async function keywordChunks(db: SupabaseClient, query: string): Promise<Retriev
       content: row.content as string,
     };
   });
+}
+
+/**
+ * Search for several angles of one page (what it is about, and the statistics
+ * about it) and merge the results, best of each first.
+ */
+export async function retrieveForPage(db: SupabaseClient, queries: string[]): Promise<RetrievedChunk[]> {
+  const unique = [...new Set(queries.map((q) => q.trim()).filter(Boolean))];
+  const lists = await Promise.all(unique.map((q) => retrieveChunks(db, q)));
+  return interleave(lists, (c) => `${c.document_id}:${c.content.slice(0, 80)}`);
 }

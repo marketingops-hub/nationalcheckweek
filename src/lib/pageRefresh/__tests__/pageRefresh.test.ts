@@ -337,3 +337,146 @@ describe("evidence-only prompt and parser", () => {
     expect(() => parseEvidenceOutput("not json", "state_issue", 2)).toThrow(/unreadable/);
   });
 });
+
+import { mergeSources, type NumberedSource, type VaultSourceRow } from "../mergeSources";
+
+describe("mergeSources", () => {
+  const numbered: NumberedSource[] = [
+    { id: "n1", num: 1, title: "eSafety Commissioner - Cyberbullying", url: null, publisher: "eSafety Commissioner", year: null },
+    { id: "n2", num: 2, title: "AIHW Youth report", url: "https://www.aihw.gov.au/reports/youth/", publisher: "AIHW", year: 2024 },
+  ];
+  const vault = (rows: Partial<VaultSourceRow>[]): VaultSourceRow[] =>
+    rows.map((r, i) => ({ document_id: `d${i}`, title: "Untitled", ...r }));
+
+  it("lists a document that is in both lists once, keeping the numbered entry and filling in its missing link", () => {
+    const out = mergeSources(
+      numbered,
+      vault([{ title: "eSafety Commissioner - Cyberbullying", source_url: "https://www.esafety.gov.au/key-topics/cyberbullying" }]),
+    );
+    expect(out.extras).toEqual([]);
+    expect(out.numbered[0]).toMatchObject({ num: 1, url: "https://www.esafety.gov.au/key-topics/cyberbullying" });
+  });
+
+  it("appends vault documents that are new, in order, and never renumbers the references", () => {
+    const out = mergeSources(
+      numbered,
+      vault([
+        { title: "eSafety Commissioner - Cyberbullying" },
+        { title: "eSafety Commissioner - Digital lives of Aussie teens", source_url: "https://www.esafety.gov.au/digital-lives" },
+      ]),
+    );
+    expect(out.numbered.map((n) => n.num)).toEqual([1, 2]);
+    expect(out.extras).toEqual([
+      { id: "d1", label: "eSafety Commissioner - Digital lives of Aussie teens", url: "https://www.esafety.gov.au/digital-lives" },
+    ]);
+  });
+
+  it("matches the same link despite www, trailing slash, query and case", () => {
+    const out = mergeSources(numbered, vault([{ title: "Totally different title", source_url: "https://aihw.gov.au/Reports/Youth?x=1" }]));
+    expect(out.extras).toEqual([]);
+  });
+
+  it("matches a composed reference that contains the numbered title", () => {
+    const out = mergeSources(
+      numbered,
+      vault([{ title: "AIHW Youth report", author: "AIHW", year: "2024", publisher: "AIHW", source_url: null }]),
+    );
+    expect(out.extras).toEqual([]);
+  });
+
+  it("de-duplicates a document that appears for several pages, and ignores unsafe links", () => {
+    const out = mergeSources(
+      [],
+      [
+        { document_id: "d1", title: "Survey A", source_url: "javascript:alert(1)" },
+        { document_id: "d1", title: "Survey A", source_url: null },
+        { document_id: "d2", title: "Survey A", source_url: "https://x.org/a" },
+      ],
+    );
+    expect(out.extras).toHaveLength(1);
+    expect(out.extras[0]).toMatchObject({ id: "d1", url: "https://x.org/a" });
+  });
+
+  it("does not treat short titles as the same document", () => {
+    const out = mergeSources([{ id: "n", num: 1, title: "Report", url: null }], vault([{ title: "Annual Report" }]));
+    expect(out.extras).toHaveLength(1);
+  });
+});
+
+import { interleave } from "../group";
+import { figureCount } from "../rank";
+import { buildUserPrompt } from "../prompt";
+
+describe("interleave", () => {
+  it("alternates between lists, best first, dropping repeats", () => {
+    const a = ["a1", "a2", "a3"];
+    const b = ["b1", "a2", "b3", "b4"];
+    expect(interleave([a, b], (x) => x)).toEqual(["a1", "b1", "a2", "a3", "b3", "b4"]);
+  });
+
+  it("handles empty lists", () => {
+    expect(interleave([], (x: string) => x)).toEqual([]);
+    expect(interleave([[], ["x"]], (x) => x)).toEqual(["x"]);
+  });
+});
+
+describe("a second document is not crowded out", () => {
+  it("keeps passages from other documents when one document has many strong passages", () => {
+    const strong: RetrievedChunk[] = Array.from({ length: 20 }, (_, i) => ({
+      document_id: "dominant",
+      document_title: "Dominant report",
+      content: `Cyberbullying passage ${i} about definitions and policy.`,
+    }));
+    const other: RetrievedChunk[] = [
+      { document_id: "stats", document_title: "Digital lives of Aussie teens", content: "53% of teens experienced cyberbullying in 2025." },
+    ];
+    // A large pool lists the other document's passage further down; grouping still includes it.
+    const out = groupChunks([...strong, ...other]);
+    expect(out.map((d) => d.document_id)).toContain("stats");
+    expect(out.find((d) => d.document_id === "dominant")?.chunks).toHaveLength(4);
+  });
+});
+
+describe("rankChunksForText with preferStats", () => {
+  const chunk = (content: string): RetrievedChunk => ({ document_id: "a", document_title: "Doc", content });
+  const rows = [
+    chunk("Introduction: cyberbullying is a growing concern for schools and families across the country."),
+    chunk("Cyberbullying results: 53% of teens, 38% in the past year, and 1,200 schools reported incidents in 2025."),
+  ];
+
+  it("puts the passage with figures first", () => {
+    const out = rankChunksForText(rows, "cyberbullying schools", { preferStats: true });
+    expect(out[0].chunks[0].content).toContain("53%");
+  });
+
+  it("does not boost unrelated passages that merely contain numbers", () => {
+    const out = rankChunksForText(
+      [chunk("Funding totals 12,500,000 across 340 programs and 25% of budgets."), chunk("Cyberbullying affects many students.")],
+      "cyberbullying",
+      { preferStats: true },
+    );
+    expect(out[0].chunks).toHaveLength(1);
+    expect(out[0].chunks[0].content).toContain("Cyberbullying");
+  });
+
+  it("counts percentages and larger numbers", () => {
+    expect(figureCount("53% and 38 %, 1,200 schools, 7 children")).toBe(3);
+  });
+});
+
+describe("prompt when the reviewer chose the sources", () => {
+  const base = {
+    entityType: "issue" as const,
+    subject: "Cyberbullying",
+    current: { short_desc: "S", definition: "D", australian_data: "A", mechanisms: "M", anchor_stat: "x" },
+    docs: [{ n: 1, title: "Survey", chunks: [{ content: "53% of teens." }] }],
+  };
+
+  it("tells the AI to use the chosen documents' figures", () => {
+    expect(buildUserPrompt({ ...base, reviewerChoseSources: true })).toContain("The reviewer chose these documents specifically");
+  });
+
+  it("keeps the cautious wording for documents found by the automatic search", () => {
+    expect(buildUserPrompt(base)).not.toContain("The reviewer chose these documents specifically");
+  });
+});

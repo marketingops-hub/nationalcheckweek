@@ -5,7 +5,7 @@ import { SEVERITY, SEVERITY_ICON } from "@/lib/colors";
 import SchoolStatsPanel from "@/components/SchoolStatsPanel";
 import CitedText from "@/components/CitedText";
 import InfoNote from "@/components/InfoNote";
-import PageSources from "@/components/PageSources";
+import IssueSourcesSection from "@/components/IssueSourcesSection";
 import PreventionBridge from "@/components/PreventionBridge";
 import {
   parseImpacts,
@@ -281,44 +281,15 @@ export default async function GeoIssuePage({ params }: Props) {
           </p>
         </PreventionBridge>
 
-        {/* SOURCES */}
-        {(issueSources.length > 0 || legacySources.length > 0) && (
-          <section id="sources" className="inner-section">
-            <h2 className="section-heading section-heading--tight">Sources &amp; References</h2>
-            {issueSources.length > 0 && (
-              <div className="section-heading--md">
-                {issueSources.map((src) => (
-                  <div key={src.id} id={`source-${src.num}`} className="source-item">
-                    <span className={`source-num ${src.verified ? "source-num--verified" : ""}`}>
-                      {src.num}
-                    </span>
-                    <div>
-                      <div className="source-title">
-                        {src.url ? (
-                          <a href={src.url} target="_blank" rel="noopener noreferrer">{src.title}</a>
-                        ) : src.title}
-                        {src.verified && <span className="source-verified">VERIFIED</span>}
-                      </div>
-                      <div className="source-meta">
-                        {src.publisher}{src.publisher && src.year && " · "}{src.year}
-                        {src.url && (
-                          <a href={src.url} target="_blank" rel="noopener noreferrer">↗ View source</a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {!issueSources.length && legacySources.map((s) => (
-              <div key={s} className="source-legacy">📄 {s}</div>
-            ))}
-          </section>
-        )}
-
-        {/* Vault documents this state's figures were refreshed from */}
-        <PageSources entityType="state_issue" entityKey={`${stateSlug}/${issueSlug}`} title={`Sources for ${state.name} data`} asSection />
-        <PageSources entityType="issue" entityKey={issueSlug} title={`Sources for the ${issue.title.toLowerCase()} overview`} asSection />
+        {/* SOURCES: the issue's numbered references plus the vault documents behind this state's figures and the overview */}
+        <IssueSourcesSection
+          numbered={issueSources}
+          legacy={legacySources}
+          vault={[
+            { entityType: "state_issue", entityKey: `${stateSlug}/${issueSlug}` },
+            { entityType: "issue", entityKey: issueSlug },
+          ]}
+        />
 
         {/* NAVIGATION */}
         <section className="inner-section">

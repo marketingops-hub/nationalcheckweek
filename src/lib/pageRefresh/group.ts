@@ -63,3 +63,25 @@ export function looseQuery(text: string): string {
     .filter((w) => w.length > 3);
   return [...new Set(words)].slice(0, 12).join(" or ");
 }
+
+/**
+ * Merge several relevance-ordered lists into one, alternating between them
+ * (best of each first) and dropping repeats. Used to combine searches for
+ * different angles of the same page, so no single query dominates.
+ */
+export function interleave<T>(lists: T[][], keyOf: (item: T) => string): T[] {
+  const out: T[] = [];
+  const seen = new Set<string>();
+  const longest = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < longest; i++) {
+    for (const list of lists) {
+      const item = list[i];
+      if (item === undefined) continue;
+      const key = keyOf(item);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(item);
+    }
+  }
+  return out;
+}
