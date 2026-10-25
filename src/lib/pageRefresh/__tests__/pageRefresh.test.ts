@@ -287,3 +287,53 @@ describe("vault source_url validation", () => {
     expect(PatchDocumentSchema.safeParse({ source_url: "https://" }).success).toBe(false);
   });
 });
+
+import { rankChunksForText } from "../rank";
+import { buildEvidencePrompt, parseEvidenceOutput } from "../prompt";
+
+describe("rankChunksForText", () => {
+  const chunk = (doc: string, content: string): RetrievedChunk => ({ document_id: doc, document_title: `Doc ${doc}`, content });
+
+  it("prefers chunks that share words and especially figures with the edited text", () => {
+    const rows = [
+      chunk("a", "Attendance rates in remote schools are lower than in cities."),
+      chunk("b", "The eSafety survey found 53% of children aged 10-17 had experienced cyberbullying."),
+      chunk("a", "Completely unrelated paragraph about funding models."),
+    ];
+    const out = rankChunksForText(rows, "Cyberbullying affects 53% of children, according to eSafety");
+    expect(out[0].document_id).toBe("b");
+    expect(out.flatMap((d) => d.chunks).every((c) => !c.content.includes("funding"))).toBe(true);
+  });
+
+  it("returns nothing when no chunk overlaps, and respects the per-document cap", () => {
+    expect(rankChunksForText([chunk("a", "zzz yyy")], "Cyberbullying statistics")).toEqual([]);
+    const many = Array.from({ length: 10 }, (_, i) => chunk("a", `cyberbullying result number ${i}`));
+    expect(rankChunksForText(many, "cyberbullying result", { perDoc: 3 })[0].chunks).toHaveLength(3);
+  });
+
+  it("matches figures written with thousands separators", () => {
+    const out = rankChunksForText([chunk("a", "Over 1,200 schools took part in the programme.")], "1200 schools took part");
+    expect(out).toHaveLength(1);
+  });
+});
+
+describe("evidence-only prompt and parser", () => {
+  it("includes the staff text and the numbered documents", () => {
+    const prompt = buildEvidencePrompt({
+      entityType: "state_issue",
+      subject: "Bullying in Victoria",
+      fields: [{ field: "stat", label: "Headline stat", text: "1 in 4 students" }],
+      docs: [{ n: 1, title: "Report", chunks: [{ page: 3, heading: "Results", content: "One in four students." }] }],
+    });
+    expect(prompt).toContain("1 in 4 students");
+    expect(prompt).toContain('<document n="1" title="Report"');
+    expect(prompt).toContain("WORD FOR WORD");
+  });
+
+  it("parses evidence leniently and rejects unreadable replies", () => {
+    const raw = JSON.stringify({ evidence: { stat: [{ source: 1, quote: "One in four students." }, { source: 9, quote: "bad source" }] } });
+    expect(parseEvidenceOutput(raw, "state_issue", 2)).toEqual({ stat: [{ source: 1, quote: "One in four students." }] });
+    expect(parseEvidenceOutput("{}", "state_issue", 2)).toEqual({});
+    expect(() => parseEvidenceOutput("not json", "state_issue", 2)).toThrow(/unreadable/);
+  });
+});

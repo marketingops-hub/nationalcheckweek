@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { adminFetch } from "@/lib/adminFetch";
 import { FIELDS, FIELD_LABELS, type EntityType } from "@/lib/pageRefresh/entities";
+import { changedFields } from "@/lib/pageRefresh/prompt";
+import AddSourcesPanel, { type FoundSource } from "@/components/admin/AddSourcesPanel";
+import DraftFieldEditor from "@/components/admin/DraftFieldEditor";
 
 interface PreviewSource {
   id: string;
@@ -11,6 +14,8 @@ interface PreviewSource {
   url: string | null;
   year: string | null;
   cited: boolean;
+  /** added by the reviewer through "Add more sources" */
+  added?: boolean;
 }
 
 interface EvidenceItem {
@@ -33,6 +38,20 @@ interface Preview {
   unsupported: Record<string, string[]>;
   warnings: string[];
 }
+
+/** What the review screen shows as proof: from the AI draft, or from the latest "Re-run verification". */
+interface Verification {
+  evidence: Record<string, EvidenceItem[]>;
+  unsupported: Record<string, string[]>;
+  warnings: string[];
+}
+
+/** Identifies the exact text and ticked sources a verification applies to. */
+function stateKey(proposed: Record<string, unknown>, selectedIds: string[]): string {
+  return JSON.stringify({ p: proposed, s: [...selectedIds].sort() });
+}
+
+const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 interface Version {
   id: string;
@@ -118,6 +137,13 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
   const [urlDraft, setUrlDraft] = useState<Record<string, string>>({});
   const [urlBusy, setUrlBusy] = useState<string | null>(null);
   const [urlMsg, setUrlMsg] = useState<Record<string, { ok: boolean; text: string }>>({});
+  // Reviewer edits to the AI draft, extra sources, and the latest verification.
+  const [edits, setEdits] = useState<Record<string, unknown>>({});
+  const [editing, setEditing] = useState<Record<string, boolean>>({});
+  const [extraSources, setExtraSources] = useState<PreviewSource[]>([]);
+  const [view, setView] = useState<Verification>({ evidence: {}, unsupported: {}, warnings: [] });
+  const [verifiedKey, setVerifiedKey] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   const fields = FIELDS[entityType];
   const live = versions[0];
@@ -161,9 +187,15 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
         { entity_type: entityType, entity_key: entityKey },
         PREVIEW_TIMEOUT_MS, // searching the vault and writing with the AI can take a minute or more
       );
+      const initialSelected = d.sources.filter((s) => s.cited).map((s) => s.id);
       setPreview(d);
-      setAccepted(Object.fromEntries(d.changed.map((f) => [f, true])));
-      setSelected(new Set(d.sources.filter((s) => s.cited).map((s) => s.id)));
+      setAccepted({});
+      setSelected(new Set(initialSelected));
+      setEdits({});
+      setEditing({});
+      setExtraSources([]);
+      setView({ evidence: d.evidence, unsupported: d.unsupported, warnings: d.warnings });
+      setVerifiedKey(stateKey(Object.fromEntries(fields.map((f) => [f, d.proposed[f]])), initialSelected));
       setNote("");
       setUrls({});
       setUrlDraft({});
@@ -182,9 +214,12 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
 
   async function publish() {
     if (!preview) return;
-    const chosen = fields.filter((f) => accepted[f]);
+    const chosen = changedNow.filter(isAccepted);
     if (chosen.length === 0) return;
-    if (!window.confirm(`Publish ${chosen.length} field${chosen.length > 1 ? "s" : ""} to the live site? You can revert afterwards from the version history.`)) return;
+    const warning = stale
+      ? "The checks on this screen are out of date: you edited the text or changed the ticked sources since the last verification.\n\n"
+      : "";
+    if (!window.confirm(`${warning}Publish ${chosen.length} field${chosen.length > 1 ? "s" : ""} to the live site? You can revert afterwards from the version history.`)) return;
 
     setPhase("publishing");
     setError("");
@@ -192,8 +227,8 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
       await post("/api/admin/page-refresh/publish", {
         entity_type: entityType,
         entity_key: entityKey,
-        content: Object.fromEntries(chosen.map((f) => [f, preview.proposed[f]])),
-        source_ids: preview.sources.filter((s) => selected.has(s.id)).map((s) => s.id),
+        content: Object.fromEntries(chosen.map((f) => [f, proposedNow[f]])),
+        source_ids: selectedIds,
         note: note || null,
       });
       reloadSoon("Published.");
@@ -201,6 +236,48 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
       setError(e instanceof Error ? e.message : "Publish failed");
       setPhase("review");
     }
+  }
+
+  /** Re-check the (possibly edited) draft against every ticked source, original and added. */
+  async function verify() {
+    if (!preview || selectedIds.length === 0) return;
+    const key = currentKey;
+    setVerifying(true);
+    setError("");
+    try {
+      const d = await post(
+        "/api/admin/page-refresh/verify",
+        { entity_type: entityType, entity_key: entityKey, proposed: proposedNow, source_ids: selectedIds },
+        PREVIEW_TIMEOUT_MS,
+      );
+      setView({ evidence: d.evidence ?? {}, unsupported: d.unsupported ?? {}, warnings: d.warnings ?? [] });
+      setVerifiedKey(key);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Verification failed");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  function startEdit(f: string) {
+    setEdits((e) => (f in e ? e : { ...e, [f]: clone(effective(f)) }));
+    setEditing((e) => ({ ...e, [f]: true }));
+  }
+
+  function resetEdit(f: string) {
+    setEdits((e) => {
+      const next = { ...e };
+      delete next[f];
+      return next;
+    });
+    setEditing((e) => ({ ...e, [f]: false }));
+  }
+
+  function addSource(src: FoundSource) {
+    const { snippets: _snippets, ...rest } = src;
+    void _snippets;
+    setExtraSources((prev) => (prev.some((p) => p.id === src.id) ? prev : [...prev, { ...rest, added: true }]));
+    setSelected((prev) => new Set(prev).add(src.id));
   }
 
   async function revert(v: Version) {
@@ -258,11 +335,23 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
     }
   }
 
-  const missingLinks = preview
-    ? preview.sources.filter((src) => selected.has(src.id) && !linkOf(src.id, src.url)).length
-    : 0;
+  const allSources = preview ? [...preview.sources, ...extraSources] : [];
+  const selectedIds = allSources.filter((src) => selected.has(src.id)).map((src) => src.id);
+  const missingLinks = allSources.filter((src) => selected.has(src.id) && !linkOf(src.id, src.url)).length;
 
-  const acceptedCount = fields.filter((f) => accepted[f]).length;
+  // The draft as it would be published: AI proposal with the reviewer's edits on top.
+  const effective = (f: string): unknown => (f in edits ? edits[f] : preview?.proposed[f]);
+  const proposedNow: Record<string, unknown> = Object.fromEntries(fields.map((f) => [f, effective(f)]));
+  const changedNow = preview ? changedFields(entityType, preview.current, proposedNow) : [];
+  const isAccepted = (f: string) => accepted[f] !== false;
+  const acceptedCount = changedNow.filter(isAccepted).length;
+
+  const currentKey = stateKey(proposedNow, selectedIds);
+  const stale = Boolean(preview) && currentKey !== verifiedKey;
+  const quotedIds = new Set(
+    Object.values(view.evidence).flatMap((items) => items.filter((i) => i.verified).map((i) => i.sourceId)),
+  );
+  const busy = phase === "publishing" || verifying;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -292,34 +381,97 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ fontWeight: 700, fontSize: 14 }}>Review changes — {preview.subject}</div>
 
-          {preview.warnings.map((w) => (
+          {view.warnings.map((w) => (
             <div key={w} style={{ ...box, borderColor: "#fde68a", background: "#fffbeb", color: "#92400e", fontSize: 13 }}>{w}</div>
           ))}
 
+          {/* Verification status: re-run after editing the text or changing the ticked sources */}
+          <div
+            style={{
+              ...box,
+              borderColor: stale ? "#fde68a" : "#bbf7d0",
+              background: stale ? "#fffbeb" : "#f0fdf4",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+            }}
+          >
+            <div style={{ fontSize: 13 }}>
+              {stale ? (
+                <><strong>Verification is out of date.</strong> You edited the text or changed the ticked sources.</>
+              ) : (
+                <><strong>Verification is up to date</strong> for the text and sources below.</>
+              )}
+              <div style={{ fontSize: 12, ...muted }}>
+                Re-running finds supporting quotes for the current wording and checks every quote and figure against the {selectedIds.length} ticked source{selectedIds.length === 1 ? "" : "s"}.
+              </div>
+            </div>
+            <button
+              className={stale ? "admin-btn admin-btn-primary" : "admin-btn admin-btn-secondary"}
+              onClick={verify}
+              disabled={busy || selectedIds.length === 0 || changedNow.length === 0}
+            >
+              {verifying ? "Verifying…" : "Re-run verification"}
+            </button>
+          </div>
+
           {fields.map((f) => {
-            const changed = preview.changed.includes(f);
+            const changed = changedNow.includes(f);
+            const isEditing = Boolean(editing[f]);
+            const edited = f in edits && JSON.stringify(edits[f]) !== JSON.stringify(preview.proposed[f]);
+            const hasEvidenceKey = f in view.evidence;
+            const outdated = stale && (edited || !hasEvidenceKey);
             return (
               <div key={f} style={box}>
                 <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, fontWeight: 600, fontSize: 13, opacity: changed ? 1 : 0.6 }}>
                   <input
                     type="checkbox"
                     style={checkbox}
-                    checked={Boolean(accepted[f])}
-                    disabled={!changed || phase === "publishing"}
+                    checked={changed && isAccepted(f)}
+                    disabled={!changed || busy}
                     onChange={(e) => setAccepted((a) => ({ ...a, [f]: e.target.checked }))}
                   />
                   {FIELD_LABELS[f] ?? f}
-                  <span style={{ fontWeight: 400, fontSize: 12, ...muted }}>{changed ? "Changed" : "No change"}</span>
+                  <span style={{ fontWeight: 400, fontSize: 12, ...muted }}>
+                    {changed ? (edited ? "Changed (edited by you)" : "Changed") : "No change"}
+                  </span>
                 </label>
-                <div style={{ display: "grid", gridTemplateColumns: changed ? "1fr 1fr" : "1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: changed || isEditing ? "1fr 1fr" : "1fr", gap: 12 }}>
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", ...muted, marginBottom: 4 }}>Current</div>
                     <Value value={preview.current[f]} />
+                    {!changed && !isEditing && (
+                      <button type="button" className="admin-btn admin-btn-ghost text-xs" style={{ marginTop: 8 }} onClick={() => startEdit(f)} disabled={busy}>
+                        Edit this field
+                      </button>
+                    )}
                   </div>
-                  {changed && (
+                  {(changed || isEditing) && (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#15803d", marginBottom: 4 }}>Proposed</div>
-                      <Value value={preview.proposed[f]} />
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#15803d" }}>
+                          {edited ? "Proposed (your edit)" : "Proposed"}
+                        </span>
+                        <span style={{ display: "flex", gap: 6 }}>
+                          {isEditing ? (
+                            <button type="button" className="admin-btn admin-btn-secondary text-xs" onClick={() => setEditing((e) => ({ ...e, [f]: false }))}>
+                              Done editing
+                            </button>
+                          ) : (
+                            <button type="button" className="admin-btn admin-btn-ghost text-xs" onClick={() => startEdit(f)} disabled={busy}>
+                              Edit
+                            </button>
+                          )}
+                          {f in edits && (
+                            <button type="button" className="admin-btn admin-btn-ghost text-xs" onClick={() => resetEdit(f)} disabled={busy}>
+                              Reset to AI draft
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                      {isEditing ? (
+                        <DraftFieldEditor field={f} value={effective(f)} disabled={busy} onChange={(v) => setEdits((e) => ({ ...e, [f]: v }))} />
+                      ) : (
+                        <Value value={effective(f)} />
+                      )}
                     </div>
                   )}
                 </div>
@@ -329,15 +481,23 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                     <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", ...muted, marginBottom: 6 }}>
                       Where this comes from
                     </div>
-                    {(preview.evidence[f] ?? []).length === 0 ? (
-                      <div style={{ fontSize: 12, color: "#b91c1c" }}>
-                        No supporting quote was given. Check this change against the source documents before publishing.
+                    {outdated && (
+                      <div style={{ fontSize: 12, color: "#b45309", marginBottom: 6 }}>
+                        {hasEvidenceKey
+                          ? "You edited this text or changed the sources since it was checked. The quotes below may no longer match: re-run verification."
+                          : "Not verified yet. Re-run verification to find supporting quotes for this text."}
                       </div>
-                    ) : (
-                      (preview.evidence[f] ?? []).map((ev, i) => {
+                    )}
+                    {!outdated && (view.evidence[f] ?? []).length === 0 && (
+                      <div style={{ fontSize: 12, color: "#b91c1c" }}>
+                        No supporting quote was found in the ticked sources. Check this change against the source documents, or tick more sources and re-run verification.
+                      </div>
+                    )}
+                    {hasEvidenceKey &&
+                      (view.evidence[f] ?? []).map((ev, i) => {
                         const link = linkOf(ev.sourceId, ev.url);
                         return (
-                          <div key={i} style={{ marginBottom: 8, fontSize: 12 }}>
+                          <div key={i} style={{ marginBottom: 8, fontSize: 12, opacity: outdated ? 0.6 : 1 }}>
                             <div style={{ fontWeight: 600 }}>
                               {link ? (
                                 <a href={link} target="_blank" rel="noopener noreferrer" style={{ color: "var(--admin-accent)" }}>{ev.label} ↗</a>
@@ -358,11 +518,10 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                             </span>
                           </div>
                         );
-                      })
-                    )}
-                    {(preview.unsupported[f] ?? []).length > 0 && (
-                      <div style={{ fontSize: 12, color: "#b45309", marginTop: 4 }}>
-                        ⚠ Figures not found in the document excerpts: <strong>{preview.unsupported[f].join(", ")}</strong>
+                      })}
+                    {(view.unsupported[f] ?? []).length > 0 && (
+                      <div style={{ fontSize: 12, color: "#b45309", marginTop: 4, opacity: outdated ? 0.6 : 1 }}>
+                        ⚠ Figures not found in the ticked documents: <strong>{view.unsupported[f].join(", ")}</strong>
                       </div>
                     )}
                   </div>
@@ -372,16 +531,16 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
           })}
 
           <div style={box}>
-            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Sources shown at the bottom of the page</div>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Sources</div>
             <div style={{ fontSize: 12, ...muted, marginBottom: 10 }}>
-              Tick the documents to list. Add or fix a public link here and it is saved to the vault document.
+              Ticked documents are used to verify the text above and are listed at the bottom of the page. Add or fix a public link here and it is saved to the vault document.
             </div>
             {missingLinks > 0 && (
               <div style={{ fontSize: 12, color: "#b45309", marginBottom: 10 }}>
                 {missingLinks} selected document{missingLinks > 1 ? "s have" : " has"} no public link and will show as plain text. Paste the link below to make {missingLinks > 1 ? "them" : "it"} clickable.
               </div>
             )}
-            {preview.sources.map((s) => {
+            {allSources.map((s) => {
               const link = linkOf(s.id, s.url);
               const msg = urlMsg[s.id];
               return (
@@ -391,7 +550,7 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                       type="checkbox"
                       style={{ ...checkbox, marginTop: 3 }}
                       checked={selected.has(s.id)}
-                      disabled={phase === "publishing"}
+                      disabled={busy}
                       onChange={(e) =>
                         setSelected((prev) => {
                           const next = new Set(prev);
@@ -403,7 +562,15 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                     />
                     <span>
                       {s.label}{" "}
-                      {s.cited ? <em style={{ fontSize: 11, color: "#1d4ed8" }}>cited</em> : <em style={{ fontSize: 11, ...muted }}>considered, not cited</em>}
+                      {quotedIds.has(s.id) ? (
+                        <em style={{ fontSize: 11, color: "#15803d" }}>quoted as evidence</em>
+                      ) : s.added ? (
+                        <em style={{ fontSize: 11, color: "#1d4ed8" }}>added by you</em>
+                      ) : s.cited ? (
+                        <em style={{ fontSize: 11, color: "#1d4ed8" }}>cited</em>
+                      ) : (
+                        <em style={{ fontSize: 11, ...muted }}>considered, not cited</em>
+                      )}
                     </span>
                   </label>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6, marginLeft: 24, flexWrap: "wrap" }}>
@@ -415,13 +582,13 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                       aria-label={`Public link for ${s.label}`}
                       className="swa-form-input"
                       style={{ flex: "1 1 280px", fontSize: 12 }}
-                      disabled={phase === "publishing" || urlBusy === s.id}
+                      disabled={busy || urlBusy === s.id}
                     />
                     <button
                       type="button"
                       className="admin-btn admin-btn-secondary text-xs"
                       onClick={() => saveUrl(s.id, s.url)}
-                      disabled={phase === "publishing" || urlBusy === s.id || (urlDraft[s.id] === undefined)}
+                      disabled={busy || urlBusy === s.id || (urlDraft[s.id] === undefined)}
                     >
                       {urlBusy === s.id ? "Saving…" : "Save link"}
                     </button>
@@ -441,6 +608,8 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
                 </div>
               );
             })}
+
+            <AddSourcesPanel existingIds={new Set(allSources.map((x) => x.id))} onAdd={addSource} disabled={busy} />
           </div>
 
           <input
@@ -453,10 +622,10 @@ export default function RefreshFromVault({ entityType, entityKey, pagePath, bloc
           />
 
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="admin-btn admin-btn-primary" onClick={publish} disabled={acceptedCount === 0 || phase === "publishing"}>
+            <button className="admin-btn admin-btn-primary" onClick={publish} disabled={acceptedCount === 0 || busy}>
               {phase === "publishing" ? "Publishing…" : `Publish ${acceptedCount} selected field${acceptedCount === 1 ? "" : "s"}`}
             </button>
-            <button className="admin-btn admin-btn-ghost" onClick={() => { setPreview(null); setPhase("idle"); }} disabled={phase === "publishing"}>
+            <button className="admin-btn admin-btn-ghost" onClick={() => { setPreview(null); setPhase("idle"); }} disabled={busy}>
               Discard
             </button>
           </div>

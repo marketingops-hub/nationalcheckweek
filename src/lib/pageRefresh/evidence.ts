@@ -94,11 +94,13 @@ export function reviewEvidence(args: {
   docs: EvidenceDoc[];
   raw: Record<string, RawEvidence[]>;
   describe: (documentId: string) => { label: string; url: string | null };
+  /** Full text of the documents. When given, new figures are checked against it instead of the excerpts. */
+  fullText?: string;
 }): { evidence: Record<string, EvidenceItem[]>; unsupported: Record<string, string[]>; warnings: string[] } {
   const evidence: Record<string, EvidenceItem[]> = {};
   const unsupported: Record<string, string[]> = {};
   const warnings: string[] = [];
-  const excerpts = args.docs.flatMap((d) => d.chunks.map((c) => c.content)).join("\n");
+  const excerpts = args.fullText ?? args.docs.flatMap((d) => d.chunks.map((c) => c.content)).join("\n");
   let unverified = 0;
 
   for (const field of args.changed) {
@@ -141,7 +143,7 @@ export function reviewEvidence(args: {
     const missing = unsupportedFigures(fieldText(args.proposed[field]), fieldText(args.current[field]), excerpts);
     if (missing.length) {
       unsupported[field] = missing;
-      warnings.push(`"${name}" contains figures that were not found in the document excerpts: ${missing.join(", ")}.`);
+      warnings.push(`"${name}" contains figures that were not found in the selected documents: ${missing.join(", ")}.`);
     }
   }
 

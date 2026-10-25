@@ -154,7 +154,7 @@ export function parseModelOutput(raw: string, entityType: EntityType, docCount: 
 }
 
 /** Evidence is advisory, so a malformed entry is dropped rather than failing the whole reply. */
-function sanitizeEvidence(raw: unknown, entityType: EntityType, docCount: number): Record<string, RawEvidence[]> {
+export function sanitizeEvidence(raw: unknown, entityType: EntityType, docCount: number): Record<string, RawEvidence[]> {
   const out: Record<string, RawEvidence[]> = {};
   if (!raw || typeof raw !== "object") return out;
   for (const field of FIELDS[entityType]) {
@@ -207,4 +207,66 @@ function normalize(v: unknown): unknown {
     return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, normalize(x)]));
   }
   return v;
+}
+
+/* ── Evidence-only pass: used when staff edit a draft or add sources ─────── */
+
+export interface EvidencePromptContext {
+  entityType: EntityType;
+  subject: string;
+  /** the changed fields, as they would be published */
+  fields: { field: string; label: string; text: string }[];
+  docs: PromptDoc[];
+}
+
+export function buildEvidencePrompt(ctx: EvidencePromptContext): string {
+  const docs = ctx.docs
+    .map((d) => {
+      const meta = [d.author, d.year].filter(Boolean).join(", ");
+      const chunks = d.chunks
+        .map((c) => {
+          const where = [c.heading, c.page ? `p. ${c.page}` : ""].filter(Boolean).join(", ");
+          return `${where ? `[${where}]\n` : ""}${c.content.trim()}`;
+        })
+        .join("\n---\n");
+      return `<document n="${d.n}" title="${d.title.replace(/"/g, "'")}"${meta ? ` info="${meta.replace(/"/g, "'")}"` : ""}>\n${chunks}\n</document>`;
+    })
+    .join("\n\n");
+
+  const fields = ctx.fields.map((f) => `${f.field} (${f.label}):\n${f.text}`).join("\n\n");
+
+  return `PAGE: ${ctx.subject}
+
+PROPOSED TEXT TO CHECK (this has been written or edited by staff):
+${fields}
+
+SOURCE EXCERPTS:
+${docs}
+
+TASK
+For each field above, find quotes in the excerpts that genuinely support the text. Do NOT rewrite the text.
+
+Rules:
+- Copy quotes WORD FOR WORD from the excerpts (each at most 300 characters). Never paraphrase inside a quote.
+- Give 1-3 quotes per field, each containing the figure or claim it supports.
+- If the excerpts do not support a field, or only part of it, give the quotes you can and no more. An empty list is the correct answer for an unsupported field.
+- Do not stretch a quote to fit. A quote must say what the text says.
+
+Return ONLY a JSON object:
+{ "evidence": { "<field name>": [ { "source": <document n>, "quote": "<exact words from that document>" } ] } }`;
+}
+
+/** Parse the evidence-only reply. Throws a readable Error when it is unusable. */
+export function parseEvidenceOutput(raw: string, entityType: EntityType, docCount: number): Record<string, RawEvidence[]> {
+  const text = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("The AI returned an unreadable response. Try again.");
+  }
+  return sanitizeEvidence((json as { evidence?: unknown } | null)?.evidence, entityType, docCount);
 }

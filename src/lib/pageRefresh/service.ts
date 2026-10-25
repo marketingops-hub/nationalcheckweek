@@ -54,24 +54,24 @@ export interface RefreshPreview {
   warnings: string[];
 }
 
-interface PageContext {
+export interface PageContext {
   subject: string;
   current: Record<string, unknown>;
   query: string;
 }
 
-const MODEL = "claude-sonnet-4-6";
+export const MODEL = "claude-sonnet-4-6";
 // The preview route may run for at most 120s (maxDuration): one slow attempt
 // (55s) plus a retry started before the 40s mark (55s) still fits.
 const AI_ATTEMPT_TIMEOUT_MS = 55_000;
 const RETRY_ONLY_IF_UNDER_MS = 40_000;
 
-function assertKey(type: EntityType, key: string) {
+export function assertKey(type: EntityType, key: string) {
   if (!isValidEntityKey(type, key)) throw new RefreshError("Invalid page.", 400);
 }
 
 /** Current content of the page plus what to search the vault for. */
-async function loadContext(db: SupabaseClient, type: EntityType, key: string): Promise<PageContext> {
+export async function loadContext(db: SupabaseClient, type: EntityType, key: string): Promise<PageContext> {
   if (type === "area") {
     const { data } = await db
       .from("areas")
@@ -139,11 +139,11 @@ async function loadContext(db: SupabaseClient, type: EntityType, key: string): P
   };
 }
 
-interface VaultMeta extends SourceDoc {
+export interface VaultMeta extends SourceDoc {
   id: string;
 }
 
-async function loadDocMeta(db: SupabaseClient, ids: string[]): Promise<Map<string, VaultMeta>> {
+export async function loadDocMeta(db: SupabaseClient, ids: string[]): Promise<Map<string, VaultMeta>> {
   if (ids.length === 0) return new Map();
   const { data, error } = await db
     .from("vault_documents")
@@ -153,7 +153,7 @@ async function loadDocMeta(db: SupabaseClient, ids: string[]): Promise<Map<strin
   return new Map((data ?? []).map((d) => [d.id as string, d as VaultMeta]));
 }
 
-function toPreviewSource(meta: VaultMeta, cited: boolean): PreviewSource {
+export function toPreviewSource(meta: VaultMeta, cited: boolean): PreviewSource {
   return {
     id: meta.id,
     title: meta.title,
