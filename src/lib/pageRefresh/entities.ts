@@ -54,12 +54,19 @@ export interface StateContent {
   issues: StateIssueEntry[];
 }
 
+export interface ImpactArea {
+  title: string;
+  text: string;
+}
+
 export interface IssueContent {
   short_desc: string;
   definition: string;
   australian_data: string;
   mechanisms: string;
   anchor_stat: string;
+  impacts: ImpactArea[];
+  groups: string[];
 }
 
 export type PageContent =
@@ -81,13 +88,15 @@ export const FIELD_LABELS: Record<string, string> = {
   australian_data: "Australian data",
   mechanisms: "Mechanisms",
   anchor_stat: "Anchor stat",
+  impacts: "Key impact areas",
+  groups: "Groups most at risk",
 };
 
 export const FIELDS: Record<EntityType, readonly string[]> = {
   area: ["overview", "prevention", "key_stats"],
   state_issue: ["stat", "desc"],
   state: ["subtitle", "issues"],
-  issue: ["short_desc", "definition", "australian_data", "mechanisms", "anchor_stat"],
+  issue: ["short_desc", "definition", "australian_data", "mechanisms", "anchor_stat", "impacts", "groups"],
 };
 
 const keyStatSchema = z.object({
@@ -120,12 +129,33 @@ const stateShape = {
     .max(40),
 };
 
+/** Titles/names are used as React keys on the page, so they must be unique. */
+const uniqueBy = <T,>(items: T[], key: (t: T) => string) =>
+  new Set(items.map((i) => key(i).trim().toLowerCase())).size === items.length;
+
 const issueShape = {
   short_desc: z.string().trim().min(1).max(600),
   definition: z.string().trim().min(1).max(4000),
   australian_data: z.string().trim().min(1).max(4000),
   mechanisms: z.string().trim().min(1).max(4000),
   anchor_stat: z.string().trim().min(1).max(300),
+  // "Key Impact Areas": cards with a short title and a one-sentence description.
+  impacts: z
+    .array(
+      z.object({
+        title: z.string().trim().min(1).max(60),
+        text: z.string().trim().min(1).max(300),
+      }),
+    )
+    .min(1)
+    .max(8)
+    .refine((list) => uniqueBy(list, (i) => i.title), "Impact area titles must be different from each other"),
+  // "Groups Most at Risk": short phrases shown as tags.
+  groups: z
+    .array(z.string().trim().min(1).max(120))
+    .min(1)
+    .max(10)
+    .refine((list) => uniqueBy(list, (g) => g), "Each group must be different"),
 };
 
 const nonEmpty = (o: Record<string, unknown>) => Object.keys(o).length > 0;

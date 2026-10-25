@@ -9,10 +9,16 @@ import RefreshFromVault from "../RefreshFromVault";
 
 const SOURCE = { id: "doc1", title: "Report", label: "AIHW (2025). Report", url: "https://x.org/r", year: "2025", cited: true };
 
+const IMPACTS = [
+  { title: "Sleep & Fatigue", text: "Night-time checking disrupts sleep." },
+  { title: "School Avoidance", text: "Classmates involved, so school feels unsafe." },
+];
+const GROUPS = ["Girls aged 10-17", "LGBTQ+ youth"];
+
 const PREVIEW = {
   subject: "Cyberbullying (national issue page)",
-  current: { short_desc: "S", definition: "D", australian_data: "A", mechanisms: "M", anchor_stat: "Old stat" },
-  proposed: { short_desc: "S", definition: "D", australian_data: "A", mechanisms: "M", anchor_stat: "53% of children" },
+  current: { short_desc: "S", definition: "D", australian_data: "A", mechanisms: "M", anchor_stat: "Old stat", impacts: IMPACTS, groups: GROUPS },
+  proposed: { short_desc: "S", definition: "D", australian_data: "A", mechanisms: "M", anchor_stat: "53% of children", impacts: IMPACTS, groups: GROUPS },
   changed: ["anchor_stat"],
   sources: [SOURCE],
   evidence: {
@@ -83,8 +89,8 @@ describe("RefreshFromVault review flow", () => {
     expect(screen.getByText(/53% of children had experienced it/)).toBeTruthy();
     expect(screen.getByText("✓ Backed by sources")).toBeTruthy();
 
-    // four unchanged fields are one-line rows, not cards
-    expect(screen.getAllByText(/· no change/)).toHaveLength(4);
+    // the six unchanged fields (including impact areas and groups) are one-line rows, not cards
+    expect(screen.getAllByText(/· no change/)).toHaveLength(6);
 
     expect(screen.getByText("1 change")).toBeTruthy(); // the publish summary
     expect(screen.getByRole("button", { name: "Publish 1 change" })).toBeTruthy();
@@ -142,5 +148,38 @@ describe("RefreshFromVault review flow", () => {
 
     expect(screen.getByText(/1 ticked document has no public link/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add link" })).toBeTruthy();
+  });
+});
+
+describe("RefreshFromVault: impact areas and groups at risk", () => {
+  it("shows a changed list next to the live one, with its evidence, and lets staff edit it", async () => {
+    const newImpacts = [IMPACTS[0], { title: "Anxiety", text: "Constant monitoring raises anxiety." }];
+    vi.mocked(adminFetch).mockImplementation(async (url: string, opts?: RequestInit) => {
+      const body = opts?.body ? (JSON.parse(String(opts.body)) as Record<string, unknown>) : undefined;
+      calls.push({ url, body });
+      if (url.includes("/versions")) return respond({ versions: [] });
+      if (url.includes("/preview")) {
+        return respond({
+          ...PREVIEW,
+          proposed: { ...PREVIEW.proposed, anchor_stat: "Old stat", impacts: newImpacts },
+          changed: ["impacts"],
+          evidence: { impacts: [{ sourceId: "doc1", label: SOURCE.label, url: SOURCE.url, page: 3, heading: "Effects", quote: "Constant monitoring raises anxiety among teens.", verified: true }] },
+        });
+      }
+      return respond({});
+    });
+
+    await startReview();
+
+    expect(screen.getByText("Key impact areas")).toBeTruthy();
+    expect(screen.getByText("School Avoidance")).toBeTruthy(); // live now
+    expect(screen.getByText("Anxiety")).toBeTruthy(); // new version
+    expect(screen.getByText(/Constant monitoring raises anxiety among teens/)).toBeTruthy();
+    expect(screen.getByText("Groups most at risk")).toBeTruthy(); // collapsed: unchanged
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Impact area 2 title"), { target: { value: "Low mood" } });
+    expect(screen.getByText(/You edited the text/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Publish 1 change" })).toBeTruthy();
   });
 });

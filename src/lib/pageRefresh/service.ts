@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adminClient } from "@/lib/adminClient";
+import { parseGroups, parseImpacts } from "@/lib/schemas/geo";
 import { anthropicService } from "@/lib/ai/anthropic-service";
 import {
   FIELDS,
@@ -11,6 +12,8 @@ import {
   type EntityType,
 } from "./entities";
 import { fieldText, reviewEvidence, type EvidenceItem } from "./evidence";
+import { refillWeakFields } from "./refill";
+import { mergeRefill, weakFields } from "./refillMerge";
 import { safeSourceUrl, sourceLabel, type SourceDoc } from "./format";
 import { groupChunks, type GroupedDoc } from "./group";
 import { describeAiError } from "./aiError";
@@ -64,6 +67,9 @@ export const MODEL = "claude-sonnet-4-6";
 // (55s) plus a retry started before the 40s mark (55s) still fits.
 const AI_ATTEMPT_TIMEOUT_MS = 55_000;
 const RETRY_ONLY_IF_UNDER_MS = 40_000;
+// The second pass (sections without a valid source) needs ~40s itself, so only start it
+// while there is room left inside the route's 120s limit.
+const REFILL_ONLY_IF_UNDER_MS = 55_000;
 
 export function assertKey(type: EntityType, key: string) {
   if (!isValidEntityKey(type, key)) throw new RefreshError("Invalid page.", 400);
@@ -88,7 +94,7 @@ export async function loadContext(db: SupabaseClient, type: EntityType, key: str
   if (type === "issue") {
     const { data } = await db
       .from("issues")
-      .select("title, short_desc, definition, australian_data, mechanisms, anchor_stat")
+      .select("title, short_desc, definition, australian_data, mechanisms, anchor_stat, impacts, groups")
       .eq("slug", key)
       .maybeSingle();
     if (!data) throw new RefreshError("Issue not found.", 404);
@@ -100,6 +106,8 @@ export async function loadContext(db: SupabaseClient, type: EntityType, key: str
         australian_data: data.australian_data,
         mechanisms: data.mechanisms,
         anchor_stat: data.anchor_stat,
+        impacts: parseImpacts(data.impacts),
+        groups: parseGroups(data.groups),
       },
       query: `${data.title} Australian students young people prevalence statistics research`,
     };
@@ -298,18 +306,80 @@ export async function previewRefresh(
       return m ? { label: sourceLabel(m), url: safeSourceUrl(m.source_url) } : { label: "Unknown document", url: null };
     },
   });
+  // Second pass: any section without a valid source is rewritten from the picked documents, so
+  // that every section that can be backed by them is. Sections that still cannot are not given
+  // unsupported new text.
+  let content = proposal.content;
+  let evidence = review.evidence;
+  let unsupported = review.unsupported;
+  const notes: string[] = [];
+  const weak = weakFields(FIELDS[type], changed, evidence, unsupported);
+  if (weak.length > 0) {
+    if (Date.now() - started > REFILL_ONLY_IF_UNDER_MS) {
+      notes.push(
+        `${weak.length} section${weak.length === 1 ? "" : "s"} could not be re-checked against the sources in time. Press Regenerate to try again.`,
+      );
+    } else {
+      const r = await refillWeakFields({
+        db,
+        type,
+        ctx,
+        draft: content,
+        docIds: [...grouped.map((g) => g.document_id), ...chosen],
+        meta,
+        weak,
+        reviewerChoseSources: chosen.length > 0,
+      });
+      if (r) {
+        if (type === "state" && Array.isArray(r.content.issues)) {
+          r.content.issues = reconcileStateIssues(
+            ctx.current.issues as { name: string; stat: string; desc: string }[],
+            r.content.issues as { name: string; stat: string; desc: string }[],
+          );
+        }
+        const merged = mergeRefill({
+          fields: FIELDS[type],
+          weak,
+          current: ctx.current,
+          draft: content,
+          evidence,
+          unsupported,
+          refilled: r.content,
+          refilledEvidence: r.evidence,
+          refilledUnsupported: r.unsupported,
+        });
+        content = merged.content;
+        evidence = merged.evidence;
+        unsupported = merged.unsupported;
+        const names = (fs: string[]) => fs.map((f) => FIELD_LABELS[f] ?? f).join(", ");
+        notes.push(
+          `${weak.length} section${weak.length === 1 ? "" : "s"} had no valid source, so the AI went back to your documents for ${weak.length === 1 ? "it" : "them"}: ` +
+            [
+              merged.nowBacked.length ? `now backed by a quote: ${names(merged.nowBacked)}` : "",
+              merged.stillWeak.length ? `still unsupported, check by hand: ${names(merged.stillWeak)}` : "",
+              merged.keptCurrent.length ? `nothing relevant found, left as they are: ${names(merged.keptCurrent)}` : "",
+            ]
+              .filter(Boolean)
+              .join("; ") +
+            ".",
+        );
+      }
+    }
+  }
+  const finalChanged = changedFields(type, ctx.current, content);
+
   // A document the quotes come from counts as cited, even if the model forgot to list it.
-  for (const items of Object.values(review.evidence)) for (const it of items) if (it.verified) citedIds.add(it.sourceId);
+  for (const items of Object.values(evidence)) for (const it of items) if (it.verified) citedIds.add(it.sourceId);
   for (const src of sources) if (citedIds.has(src.id)) src.cited = true;
   sources.sort((a, b) => Number(b.cited) - Number(a.cited));
 
   // Problems with a specific field (no quote, unverified quote, untraceable figure) are shown on that
   // field's card, so this list only holds notes about the page as a whole.
-  const warnings: string[] = [];
-  if (changed.length > 0 && citedIds.size === 0) {
+  const warnings: string[] = [...notes];
+  if (finalChanged.length > 0 && citedIds.size === 0) {
     warnings.push("The AI changed content without citing any document. Check the proposal carefully before publishing.");
   }
-  if (changed.length === 0) {
+  if (finalChanged.length === 0) {
     const passages = grouped.reduce((n, g) => n + g.chunks.length, 0);
     warnings.push(
       chosen.length > 0
@@ -323,11 +393,11 @@ export async function previewRefresh(
     entityKey: key,
     subject: ctx.subject,
     current: ctx.current,
-    proposed: proposal.content,
-    changed,
+    proposed: content,
+    changed: finalChanged,
     sources,
-    evidence: review.evidence,
-    unsupported: review.unsupported,
+    evidence,
+    unsupported,
     warnings,
   };
 }

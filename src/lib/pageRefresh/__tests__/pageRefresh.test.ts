@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidEntityKey, pathsToRevalidate, publishContentSchemas, publicPath } from "../entities";
+import { FIELDS, FIELD_LABELS, isValidEntityKey, pathsToRevalidate, publishContentSchemas, publicPath } from "../entities";
 import { safeSourceUrl, sourceLabel } from "../format";
 import { groupChunks, looseQuery, type RetrievedChunk } from "../group";
 import { changedFields, parseModelOutput, reconcileStateIssues } from "../prompt";
@@ -142,7 +142,11 @@ describe("state and issue pages", () => {
     expect(parseModelOutput(state, "state", 1).content.subtitle).toBe("Sub");
 
     const issue = JSON.stringify({
-      content: { short_desc: "a", definition: "b", australian_data: "c", mechanisms: "d", anchor_stat: "e" },
+      content: {
+        short_desc: "a", definition: "b", australian_data: "c", mechanisms: "d", anchor_stat: "e",
+        impacts: [{ title: "Sleep", text: "Disrupts sleep." }],
+        groups: ["Girls aged 10-17"],
+      },
       sources_used: [],
     });
     expect(parseModelOutput(issue, "issue", 3).sourcesUsed).toEqual([]);
@@ -202,7 +206,6 @@ describe("describeAiError", () => {
 
 import { normalizeText, quoteInText, reviewEvidence, stripCitations, unsupportedFigures } from "../evidence";
 import { PatchDocumentSchema } from "../../vault/schemas";
-import { FIELD_LABELS } from "../entities";
 
 describe("quote verification", () => {
   const text = "The eSafety Commissioner’s research found 53% of 10–17 year olds had experienced cyberbullying — and 38% in the past 12 months.";
@@ -478,5 +481,178 @@ describe("prompt when the reviewer chose the sources", () => {
 
   it("keeps the cautious wording for documents found by the automatic search", () => {
     expect(buildUserPrompt(base)).not.toContain("The reviewer chose these documents specifically");
+  });
+});
+
+import { modelContentSchemas } from "../entities";
+import { fieldText } from "../evidence";
+
+describe("issue pages: impact areas and groups at risk", () => {
+  const issue = {
+    short_desc: "s", definition: "d", australian_data: "a", mechanisms: "m", anchor_stat: "x",
+    impacts: [
+      { title: "Sleep & Fatigue", text: "Night-time checking disrupts sleep." },
+      { title: "School Avoidance", text: "Classmates involved, so school feels unsafe." },
+    ],
+    groups: ["Girls aged 10-17 (higher prevalence)", "LGBTQ+ youth (higher severity)"],
+  };
+
+  it("are part of the issue page's refreshable fields", () => {
+    expect(FIELDS.issue).toContain("impacts");
+    expect(FIELDS.issue).toContain("groups");
+    expect(FIELD_LABELS.impacts).toBe("Key impact areas");
+    expect(FIELD_LABELS.groups).toBe("Groups most at risk");
+  });
+
+  it("accept a valid draft and a partial publish of just one list", () => {
+    expect(modelContentSchemas.issue.safeParse(issue).success).toBe(true);
+    expect(publishContentSchemas.issue.safeParse({ groups: issue.groups }).success).toBe(true);
+    expect(publishContentSchemas.issue.safeParse({ impacts: issue.impacts }).success).toBe(true);
+  });
+
+  it("reject duplicate titles/groups (they are React keys on the page), empty items and runaway lists", () => {
+    const dupTitle = { ...issue, impacts: [issue.impacts[0], { ...issue.impacts[1], title: "sleep & fatigue" }] };
+    expect(modelContentSchemas.issue.safeParse(dupTitle).success).toBe(false);
+    expect(publishContentSchemas.issue.safeParse({ groups: ["A group", "a GROUP"] }).success).toBe(false);
+    expect(publishContentSchemas.issue.safeParse({ groups: ["ok", ""] }).success).toBe(false);
+    expect(publishContentSchemas.issue.safeParse({ impacts: [] }).success).toBe(false);
+    expect(publishContentSchemas.issue.safeParse({ groups: Array.from({ length: 11 }, (_, i) => `g${i}`) }).success).toBe(false);
+  });
+
+  it("tell the AI to keep the page's current number of impact areas and groups", () => {
+    const current = {
+      ...issue,
+      impacts: Array.from({ length: 4 }, (_, i) => ({ title: `T${i}`, text: "x" })),
+      groups: Array.from({ length: 5 }, (_, i) => `g${i}`),
+    };
+    const prompt = buildUserPrompt({ entityType: "issue", subject: "Cyberbullying", current, docs: [] });
+    expect(prompt).toContain("Return exactly 4 impact areas");
+    expect(prompt).toContain("Return exactly 5 groups");
+    expect(prompt).toContain("Key Impact Areas");
+    expect(prompt).toContain("Groups Most at Risk");
+  });
+
+  it("notice a change in either list, and read their text for the figure checks", () => {
+    const next = { ...issue, groups: [...issue.groups.slice(0, 1), "Students on image-based platforms"] };
+    expect(changedFields("issue", issue, next)).toEqual(["groups"]);
+    expect(changedFields("issue", issue, { ...issue, impacts: [issue.impacts[0], { ...issue.impacts[1], text: "New sentence about 40% of teens." }] })).toEqual(["impacts"]);
+    expect(fieldText(issue.impacts)).toContain("Sleep & Fatigue");
+    expect(fieldText(issue.groups)).toContain("LGBTQ+ youth");
+  });
+});
+
+import { isBacked, mergeRefill, weakFields } from "../refillMerge";
+import { buildRefillPrompt, parseRefillOutput } from "../prompt";
+import type { EvidenceItem } from "../evidence";
+
+const ev = (verified = true): EvidenceItem => ({ sourceId: "d1", label: "Doc", url: null, page: null, heading: null, quote: "q", verified });
+
+describe("which sections count as having a valid source", () => {
+  it("needs at least one quote, all found, and no untraceable figures", () => {
+    expect(isBacked([ev()], [])).toBe(true);
+    expect(isBacked([ev(), ev()], undefined)).toBe(true);
+    expect(isBacked([], [])).toBe(false);
+    expect(isBacked(undefined, undefined)).toBe(false);
+    expect(isBacked([ev(), ev(false)], [])).toBe(false);
+    expect(isBacked([ev()], ["53%"])).toBe(false);
+  });
+
+  it("treats unchanged sections and unbacked changes as weak, and backed changes as fine", () => {
+    const fields = ["a", "b", "c", "d"];
+    const weak = weakFields(fields, ["a", "b", "c"], { a: [ev()], b: [], c: [ev(false)] }, {});
+    expect(weak).toEqual(["b", "c", "d"]); // a is backed; b/c changed without valid evidence; d unchanged
+  });
+});
+
+describe("mergeRefill: what is kept for each weak section", () => {
+  const base = {
+    fields: ["a", "b", "c", "d"],
+    current: { a: "A0", b: "B0", c: "C0", d: "D0" },
+    draft: { a: "A1", b: "B1", c: "C1", d: "D0" }, // a backed; b,c changed but unbacked; d unchanged
+    evidence: { a: [ev()], b: [], c: [] } as Record<string, EvidenceItem[]>,
+    unsupported: {} as Record<string, string[]>,
+    weak: ["b", "c", "d"],
+  };
+
+  it("uses the second pass where it is backed, keeps a flagged draft where it is not, and leaves unchanged sections alone", () => {
+    const out = mergeRefill({
+      ...base,
+      refilled: { b: "B2", c: "C2", d: "D0" }, // b backed; c refilled but not backed; d unchanged (nothing relevant)
+      refilledEvidence: { b: [ev()], c: [] },
+      refilledUnsupported: {},
+    });
+    expect(out.content).toEqual({ a: "A1", b: "B2", c: "C1", d: "D0" });
+    expect(out.nowBacked).toEqual(["b"]);
+    expect(out.stillWeak).toEqual(["c"]);
+    expect(out.keptCurrent).toEqual(["d"]);
+    expect(out.evidence.b).toHaveLength(1);
+    expect(out.evidence.a).toHaveLength(1); // an already-backed section is never touched
+  });
+
+  it("does not let an unchanged section gain unsupported text", () => {
+    const out = mergeRefill({
+      ...base,
+      weak: ["d"],
+      refilled: { d: "D-new with 99% of teens" },
+      refilledEvidence: { d: [] },
+      refilledUnsupported: { d: ["99%"] },
+    });
+    expect(out.content.d).toBe("D0");
+    expect(out.keptCurrent).toEqual(["d"]);
+  });
+
+  it("rejects a refilled section whose figures are not in the documents", () => {
+    const out = mergeRefill({
+      ...base,
+      weak: ["b"],
+      refilled: { b: "B2" },
+      refilledEvidence: { b: [ev()] },
+      refilledUnsupported: { b: ["77%"] },
+    });
+    expect(out.content.b).toBe("B1"); // keeps the first draft, flagged
+    expect(out.stillWeak).toEqual(["b"]);
+  });
+
+  it("survives a second pass that returned nothing", () => {
+    const out = mergeRefill({ ...base, refilled: {}, refilledEvidence: {}, refilledUnsupported: {} });
+    expect(out.content).toEqual({ a: "A1", b: "B1", c: "C1", d: "D0" });
+    expect(out.stillWeak).toEqual(["b", "c"]);
+    expect(out.keptCurrent).toEqual(["d"]);
+  });
+});
+
+describe("second-pass prompt and parser", () => {
+  const ctx = {
+    entityType: "issue" as const,
+    subject: "Cyberbullying",
+    current: {
+      short_desc: "S", definition: "Old definition", australian_data: "A", mechanisms: "M", anchor_stat: "x",
+      impacts: Array.from({ length: 4 }, (_, i) => ({ title: `T${i}`, text: "t" })),
+      groups: Array.from({ length: 5 }, (_, i) => `g${i}`),
+    },
+    draft: {},
+    fields: ["definition", "groups"],
+    docs: [{ n: 1, title: "Survey", chunks: [{ content: "53% of teens." }] }],
+  };
+
+  it("asks only for the weak sections, using the documents", () => {
+    const prompt = buildRefillPrompt(ctx);
+    expect(prompt).toContain("NOT yet backed by any quote");
+    expect(prompt).toContain("definition (Definition)");
+    expect(prompt).toContain("groups (Groups most at risk)");
+    expect(prompt).not.toContain("short_desc (Short description)");
+    expect(prompt).toContain('<document n="1" title="Survey"');
+    expect(prompt).toContain("Return exactly 5 groups");
+  });
+
+  it("keeps valid sections and drops invalid or missing ones", () => {
+    const raw = JSON.stringify({
+      content: { definition: "New definition citing 53% (Source: Survey).", groups: [] /* invalid: min 1 */, mechanisms: "ignored: not requested" },
+      evidence: { definition: [{ source: 1, quote: "53% of teens." }] },
+    });
+    const out = parseRefillOutput(raw, "issue", ["definition", "groups"], 1);
+    expect(out.content).toEqual({ definition: "New definition citing 53% (Source: Survey)." });
+    expect(out.evidence).toEqual({ definition: [{ source: 1, quote: "53% of teens." }] });
+    expect(() => parseRefillOutput("nope", "issue", ["definition"], 1)).toThrow(/unreadable/);
   });
 });

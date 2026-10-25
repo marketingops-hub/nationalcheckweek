@@ -54,8 +54,23 @@ const FIELD_GUIDE: Record<EntityType, string> = {
     "- definition: 2-3 sentences, up to about 450 characters, explaining what the issue is and how it presents.\n" +
     "- australian_data: 2-3 sentences, up to about 450 characters, of Australian statistics and research. Use the excerpts as the main source.\n" +
     "- mechanisms: 2-3 sentences, up to about 450 characters, on the psychological and social mechanisms behind the issue.\n" +
-    '- anchor_stat: ONE striking statistic, at most 150 characters, e.g. "1 in 5 young Australians". No citation.',
+    '- anchor_stat: ONE striking statistic, at most 150 characters, e.g. "1 in 5 young Australians". No citation.\n' +
+    '- impacts: the "Key Impact Areas" cards, a list of {"title": "...", "text": "..."}. title is a short label of at most 25 characters (e.g. "Sleep & Fatigue"); text is ONE sentence of at most 120 characters on how the issue affects students. Titles must all be different. No citations.\n' +
+    '- groups: the "Groups Most at Risk" tags, a list of short phrases of at most 70 characters, e.g. "Girls aged 10-17 (higher prevalence)". Base each on who the excerpts say is more affected. No citations.',
 };
+
+/** The field guide, plus how many list items to return for the lists on this page. */
+function fieldGuide(ctx: PromptContext): string {
+  const base = FIELD_GUIDE[ctx.entityType];
+  if (ctx.entityType !== "issue") return base;
+  const impacts = Array.isArray(ctx.current.impacts) ? ctx.current.impacts.length : 0;
+  const groups = Array.isArray(ctx.current.groups) ? ctx.current.groups.length : 0;
+  const counts = [
+    impacts ? `Return exactly ${impacts} impact areas (the page is laid out for that many).` : "",
+    groups ? `Return exactly ${groups} groups.` : "",
+  ].filter(Boolean);
+  return counts.length ? `${base}\n- ${counts.join(" ")} Replace an item only when the excerpts support a better one; otherwise keep it as it is.` : base;
+}
 
 export function buildUserPrompt(ctx: PromptContext): string {
   const docs = ctx.docs
@@ -98,7 +113,7 @@ Rules:
 - Plain text only, no HTML or markdown.
 
 Field guide:
-${FIELD_GUIDE[ctx.entityType]}
+${fieldGuide(ctx)}
 
 - EVIDENCE: for every field you CHANGED, give 1-3 quotes copied WORD FOR WORD from the excerpts that support the new text (each at most 300 characters, containing the figure or claim you used). Do not paraphrase inside quotes. Do not give evidence for fields you left unchanged. Never claim a document says something it does not.
 
@@ -276,4 +291,94 @@ export function parseEvidenceOutput(raw: string, entityType: EntityType, docCoun
     throw new Error("The AI returned an unreadable response. Try again.");
   }
   return sanitizeEvidence((json as { evidence?: unknown } | null)?.evidence, entityType, docCount);
+}
+
+/* ── Second pass: rewrite the sections that have no valid source ─────────── */
+
+export interface RefillPromptContext {
+  entityType: EntityType;
+  subject: string;
+  /** the live page, for list sizes and the field guide */
+  current: Record<string, unknown>;
+  /** the first-pass draft, so the model can see what it already tried */
+  draft: Record<string, unknown>;
+  /** the sections to rewrite */
+  fields: string[];
+  docs: PromptDoc[];
+  reviewerChoseSources?: boolean;
+}
+
+export function buildRefillPrompt(ctx: RefillPromptContext): string {
+  const docs = ctx.docs
+    .map((d) => {
+      const meta = [d.author, d.year].filter(Boolean).join(", ");
+      const chunks = d.chunks
+        .map((c) => {
+          const where = [c.heading, c.page ? `p. ${c.page}` : ""].filter(Boolean).join(", ");
+          return `${where ? `[${where}]\n` : ""}${c.content.trim()}`;
+        })
+        .join("\n---\n");
+      return `<document n="${d.n}" title="${d.title.replace(/"/g, "'")}"${meta ? ` info="${meta.replace(/"/g, "'")}"` : ""}>\n${chunks}\n</document>`;
+    })
+    .join("\n\n");
+
+  const sections = ctx.fields
+    .map((f) => `${f} (${FIELD_LABELS[f] ?? f}), CURRENT TEXT ON THE PAGE:\n${JSON.stringify(ctx.current[f], null, 2)}`)
+    .join("\n\n");
+
+  return `PAGE: ${ctx.subject}
+
+These sections of the page are NOT yet backed by any quote from the documents. Rewrite each one using the source excerpts below, so that it is based on what the documents say.
+
+SECTIONS TO REWRITE:
+${sections}
+
+SOURCE EXCERPTS:
+${docs}
+
+Rules:
+- Base every statistic and claim on the excerpts. Use the figures and findings the documents give about this page's topic, preferring the most recent data and stating its year.
+${ctx.reviewerChoseSources ? "- The reviewer chose these documents for this page, so use them wherever they are relevant.\n" : ""}- If the excerpts contain nothing relevant to a section, return that section exactly as it is now and give no evidence for it. Never invent a statistic.
+- In sentences, add an inline citation "(Source: <document title>)" after each statistic or claim taken from a document, using the exact title. Do NOT put citations in short headline fields (stat, anchor_stat, subtitle, key_stats) or in lists of titles/tags (impacts titles, groups).
+- Respect the length limits in the field guide and keep the existing tone, style and number of list items.
+- Plain text only.
+- EVIDENCE: for every section you CHANGED, give 1-3 quotes copied WORD FOR WORD from the excerpts (each at most 300 characters, containing the figure or claim used). Never paraphrase inside a quote.
+
+Field guide:
+${fieldGuide({ entityType: ctx.entityType, subject: ctx.subject, current: ctx.current, docs: ctx.docs })}
+
+Return ONLY a JSON object containing just the sections above:
+{
+  "content": { ${ctx.fields.map((f) => `"${f}": ...`).join(", ")} },
+  "evidence": { "<changed section name>": [ { "source": <document n>, "quote": "<exact words from that document>" } ] }
+}`;
+}
+
+/** Parse the second-pass reply. Sections that are missing or invalid are dropped, never guessed. */
+export function parseRefillOutput(
+  raw: string,
+  entityType: EntityType,
+  fields: string[],
+  docCount: number,
+): { content: Record<string, unknown>; evidence: Record<string, RawEvidence[]> } {
+  const text = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("The AI returned an unreadable response.");
+  }
+  const body = (json ?? {}) as { content?: Record<string, unknown>; evidence?: unknown };
+  const shape = (modelContentSchemas[entityType] as unknown as { shape: Record<string, { safeParse: (v: unknown) => { success: boolean; data?: unknown } }> }).shape;
+
+  const content: Record<string, unknown> = {};
+  for (const f of fields) {
+    if (!body.content || !(f in body.content)) continue;
+    const res = shape[f]?.safeParse(body.content[f]);
+    if (res?.success) content[f] = res.data;
+  }
+  return { content, evidence: sanitizeEvidence(body.evidence, entityType, docCount) };
 }

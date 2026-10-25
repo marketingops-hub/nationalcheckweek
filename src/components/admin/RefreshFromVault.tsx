@@ -112,7 +112,18 @@ function Value({ value }: { value: unknown }) {
     return (
       <div style={{ fontSize: 13, lineHeight: 1.6 }}>
         {value.map((v, i) => {
-          const s = v as { num?: string; label?: string; name?: string; stat?: string; desc?: string };
+          // "Groups most at risk": a list of short phrases
+          if (typeof v === "string") return <div key={i}>• {v}</div>;
+          const s = v as { num?: string; label?: string; name?: string; stat?: string; desc?: string; title?: string; text?: string };
+          // "Key impact areas": a title with a one-sentence description
+          if (s.title !== undefined && s.text !== undefined) {
+            return (
+              <div key={i} style={{ marginBottom: 6 }}>
+                <strong>{s.title}</strong>
+                <div>{s.text}</div>
+              </div>
+            );
+          }
           if (s.name !== undefined) {
             return (
               <div key={i} style={{ marginBottom: 8 }}>
