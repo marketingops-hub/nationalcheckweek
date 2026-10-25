@@ -30,7 +30,8 @@ import {
   type VaultDocumentDetail,
 } from "@/lib/vault/types";
 import { StatusChip } from "../../upload/page";
-import { VAULT_CATEGORIES } from "@/lib/vault/categories";
+import VaultCategorySelect from "@/components/admin/VaultCategorySelect";
+import VaultTagInput, { invalidateVaultTags } from "@/components/admin/VaultTagInput";
 
 export default function VaultDocumentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +44,7 @@ export default function VaultDocumentDetailPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft,   setTitleDraft]   = useState("");
   const [categoryDraft, setCategoryDraft] = useState("");
-  const [tagsDraft,    setTagsDraft]    = useState("");
+  const [tagsDraft,    setTagsDraft]    = useState<string[]>([]);
   const [referenceDraft, setReferenceDraft] = useState("");
   const [authorDraft,    setAuthorDraft]    = useState("");
   const [publisherDraft, setPublisherDraft] = useState("");
@@ -60,7 +61,7 @@ export default function VaultDocumentDetailPage() {
       setDoc(d);
       setTitleDraft(d.title);
       setCategoryDraft(d.category);
-      setTagsDraft(d.tags.join(', '));
+      setTagsDraft(d.tags);
       setReferenceDraft(d.reference ?? '');
       setAuthorDraft(d.author ?? '');
       setPublisherDraft(d.publisher ?? '');
@@ -104,13 +105,14 @@ export default function VaultDocumentDetailPage() {
     }
   }
 
-  async function saveMeta() {
+  /** Saves the metadata boxes. Category and tags save the moment they change, so they are passed in directly. */
+  async function saveMeta(overrides: { category?: string; tags?: string[] } = {}) {
     if (!doc) return;
     try {
       setSavingMeta(true);
-      const tags = tagsDraft.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 20);
+      const tags = (overrides.tags ?? tagsDraft).slice(0, 20);
       const updated = await patchDocument(doc.id, {
-        category: categoryDraft.trim() || 'general',
+        category: (overrides.category ?? categoryDraft).trim() || 'general',
         tags,
         reference:  referenceDraft.trim(),
         author:     authorDraft.trim(),
@@ -120,6 +122,7 @@ export default function VaultDocumentDetailPage() {
         page_ref:   pageRefDraft.trim(),
       });
       setDoc((d) => (d ? { ...d, ...updated } : d));
+      if (overrides.tags) invalidateVaultTags();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -359,7 +362,7 @@ export default function VaultDocumentDetailPage() {
                   <input
                     value={authorDraft}
                     onChange={(e) => setAuthorDraft(e.target.value)}
-                    onBlur={saveMeta}
+                    onBlur={() => saveMeta()}
                     placeholder="e.g. AIHW"
                     style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                   />
@@ -369,7 +372,7 @@ export default function VaultDocumentDetailPage() {
                   <input
                     value={yearDraft}
                     onChange={(e) => setYearDraft(e.target.value)}
-                    onBlur={saveMeta}
+                    onBlur={() => saveMeta()}
                     placeholder="2024"
                     style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                   />
@@ -380,7 +383,7 @@ export default function VaultDocumentDetailPage() {
                 <input
                   value={publisherDraft}
                   onChange={(e) => setPublisherDraft(e.target.value)}
-                  onBlur={saveMeta}
+                  onBlur={() => saveMeta()}
                   placeholder="e.g. Australian Institute of Health and Welfare"
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
@@ -404,7 +407,7 @@ export default function VaultDocumentDetailPage() {
                 <input
                   value={referenceDraft}
                   onChange={(e) => setReferenceDraft(e.target.value)}
-                  onBlur={saveMeta}
+                  onBlur={() => saveMeta()}
                   placeholder="Optional — overrides the composed reference"
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
@@ -415,7 +418,7 @@ export default function VaultDocumentDetailPage() {
                   type="url"
                   value={sourceUrlDraft}
                   onChange={(e) => setSourceUrlDraft(e.target.value)}
-                  onBlur={saveMeta}
+                  onBlur={() => saveMeta()}
                   placeholder="https://www.aihw.gov.au/…"
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
@@ -425,35 +428,26 @@ export default function VaultDocumentDetailPage() {
                 <input
                   value={pageRefDraft}
                   onChange={(e) => setPageRefDraft(e.target.value)}
-                  onBlur={saveMeta}
+                  onBlur={() => saveMeta()}
                   placeholder="e.g. p. 14 or Table 3"
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Category</span>
-                <input
-                  list="vault-category-suggestions"
+                <VaultCategorySelect
                   value={categoryDraft}
-                  onChange={(e) => setCategoryDraft(e.target.value)}
-                  onBlur={saveMeta}
-                  placeholder="general — or type your own"
+                  onChange={(v) => { setCategoryDraft(v); saveMeta({ category: v }); }}
                   style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
                 />
-                <datalist id="vault-category-suggestions">
-                  {VAULT_CATEGORIES.map((c) => <option key={c} value={c} />)}
-                </datalist>
               </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Tags</span>
-                <input
+                <VaultTagInput
                   value={tagsDraft}
-                  onChange={(e) => setTagsDraft(e.target.value)}
-                  onBlur={saveMeta}
-                  placeholder="comma, separated"
-                  style={{ padding: '7px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: 13 }}
+                  onChange={(next) => { setTagsDraft(next); saveMeta({ tags: next }); }}
                 />
-              </label>
+              </div>
               {savingMeta && <div style={{ fontSize: 11, color: '#6B7280' }}>Saving…</div>}
             </div>
           </div>

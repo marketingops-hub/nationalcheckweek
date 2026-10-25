@@ -24,3 +24,16 @@ export const VAULT_CATEGORIES = [
 export type VaultCategory = (typeof VAULT_CATEGORIES)[number];
 
 export const DEFAULT_VAULT_CATEGORY: VaultCategory = 'general';
+
+/**
+ * Categories offered when uploading or editing a document. A short, fixed
+ * list keeps the library tidy; documents already stored under an older
+ * category keep it (the edit screen shows it as an extra option).
+ */
+export const UPLOAD_CATEGORIES = [
+  { value: 'nciw', label: 'NCIW' },
+  { value: 'general', label: 'General' },
+] as const;
+
+/** Preselected for new uploads. */
+export const DEFAULT_UPLOAD_CATEGORY = 'nciw';

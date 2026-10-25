@@ -27,7 +27,9 @@ import {
   type VaultDocument,
   type DocumentStatus,
 } from "@/lib/vault/types";
-import { VAULT_CATEGORIES } from "@/lib/vault/categories";
+import { DEFAULT_UPLOAD_CATEGORY } from "@/lib/vault/categories";
+import VaultCategorySelect from "@/components/admin/VaultCategorySelect";
+import VaultTagInput, { invalidateVaultTags } from "@/components/admin/VaultTagInput";
 
 const ACCEPT_MIME = ".pdf,.docx,.txt,.md";
 const MAX_FILES   = 10;
@@ -46,8 +48,8 @@ export default function VaultUploadPage() {
   /* ─── File drop zone ─────────────────────────────────────────────────── */
 
   const [dragging, setDragging] = useState(false);
-  const [category, setCategory] = useState('general');
-  const [tags,     setTags]     = useState('');
+  const [category, setCategory] = useState<string>(DEFAULT_UPLOAD_CATEGORY);
+  const [tags,     setTags]     = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onFilesSelected = useCallback(async (files: FileList | File[]) => {
@@ -64,9 +66,10 @@ export default function VaultUploadPage() {
         const doc = await uploadFile({
           file,
           category,
-          tags: parseTags(tags),
+          tags,
         });
         setQueue((q) => [doc, ...q]);
+        invalidateVaultTags();
       } catch (err) {
         setGlobalError(err instanceof Error ? err.message : String(err));
       }
@@ -78,8 +81,8 @@ export default function VaultUploadPage() {
   const [pasteTitle, setPasteTitle]       = useState("");
   const [pasteContent, setPasteContent]   = useState("");
   const [pasteSource,  setPasteSource]    = useState("");
-  const [pasteCategory, setPasteCategory] = useState('general');
-  const [pasteTags,    setPasteTags]      = useState("");
+  const [pasteCategory, setPasteCategory] = useState<string>(DEFAULT_UPLOAD_CATEGORY);
+  const [pasteTags,    setPasteTags]      = useState<string[]>([]);
   const [pasteBusy,    setPasteBusy]      = useState(false);
 
   async function submitPaste(e: React.FormEvent) {
@@ -92,10 +95,11 @@ export default function VaultUploadPage() {
         content: pasteContent.trim(),
         source: pasteSource.trim() || undefined,
         category: pasteCategory,
-        tags: parseTags(pasteTags),
+        tags: pasteTags,
       });
       setQueue((q) => [doc, ...q]);
-      setPasteTitle(""); setPasteContent(""); setPasteSource(""); setPasteTags("");
+      invalidateVaultTags();
+      setPasteTitle(""); setPasteContent(""); setPasteSource(""); setPasteTags([]);
     } catch (err) {
       setGlobalError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -107,8 +111,8 @@ export default function VaultUploadPage() {
 
   const [urlValue, setUrlValue]   = useState("");
   const [urlTitle, setUrlTitle]   = useState("");
-  const [urlCat,   setUrlCat]     = useState('general');
-  const [urlTags,  setUrlTags]    = useState("");
+  const [urlCat,   setUrlCat]     = useState<string>(DEFAULT_UPLOAD_CATEGORY);
+  const [urlTags,  setUrlTags]    = useState<string[]>([]);
   const [urlBusy,  setUrlBusy]    = useState(false);
 
   async function submitUrl(e: React.FormEvent) {
@@ -120,10 +124,11 @@ export default function VaultUploadPage() {
         url: urlValue.trim(),
         title: urlTitle.trim() || undefined,
         category: urlCat,
-        tags: parseTags(urlTags),
+        tags: urlTags,
       });
       setQueue((q) => [doc, ...q]);
-      setUrlValue(""); setUrlTitle(""); setUrlTags("");
+      invalidateVaultTags();
+      setUrlValue(""); setUrlTitle(""); setUrlTags([]);
     } catch (err) {
       setGlobalError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -156,10 +161,6 @@ export default function VaultUploadPage() {
 
   return (
     <div>
-      {/* Category suggestions — typing a new value is allowed (free-form). */}
-      <datalist id="vault-category-suggestions">
-        {VAULT_CATEGORIES.map((c) => <option key={c} value={c} />)}
-      </datalist>
       <div className="swa-page-header">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -252,21 +253,10 @@ export default function VaultUploadPage() {
                 style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
               >
                 <Field label="Category for new uploads">
-                  <input
-                    list="vault-category-suggestions"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="general — or type your own"
-                    style={inputStyle}
-                  />
+                  <VaultCategorySelect value={category} onChange={setCategory} style={inputStyle} />
                 </Field>
-                <Field label="Tags (comma-separated)">
-                  <input
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    placeholder="research, mental-health"
-                    style={inputStyle}
-                  />
+                <Field label="Tags">
+                  <VaultTagInput value={tags} onChange={setTags} />
                 </Field>
               </div>
             </div>
@@ -301,16 +291,10 @@ export default function VaultUploadPage() {
                   <input value={pasteSource} onChange={(e) => setPasteSource(e.target.value)} style={inputStyle} />
                 </Field>
                 <Field label="Category">
-                  <input
-                    list="vault-category-suggestions"
-                    value={pasteCategory}
-                    onChange={(e) => setPasteCategory(e.target.value)}
-                    placeholder="general — or type your own"
-                    style={inputStyle}
-                  />
+                  <VaultCategorySelect value={pasteCategory} onChange={setPasteCategory} style={inputStyle} />
                 </Field>
                 <Field label="Tags">
-                  <input value={pasteTags} onChange={(e) => setPasteTags(e.target.value)} style={inputStyle} placeholder="comma,separated" />
+                  <VaultTagInput value={pasteTags} onChange={setPasteTags} />
                 </Field>
               </div>
 
@@ -341,16 +325,10 @@ export default function VaultUploadPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <Field label="Category">
-                  <input
-                    list="vault-category-suggestions"
-                    value={urlCat}
-                    onChange={(e) => setUrlCat(e.target.value)}
-                    placeholder="general — or type your own"
-                    style={inputStyle}
-                  />
+                  <VaultCategorySelect value={urlCat} onChange={setUrlCat} style={inputStyle} />
                 </Field>
                 <Field label="Tags">
-                  <input value={urlTags} onChange={(e) => setUrlTags(e.target.value)} style={inputStyle} placeholder="comma,separated" />
+                  <VaultTagInput value={urlTags} onChange={setUrlTags} />
                 </Field>
               </div>
 
@@ -456,6 +434,3 @@ function Field({
   );
 }
 
-function parseTags(raw: string): string[] {
-  return raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 20);
-}
