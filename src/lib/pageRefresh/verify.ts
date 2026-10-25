@@ -95,7 +95,7 @@ export async function verifyDraft(input: {
       describe: () => ({ label: "Unknown document", url: null }),
       fullText,
     });
-    return { changed, evidence: empty.evidence, unsupported: empty.unsupported, warnings: empty.warnings, checkedSourceIds: sourceIds };
+    return { changed, evidence: empty.evidence, unsupported: empty.unsupported, warnings: [], checkedSourceIds: sourceIds };
   }
 
   const docs: PromptDoc[] = grouped.map((g, i) => {
@@ -155,7 +155,7 @@ export async function verifyDraft(input: {
     changed,
     evidence: review.evidence,
     unsupported: review.unsupported,
-    warnings: review.warnings,
+    warnings: [],
     checkedSourceIds: sourceIds,
   };
 }

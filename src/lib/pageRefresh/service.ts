@@ -287,7 +287,9 @@ export async function previewRefresh(
   for (const src of sources) if (citedIds.has(src.id)) src.cited = true;
   sources.sort((a, b) => Number(b.cited) - Number(a.cited));
 
-  const warnings: string[] = [...review.warnings];
+  // Problems with a specific field (no quote, unverified quote, untraceable figure) are shown on that
+  // field's card, so this list only holds notes about the page as a whole.
+  const warnings: string[] = [];
   if (changed.length > 0 && citedIds.size === 0) {
     warnings.push("The AI changed content without citing any document. Check the proposal carefully before publishing.");
   }
