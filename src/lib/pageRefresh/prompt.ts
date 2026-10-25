@@ -36,22 +36,22 @@ export const SYSTEM_PROMPT =
 
 const FIELD_GUIDE: Record<EntityType, string> = {
   area:
-    "- overview: 1-2 short paragraphs on youth wellbeing in this area.\n" +
-    "- prevention: 1-2 short paragraphs on prevention and early-intervention priorities.\n" +
-    '- key_stats: up to 6 items {"num": "e.g. 24%", "label": "short label"}.',
+    "- overview: 1-3 sentences, up to about 300 characters, on youth wellbeing in this area.\n" +
+    "- prevention: 1-3 sentences, up to about 280 characters, on prevention and early-intervention priorities.\n" +
+    '- key_stats: up to 6 items {"num": "e.g. 24%", "label": "short label"}. num is at most 12 characters, label at most 60. No citations inside key_stats.',
   state_issue:
-    '- stat: ONE short headline statistic for this state, e.g. "1 in 4 students".\n' +
-    "- desc: 1-3 sentences explaining the statistic for this state.",
+    '- stat: ONE short headline statistic, at most 40 characters, e.g. "1 in 4 students". No citation.\n' +
+    "- desc: 1-2 sentences, up to about 250 characters, explaining the statistic for this state.",
   state:
-    "- subtitle: ONE sentence summarising student wellbeing in this state.\n" +
+    "- subtitle: ONE sentence, at most 100 characters, summarising student wellbeing in this state. No citation.\n" +
     '- issues: the list of issue cards. Return EVERY card in the current list, in the same order, with the "name" copied exactly. ' +
-    "Only the stat (one short headline statistic) and desc (1-3 sentences) may change; keep a card's current values if the excerpts have nothing better for it.",
+    'Only stat (at most 40 characters, no citation) and desc (1-2 sentences, up to about 250 characters) may change; keep a card\'s current values if the excerpts have nothing better for it.',
   issue:
-    "- short_desc: 1-2 sentence plain-English summary of the issue.\n" +
-    "- definition: 2-3 short paragraphs explaining what the issue is and how it presents.\n" +
-    "- australian_data: 2-3 short paragraphs of Australian statistics and research. Use the excerpts as the main source.\n" +
-    "- mechanisms: 2 short paragraphs on the psychological and social mechanisms behind the issue.\n" +
-    '- anchor_stat: ONE striking statistic, e.g. "1 in 5 young Australians".',
+    "- short_desc: 1-2 plain-English sentences, up to about 250 characters.\n" +
+    "- definition: 2-3 sentences, up to about 450 characters, explaining what the issue is and how it presents.\n" +
+    "- australian_data: 2-3 sentences, up to about 450 characters, of Australian statistics and research. Use the excerpts as the main source.\n" +
+    "- mechanisms: 2-3 sentences, up to about 450 characters, on the psychological and social mechanisms behind the issue.\n" +
+    '- anchor_stat: ONE striking statistic, at most 150 characters, e.g. "1 in 5 young Australians". No citation.',
 };
 
 export function buildUserPrompt(ctx: PromptContext): string {
@@ -85,7 +85,8 @@ Rules:
 - Prefer the most recent data. When two sources disagree, use the newer one and state the year of the figure.
 - Only change a field when the excerpts give relevant, better-supported information. Otherwise return the current value for that field unchanged.
 - Never add a statistic that is not in the excerpts. Keep the existing tone and length.
-- After each statistic or factual claim taken from a document, add an inline citation "(Source: <document title>)" using the document's exact title.
+- In sentences (desc, overview, prevention, short_desc, definition, australian_data, mechanisms), add an inline citation "(Source: <document title>)" after each statistic or factual claim taken from a document, using the document's exact title. Do NOT put citations in short headline fields (stat, anchor_stat, subtitle, key_stats): the sources are listed separately at the bottom of the page.
+- Respect the length limits in the field guide. Keep roughly the same size and style as the current content.
 - Plain text only, no HTML or markdown.
 
 Field guide:

@@ -102,7 +102,7 @@ const areaShape = {
 };
 
 const stateIssueShape = {
-  stat: z.string().trim().min(1).max(200),
+  stat: z.string().trim().min(1).max(120),
   desc: z.string().trim().min(1).max(1200),
 };
 
@@ -112,7 +112,7 @@ const stateShape = {
     .array(
       z.object({
         name: z.string().trim().min(1).max(120),
-        stat: z.string().trim().min(1).max(200),
+        stat: z.string().trim().min(1).max(120),
         desc: z.string().trim().min(1).max(1200),
       }),
     )
@@ -125,7 +125,7 @@ const issueShape = {
   definition: z.string().trim().min(1).max(4000),
   australian_data: z.string().trim().min(1).max(4000),
   mechanisms: z.string().trim().min(1).max(4000),
-  anchor_stat: z.string().trim().min(1).max(200),
+  anchor_stat: z.string().trim().min(1).max(300),
 };
 
 const nonEmpty = (o: Record<string, unknown>) => Object.keys(o).length > 0;

@@ -177,24 +177,37 @@ export async function previewRefresh(type: EntityType, key: string): Promise<Ref
     };
   });
 
-  let raw: string;
-  try {
-    const res = await anthropicService.generateContent(
-      SYSTEM_PROMPT,
-      buildUserPrompt({ entityType: type, subject: ctx.subject, current: ctx.current, docs }),
-      { model: MODEL, temperature: 0.2, maxTokens: 3000, timeout: 90000 },
-    );
-    raw = res.content;
-  } catch (err) {
-    throw new RefreshError(describeAiError(err), 502);
-  }
+  const userPrompt = buildUserPrompt({ entityType: type, subject: ctx.subject, current: ctx.current, docs });
 
+  // One automatic retry: if the reply is unusable (for example a field is too
+  // long), tell the model exactly what was wrong and ask again.
   let proposal;
-  try {
-    proposal = parseModelOutput(raw, type, docs.length);
-  } catch (err) {
-    throw new RefreshError(err instanceof Error ? err.message : "Unusable AI response.", 502);
+  let feedback = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    let raw: string;
+    try {
+      const res = await anthropicService.generateContent(SYSTEM_PROMPT, userPrompt + feedback, {
+        model: MODEL,
+        temperature: 0.2,
+        maxTokens: 3000,
+        timeout: 90000,
+      });
+      raw = res.content;
+    } catch (err) {
+      throw new RefreshError(describeAiError(err), 502);
+    }
+
+    try {
+      proposal = parseModelOutput(raw, type, docs.length);
+      break;
+    } catch (err) {
+      const problem = err instanceof Error ? err.message : "Unusable reply.";
+      if (attempt === 2) throw new RefreshError(problem, 502);
+      console.warn("[page-refresh] invalid AI reply, retrying:", problem);
+      feedback = `\n\nYOUR PREVIOUS REPLY WAS REJECTED: ${problem}\nReturn the JSON again, fixing exactly that problem and respecting every length limit.`;
+    }
   }
+  if (!proposal) throw new RefreshError("The AI returned an unusable response. Try again.", 502);
 
   if (type === "state") {
     proposal.content.issues = reconcileStateIssues(
